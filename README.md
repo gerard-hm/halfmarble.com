@@ -1,12 +1,12 @@
-# Half Marble // Web Command Center
+# halfmarble // Web Command Center
 
 > "When you're racing against your own biology, the **story** is just the exhaust; the **science is the engine** and my time is the fuel."
 
-This repository hosts the static landing page and beta-entry portal for **Half Marble Engineering**. 
+This repository hosts the static landing page and beta-entry portal for **halfmarble Engineering**. 
 
 ## 🛠 Project Scope
 
-Half Marble is a technical response to the biological reality of Parkinson's Disease. This site serves as the central hub for two primary workstreams:
+halfmarble is a technical response to the biological reality of Parkinson's Disease. This site serves as the central hub for two primary workstreams:
 
 1. **Steady Hand Tool (Hardware):** An open-source SMD soldering stabilizer designed to bridge the gap between a wandering hand and a perfect joint.
 2. **Autophagy AI (Software):** A specialized fasting engine powered by an AI model trained on autophagy research for neuro-protective management.
@@ -31,4 +31,4 @@ The site is designed for high-performance, low-cost static hosting (GitHub Pages
 
 ---
 
-**Gerard Ziemski** *Founder, Half Marble Engineering* [halfmarble.com](https://halfmarble.com)
+**Gerard Ziemski** *Founder, halfmarble Engineering* [halfmarble.com](https://halfmarble.com)
