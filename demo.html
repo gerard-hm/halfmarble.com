@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biomarker Timeline</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #000; color: #e0e0e8; line-height: 1.6; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .subtitle { color: #666; font-size: 14px; margin-bottom: 28px; }
+
+
+  /* ===== LINE CHART STYLES ===== */
+  .chart-section { background: #000; border-radius: 16px; padding: 20px 0; margin-bottom: 28px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; margin-bottom: 16px; }
+  .chart-title { font-size: 18px; font-weight: 600; color: #fff; }
+  .chart-subtitle { font-size: 12px; color: #555; margin-top: 2px; }
+
+  .chart-canvas-wrap { position: relative; width: 100%; height: 520px; }
+  canvas#bioChart { width: 100%; height: 100%; }
+
+  /* Chart Legend */
+  .chart-legend { display: flex; flex-direction: column; gap: 6px; padding: 16px 20px 0; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; cursor: pointer; transition: opacity 0.2s; user-select: none; }
+  .legend-item.dimmed { opacity: 0.25; }
+  .legend-line { width: 20px; height: 3px; border-radius: 2px; }
+  .legend-item .neuro-badge { font-size: 9px; padding: 1px 5px; border-radius: 6px; background: rgba(59,130,246,0.15); color: #3b82f6; margin-left: 2px; font-weight: 600; }
+
+  /* Hour Input */
+  .hour-control { display: flex; align-items: center; gap: 14px; padding: 0 20px; margin-bottom: 12px; }
+  .hour-control label { font-size: 13px; color: #555; }
+  .hour-slider { -webkit-appearance: none; width: 300px; height: 6px; border-radius: 3px; outline: none;
+    background: linear-gradient(to right, #333 0%, #333 20%, #16a34a 20%, #16a34a 60%, #d97706 60%, #d97706 83%, #dc2626 83%, #dc2626 100%); }
+  .hour-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+  .hour-value { font-size: 22px; font-weight: 700; color: #4ade80; min-width: 55px; }
+  .hour-stage { font-size: 13px; color: #666; }
+
+  /* Tier toggles */
+  .tier-toggles { display: flex; gap: 6px; padding: 12px 20px 8px; }
+  .tier-btn { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid; user-select: none; }
+  .tier-btn.active { opacity: 1; }
+  .tier-btn.inactive { opacity: 0.3; }
+  .tier-btn[data-tier="tier1"] { border-color: #fff; color: #fff; background: rgba(255,255,255,0.08); }
+  .tier-btn[data-tier="tier1"].active { background: rgba(255,255,255,0.15); }
+  .tier-btn[data-tier="tier2"] { border-color: #888; color: #888; background: rgba(255,255,255,0.03); }
+  .tier-btn[data-tier="tier2"].active { background: rgba(255,255,255,0.08); }
+  .tier-btn[data-tier="tier3"] { border-color: #555; color: #555; background: rgba(255,255,255,0.01); }
+  .tier-btn[data-tier="tier3"].active { background: rgba(255,255,255,0.04); }
+
+  /* Threshold lines legend */
+  .threshold-legend { display: flex; gap: 16px; padding: 12px 20px 0; flex-wrap: wrap; }
+  .threshold-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; }
+  .threshold-dash { width: 20px; height: 0; border-top: 2px dashed; }
+
+  /* ===== BIOMARKER CARDS ===== */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .card { background: #0a0a0a; border-radius: 14px; padding: 20px; border: 1px solid #1a1a1a; transition: border-color 0.2s; }
+  .card:hover { border-color: #333; }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .card-title { font-size: 15px; font-weight: 600; color: #fff; }
+  .card-badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .badge-high { background: rgba(45,140,240,0.12); color: #5aabff; }
+  .badge-medium { background: rgba(230,162,60,0.12); color: #f0c060; }
+  .badge-low { background: rgba(155,89,182,0.12); color: #c084fc; }
+  .card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .meta-item { font-size: 12px; }
+  .meta-label { color: #444; margin-bottom: 1px; }
+  .meta-value { color: #aaa; font-weight: 500; }
+  .card-desc { font-size: 13px; color: #777; line-height: 1.5; }
+  .card-source { font-size: 11px; color: #333; margin-top: 10px; font-style: italic; }
+  .pd-box { margin-top: 10px; padding: 10px; background: rgba(46,204,113,0.06); border-radius: 8px; border: 1px solid rgba(46,204,113,0.1); }
+  .pd-label { font-size: 10px; font-weight: 600; color: #4ade80; margin-bottom: 3px; letter-spacing: 0.5px; }
+  .pd-text { font-size: 12px; color: #6aaa8a; line-height: 1.5; }
+
+  /* ===== REFEEDING ===== */
+  .refeed-section { background: #0a0a0a; border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid #1a1a1a; }
+  .refeed-section.danger { border-color: #2a1515; }
+  .refeed-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .refeed-title.red { color: #ff6b6b; }
+  .refeed-subtitle { font-size: 12px; color: #555; margin-bottom: 18px; }
+  .warning-box { background: rgba(231,76,60,0.06); border: 1px solid rgba(231,76,60,0.15); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .warning-title { font-size: 14px; font-weight: 600; color: #ff6b6b; margin-bottom: 6px; }
+  .warning-text { font-size: 13px; color: #aa6666; line-height: 1.6; }
+  .phase { background: #050505; border-radius: 10px; padding: 16px; margin-bottom: 10px; border-left: 3px solid; }
+  .phase-1 { border-color: #e74c3c; }
+  .phase-2 { border-color: #e6a23c; }
+  .phase-3 { border-color: #2ecc71; }
+  .phase-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .phase-timing { font-size: 12px; color: #e6a23c; margin-bottom: 6px; }
+  .phase-desc { font-size: 13px; color: #777; line-height: 1.6; }
+
+
+</style>
+</head>
+<body>
+
+
+<div class="container">
+
+    <div class="chart-section">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Biomarker Activity Over Fast Duration</div>
+          <div class="chart-subtitle">Estimated relative activity levels (0–120 hours) — hover for details, click legend to toggle</div>
+        </div>
+      </div>
+
+      <div class="hour-control">
+        <label>Your position:</label>
+        <div style="display:flex;flex-direction:column;gap:0;">
+          <input type="range" class="hour-slider" id="hourSlider" min="0" max="120" value="0" oninput="updatePosition()">
+          <div style="display:flex;justify-content:space-between;width:300px;padding:2px 2px 0;">
+            <span style="font-size:9px;color:#444">0h</span>
+            <span style="font-size:9px;color:#444">24h</span>
+            <span style="font-size:9px;color:#444">48h</span>
+            <span style="font-size:9px;color:#444">72h</span>
+            <span style="font-size:9px;color:#444">96h</span>
+            <span style="font-size:9px;color:#444">120h</span>
+          </div>
+        </div>
+        <span class="hour-value" id="hourValue">0h</span>
+        <span class="hour-stage" id="hourStage">Not fasting</span>
+      </div>
+
+      <div class="chart-canvas-wrap">
+        <canvas id="bioChart"></canvas>
+      </div>
+
+      <div class="tier-toggles" id="tierToggles"></div>
+      <div class="chart-legend" id="chartLegend"></div>
+
+      <div class="threshold-legend" style="margin-top:14px;padding-top:12px;border-top:1px solid #1a1a1a;">
+        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(22,163,74,0.3);border:1px solid rgba(22,163,74,0.5)"></div> Optimal window (24–72h)</div>
+        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(217,119,6,0.3);border:1px solid rgba(217,119,6,0.5)"></div> Diminishing returns (72–100h)</div>
+        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(220,38,38,0.35);border:1px solid rgba(220,38,38,0.5)"></div> Danger — medical refeeding (100–120h+)</div>
+      </div>
+    </div>
+
+<script>
+// ==================== BIOMARKER DATA ====================
+const biomarkers = [
+  { id:'ketones', name:'Ketone Bodies (BHB)', color:'#4ade80', category:'metabolic', confidence:'high', dataSource:'measurable', direction:'increases', importance:'tier1',
+    desc:'BHB begins rising as glycogen depletes. Detectable by 12-16h, nutritional ketosis by 24-48h, deep ketosis (3-6 mmol/L) in extended fasts.',
+    parkinsons:'Ketones cross the blood-brain barrier and may provide neuroprotective effects by reducing oxidative stress in dopaminergic neurons.',
+    source:'Extensive human clinical data, Long-Term Fasting-Induced Ketosis study (1610 subjects)',
+    curve: h => h < 10 ? 0.02 : Math.min(0.95, 0.02 + Math.pow((h-10)/50, 0.8)*0.93) },
+
+  { id:'hgh', name:'Human Growth Hormone', color:'#f472b6', category:'hormonal', confidence:'high', dataSource:'estimated', direction:'increases', importance:'tier3',
+    desc:'HGH surges up to 1,300% in women and 2,000% in men during 24h fasts. Peaks around 24-48h, then plateaus — further fasting yields minimal additional HGH benefit.',
+    parkinsons:'HGH supports tissue repair and may help maintain muscle mass, important for managing motor symptoms.',
+    source:'Hartman et al., J Clin Invest (1992)',
+    // Spikes at 24-48h then clearly plateaus after 72h
+    curve: h => h < 6 ? 0.05 : h < 48 ? 0.05 + Math.pow(h/48, 1.2)*0.85 : h < 72 ? 0.9 + (h-48)/24*0.02 : 0.92 + Math.sin((h-72)/40)*0.02 },
+
+  { id:'autophagy', name:'Autophagy', color:'#ff4444', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+    desc:'Cells break down and recycle damaged components. Onset varies (18-32h), significant by 48h, peak around 48-72h. Plateaus after ~72h — diminishing returns. Cannot be directly measured in living humans.',
+    parkinsons:'Research suggests autophagy may help clear misfolded alpha-synuclein protein, which accumulates in Parkinson\'s disease. Studies are investigating this relationship.',
+    source:'Alirezaei et al., Autophagy (2010); Clinical trial NCT04842864',
+    // Peaks at ~72h then plateaus (diminishing returns)
+    curve: h => h < 16 ? 0.02 : h < 24 ? 0.02 + (h-16)/8*0.1 : h < 72 ? Math.min(0.92, 0.12 + Math.pow((h-24)/48, 0.7)*0.8) : 0.92 + Math.sin((h-72)/48*0.5)*0.03 },
+
+  { id:'igf1', name:'IGF-1', color:'#a78bfa', category:'metabolic', confidence:'high', dataSource:'estimated', direction:'decreases', importance:'tier2',
+    desc:'IGF-1 declines during fasting, shifting from growth mode to protection/repair mode. Lower IGF-1 promotes stem cell regeneration (Longo research).',
+    parkinsons:'IGF-1 reduction activates protective pathways that may shield neurons. The IGF-1/PKA axis is implicated in stem cell-based neural repair.',
+    source:'Longo et al., Cell Stem Cell (2014)',
+    curve: h => Math.max(0.1, 1.0 - Math.pow(h/80, 0.8)*0.85) },
+
+  { id:'bdnf', name:'BDNF', color:'#FFD700', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+    desc:'BDNF supports neuron survival and stimulates new nerve cell generation in the hippocampus. Fasting increases production, plateauing around 72h.',
+    parkinsons:'Research indicates BDNF supports dopaminergic neuron survival — the neurons affected in Parkinson\'s disease.',
+    source:'Mattson et al., Brain Facts (2018); BDNF meta-review (2021)',
+    // Rises then plateaus after ~72h
+    curve: h => h < 10 ? 0.05 : h < 72 ? Math.min(0.85, 0.05 + Math.pow((h-10)/62, 0.65)*0.8) : 0.85 + Math.sin((h-72)/30)*0.02 },
+
+  { id:'neurorecovery', name:'Neurological Recovery', color:'#3b82f6', category:'neurological', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+    desc:'Four synergistic mechanisms: (1) D1 receptor upregulation in prefrontal cortex via Drd1→cAMP→PKA→DARPP-32→CREB→BDNF pathway. (2) Enhanced somatodendritic dopamine release dynamics in VTA. (3) BHB ketones bypass impaired mitochondrial Complex I, providing alternative fuel to threatened neurons. (4) Autophagy clears phosphorylated alpha-synuclein aggregates. These mechanisms work together — not in isolation.',
+    parkinsons:'A 2025 Nature Communications study (Szegő et al.) found that intermittent fasting in animal models was associated with improved motor function, reduced dopaminergic neuron loss, preserved striatal dopamine, and reduced alpha-synuclein aggregation. Research suggests BHB may bypass impaired mitochondrial Complex I, providing alternative fuel to neurons. These are areas of active scientific investigation.',
+    source:'Szegő et al., Nature Comms (2025); Piao et al., Neurobiol Dis (2025); Roseberry, J Neurophysiol (2015); Tieu et al., Frontiers Nutr (2019)',
+    curve: h => h < 16 ? 0.03 : h < 24 ? 0.03 + (h-16)/8*0.07 : h < 72 ? Math.min(0.85, 0.1 + Math.pow((h-24)/48, 0.7)*0.75) : 0.85 + Math.sin((h-72)/30)*0.02 },
+
+  { id:'immune', name:'Immune Regeneration', color:'#60a5fa', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+    desc:'Longo\'s research: 72h fasts trigger stem cell-based immune regeneration. The body breaks down old immune cells, then stem cells rebuild when refeeding begins.',
+    parkinsons:'Neuroinflammation plays a significant role in Parkinson\'s. A regenerated immune system may produce less chronic inflammation damaging dopaminergic neurons.',
+    source:'Cheng et al., Cell Stem Cell (2014); USC Keck',
+    curve: h => h < 48 ? 0.02 : h < 72 ? 0.02 + (h-48)/24*0.3 : Math.min(0.95, 0.32 + Math.pow((h-72)/48, 0.8)*0.63) },
+
+  { id:'stemcells', name:'Stem Cell Activation', color:'#c084fc', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+    desc:'PKA must shut down for stem cells to enter regenerative mode. This happens when IGF-1 drops sufficiently. 72h is the key duration from Phase I clinical trial.',
+    parkinsons:'Emerging research on whether fasting-activated stem cells contribute to neural repair, though still being studied.',
+    source:'Longo et al., Cell Stem Cell (2014); Phase I at USC',
+    curve: h => h < 48 ? 0.01 : h < 72 ? 0.01 + (h-48)/24*0.2 : Math.min(0.9, 0.21 + Math.pow((h-72)/48, 0.75)*0.69) },
+
+  { id:'senescent', name:'Senescent Cell Clearance', color:'#fb923c', category:'cellular', confidence:'low', dataSource:'estimated', direction:'increases', importance:'tier3',
+    desc:'Autophagy clears senescent "zombie" cells. Prolonged fasting reduces p21, p16, p53 markers. Process is time-dependent, increasing with fast duration.',
+    parkinsons:'Senescent cells in the brain contribute to neuroinflammation and may accelerate neurodegeneration.',
+    source:'El-Shafey & Elsherbiny, Human Nutrition & Metabolism (2023)',
+    curve: h => h < 24 ? 0.02 : Math.min(0.8, 0.02 + Math.pow((h-24)/72, 0.7)*0.78) }
+];
+
+// Track visibility
+const visible = {};
+biomarkers.forEach(b => visible[b.id] = true);
+
+// Track tier visibility
+const tierVisible = { tier1: true, tier2: true, tier3: true };
+
+function toggleTier(tier) {
+  tierVisible[tier] = !tierVisible[tier];
+  // Update individual biomarker visibility based on tier
+  biomarkers.forEach(b => {
+    if (b.importance === tier) visible[b.id] = tierVisible[tier];
+  });
+  buildTierToggles();
+  buildLegend();
+  drawChart();
+}
+
+function buildTierToggles() {
+  const el = document.getElementById('tierToggles');
+  el.innerHTML = '';
+  const tiers = [
+    { id: 'tier1', label: 'Core — Autophagy \u00b7 Ketones \u00b7 BDNF \u00b7 Neuro', style: 'solid' },
+    { id: 'tier2', label: 'Supporting — IGF-1 \u00b7 Immune \u00b7 Stem Cells', style: 'dashed' },
+    { id: 'tier3', label: 'Secondary — HGH \u00b7 Senescent Cells', style: 'dotted' },
+  ];
+  tiers.forEach(t => {
+    const btn = document.createElement('div');
+    btn.className = 'tier-btn ' + (tierVisible[t.id] ? 'active' : 'inactive');
+    btn.dataset.tier = t.id;
+    btn.textContent = t.label;
+    btn.onclick = () => toggleTier(t.id);
+    el.appendChild(btn);
+  });
+}
+
+// ==================== CANVAS CHART ====================
+const canvas = document.getElementById('bioChart');
+const ctx = canvas.getContext('2d');
+let currentHour = 0;
+let hoveredPoint = null;
+
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = wrap.clientWidth * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  canvas.style.width = wrap.clientWidth + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  ctx.scale(dpr, dpr);
+}
+
+const padding = { top: 20, right: 60, bottom: 40, left: 20 };
+
+function getChartArea() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  return {
+    x: padding.left,
+    y: padding.top,
+    w: w - padding.left - padding.right,
+    h: h - padding.top - padding.bottom
+  };
+}
+
+function hourToX(hour) {
+  const a = getChartArea();
+  return a.x + (hour / 120) * a.w;
+}
+
+function valToY(val) {
+  const a = getChartArea();
+  return a.y + a.h - val * a.h;
+}
+
+function drawChart() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const a = getChartArea();
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Horizontal grid lines
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1;
+  for (let v = 0; v <= 1; v += 0.25) {
+    const y = valToY(v);
+    ctx.beginPath();
+    ctx.moveTo(a.x, y);
+    ctx.lineTo(a.x + a.w, y);
+    ctx.stroke();
+  }
+
+  // Y-axis labels (right side)
+  ctx.fillStyle = '#444';
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  const yLabels = ['0%', '25%', '50%', '75%', '100%'];
+  for (let i = 0; i <= 4; i++) {
+    ctx.fillText(yLabels[i], a.x + a.w + 8, valToY(i * 0.25) + 4);
+  }
+
+  // Vertical dashed grid lines + X labels
+  ctx.textAlign = 'center';
+  const hourMarks = [0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120];
+  hourMarks.forEach(hr => {
+    const x = hourToX(hr);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, a.y);
+    ctx.lineTo(x, a.y + a.h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#444';
+    ctx.fillText(hr + 'h', x, a.y + a.h + 20);
+  });
+
+  // ===== ZONE SHADING — prominent colored zones =====
+
+  // Zone 1: Pre-autophagy (0-24h) — dark/neutral
+  // No shading — just the dark background
+
+  // Zone 2: GREEN — Optimal window (24-72h)
+  const greenGrad = ctx.createLinearGradient(hourToX(24), 0, hourToX(72), 0);
+  greenGrad.addColorStop(0, 'rgba(22, 163, 74, 0.0)');
+  greenGrad.addColorStop(0.15, 'rgba(22, 163, 74, 0.12)');
+  greenGrad.addColorStop(0.5, 'rgba(22, 163, 74, 0.15)');
+  greenGrad.addColorStop(1, 'rgba(22, 163, 74, 0.12)');
+  ctx.fillStyle = greenGrad;
+  ctx.fillRect(hourToX(24), a.y, hourToX(72) - hourToX(24), a.h);
+  // Green top border
+  ctx.fillStyle = 'rgba(22, 163, 74, 0.5)';
+  ctx.fillRect(hourToX(24), a.y, hourToX(72) - hourToX(24), 2);
+
+  // Zone 3: ORANGE — Diminishing returns (72-100h)
+  const orangeGrad = ctx.createLinearGradient(hourToX(72), 0, hourToX(100), 0);
+  orangeGrad.addColorStop(0, 'rgba(217, 119, 6, 0.12)');
+  orangeGrad.addColorStop(0.5, 'rgba(217, 119, 6, 0.14)');
+  orangeGrad.addColorStop(1, 'rgba(217, 119, 6, 0.10)');
+  ctx.fillStyle = orangeGrad;
+  ctx.fillRect(hourToX(72), a.y, hourToX(100) - hourToX(72), a.h);
+  // Orange top border
+  ctx.fillStyle = 'rgba(217, 119, 6, 0.5)';
+  ctx.fillRect(hourToX(72), a.y, hourToX(100) - hourToX(72), 2);
+
+  // Zone 4: RED — Danger zone (100-120h)
+  const redGrad = ctx.createLinearGradient(hourToX(100), 0, hourToX(120), 0);
+  redGrad.addColorStop(0, 'rgba(220, 38, 38, 0.10)');
+  redGrad.addColorStop(0.5, 'rgba(220, 38, 38, 0.18)');
+  redGrad.addColorStop(1, 'rgba(220, 38, 38, 0.25)');
+  ctx.fillStyle = redGrad;
+  ctx.fillRect(hourToX(100), a.y, hourToX(120) - hourToX(100), a.h);
+  // Red top border
+  ctx.fillStyle = 'rgba(220, 38, 38, 0.6)';
+  ctx.fillRect(hourToX(100), a.y, hourToX(120) - hourToX(100), 2);
+
+  // ===== ZONE LABELS (top of chart) =====
+  ctx.font = 'bold 11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+
+  ctx.fillStyle = 'rgba(74, 222, 128, 0.7)';
+  ctx.fillText('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, a.y + 16);
+
+  ctx.fillStyle = 'rgba(245, 158, 11, 0.7)';
+  ctx.fillText('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, a.y + 16);
+
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+  ctx.fillText('DANGER', (hourToX(100) + hourToX(120)) / 2, a.y + 16);
+
+  // ===== ZONE BOTTOM LABELS (supplemental) =====
+  ctx.font = '10px -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(74, 222, 128, 0.4)';
+  ctx.fillText('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, a.y + 30);
+  ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
+  ctx.fillText('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, a.y + 30);
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+  ctx.fillText('Medical refeeding', (hourToX(100) + hourToX(120)) / 2, a.y + 30);
+
+  // ===== THRESHOLD LINES =====
+  drawThresholdLine(24, '#16a34a', 0.5);   // Autophagy onset
+  drawThresholdLine(48, '#16a34a', 0.35);   // Deep autophagy
+  drawThresholdLine(72, '#d97706', 0.6);    // Diminishing returns
+  drawThresholdLine(100, '#dc2626', 0.6);   // Danger begins
+
+  // Solid red line at 120h — hard medical limit
+  drawSolidThresholdLine(120, '#dc2626', 0.8);
+
+  // Draw biomarker curves — 3 tiers of visual importance
+  // Tier 1 (core): solid, thick (3px), full opacity, glow
+  // Tier 2 (supporting): dashed (8,5), medium (2px), 70% opacity
+  // Tier 3 (secondary): dotted (3,4), thin (1.2px), 45% opacity
+  const tierOrder = { tier3: 0, tier2: 1, tier1: 2 };
+  const sortedBiomarkers = [...biomarkers].sort((a, b) => tierOrder[a.importance] - tierOrder[b.importance]);
+  sortedBiomarkers.forEach(b => {
+    if (!visible[b.id]) return;
+    const tier = b.importance;
+
+    ctx.strokeStyle = b.color;
+    if (tier === 'tier1') {
+      ctx.lineWidth = 3; ctx.globalAlpha = 0.95; ctx.setLineDash([]);
+    } else if (tier === 'tier2') {
+      ctx.lineWidth = 2; ctx.globalAlpha = 0.7; ctx.setLineDash([8, 5]);
+    } else {
+      ctx.lineWidth = 1.2; ctx.globalAlpha = 0.45; ctx.setLineDash([3, 4]);
+    }
+    ctx.beginPath();
+    for (let hr = 0; hr <= 120; hr += 0.5) {
+      const x = hourToX(hr);
+      const y = valToY(b.curve(hr));
+      if (hr === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Glow only for tier 1
+    if (tier === 'tier1') {
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = 8;
+      ctx.globalAlpha = 0.06;
+      ctx.beginPath();
+      for (let hr = 0; hr <= 120; hr += 0.5) {
+        const x = hourToX(hr);
+        const y = valToY(b.curve(hr));
+        if (hr === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  });
+
+  // Current position marker
+  if (currentHour > 0) {
+    const x = hourToX(currentHour);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(x, a.y);
+    ctx.lineTo(x, a.y + a.h);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // "YOU" label
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('YOU', x, a.y - 6);
+
+    // Dots on each visible curve
+    biomarkers.forEach(b => {
+      if (!visible[b.id]) return;
+      const y = valToY(b.curve(currentHour));
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = b.color;
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  }
+
+  // Hover tooltip
+  if (hoveredPoint) {
+    const { x, y, biomarker, hour, value } = hoveredPoint;
+    const pct = Math.round(value * 100);
+    const text = `${biomarker.name}: ${pct}% at ${Math.round(hour)}h`;
+    ctx.font = '12px -apple-system, sans-serif';
+    const tw = ctx.measureText(text).width;
+    const tx = Math.min(x + 12, a.x + a.w - tw - 16);
+    const ty = Math.max(y - 30, a.y + 10);
+
+    ctx.fillStyle = 'rgba(20,20,20,0.9)';
+    ctx.beginPath();
+    ctx.roundRect(tx - 6, ty - 14, tw + 12, 22, 6);
+    ctx.fill();
+    ctx.fillStyle = biomarker.color;
+    ctx.fillText(text, tx, ty);
+  }
+}
+
+function drawThresholdLine(hour, color, opacity) {
+  const a = getChartArea();
+  const x = hourToX(hour);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = opacity;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(x, a.y);
+  ctx.lineTo(x, a.y + a.h);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+}
+
+function drawSolidThresholdLine(hour, color, opacity) {
+  const a = getChartArea();
+  const x = hourToX(hour);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.globalAlpha = opacity;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(x, a.y);
+  ctx.lineTo(x, a.y + a.h);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+// ==================== INTERACTIONS ====================
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const a = getChartArea();
+
+  if (mx < a.x || mx > a.x + a.w || my < a.y || my > a.y + a.h) {
+    hoveredPoint = null;
+    drawChart();
+    return;
+  }
+
+  const hour = ((mx - a.x) / a.w) * 120;
+  let closest = null;
+  let minDist = Infinity;
+
+  biomarkers.forEach(b => {
+    if (!visible[b.id]) return;
+    const val = b.curve(hour);
+    const y = valToY(val);
+    const dist = Math.abs(my - y);
+    if (dist < minDist && dist < 30) {
+      minDist = dist;
+      closest = { x: hourToX(hour), y, biomarker: b, hour, value: val };
+    }
+  });
+
+  hoveredPoint = closest;
+  canvas.style.cursor = closest ? 'crosshair' : 'default';
+  drawChart();
+});
+
+canvas.addEventListener('mouseleave', () => {
+  hoveredPoint = null;
+  drawChart();
+});
+
+function updatePosition() {
+  const val = parseInt(document.getElementById('hourSlider').value);
+  currentHour = val;
+
+  document.getElementById('hourValue').textContent = val + 'h';
+
+  let stage = 'Not fasting', stageColor = '#666', hourColor = '#4ade80';
+  if (val >= 100) { stage = 'DANGER ZONE — medical refeeding required'; stageColor = '#ef4444'; hourColor = '#ef4444'; }
+  else if (val >= 72) { stage = 'Diminishing returns — benefits plateauing'; stageColor = '#f59e0b'; hourColor = '#f59e0b'; }
+  else if (val >= 48) { stage = 'Deep autophagy — peak benefits zone'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
+  else if (val >= 24) { stage = 'Optimal window — autophagy active'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
+  else if (val >= 16) { stage = 'Ketosis onset'; stageColor = '#888'; hourColor = '#aaa'; }
+  else if (val >= 12) { stage = 'Fat burning'; stageColor = '#888'; hourColor = '#aaa'; }
+  else if (val >= 4) { stage = 'Early fasting'; stageColor = '#666'; hourColor = '#888'; }
+  else if (val > 0) { stage = 'Fed state'; stageColor = '#555'; hourColor = '#666'; }
+
+  document.getElementById('hourStage').textContent = stage;
+  document.getElementById('hourValue').style.color = hourColor;
+  document.getElementById('hourStage').style.color = stageColor;
+
+  drawChart();
+}
+
+// ==================== LEGEND ====================
+function buildLegend() {
+  const el = document.getElementById('chartLegend');
+  el.innerHTML = '';
+
+  const tiers = [
+    { id: 'tier1', label: 'Core', labelColor: '#ccc' },
+    { id: 'tier2', label: 'Supporting', labelColor: '#666' },
+    { id: 'tier3', label: 'Secondary', labelColor: '#444' },
+  ];
+
+  tiers.forEach(tier => {
+    const tierBiomarkers = biomarkers.filter(b => b.importance === tier.id);
+    if (tierBiomarkers.length === 0) return;
+
+    // Create a row for this tier
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;flex-wrap:wrap;gap:16px;align-items:center;width:100%;padding:4px 0;';
+
+    // Tier label
+    const label = document.createElement('span');
+    label.style.cssText = `font-size:10px;font-weight:600;color:${tier.labelColor};text-transform:uppercase;letter-spacing:0.5px;min-width:72px;`;
+    label.textContent = tier.label;
+    row.appendChild(label);
+
+    tierBiomarkers.forEach(b => {
+      const item = document.createElement('div');
+      item.className = 'legend-item' + (visible[b.id] ? '' : ' dimmed');
+      const lineStyle = tier.id === 'tier1'
+        ? `background:${b.color};height:3px`
+        : tier.id === 'tier2'
+        ? `background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 6px,transparent 6px,transparent 10px);height:2px;opacity:0.7`
+        : `background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 2px,transparent 2px,transparent 5px);height:1.5px;opacity:0.45`;
+      item.innerHTML = `<div class="legend-line" style="${lineStyle}"></div>${b.name}`;
+      item.onclick = () => {
+        visible[b.id] = !visible[b.id];
+        item.classList.toggle('dimmed');
+        drawChart();
+      };
+      row.appendChild(item);
+    });
+
+    el.appendChild(row);
+  });
+}
+
+// ==================== BIOMARKER CARDS ====================
+function buildCards() {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+
+  // Sort by tier priority, then by original order within tier
+  const tierPriority = { tier1: 0, tier2: 1, tier3: 2 };
+  const sorted = [...biomarkers].sort((a, b) => tierPriority[a.importance] - tierPriority[b.importance]);
+
+  const tierLabels = { tier1: 'CORE', tier2: 'SUPPORTING', tier3: 'SECONDARY' };
+  const tierColors = { tier1: '#ccc', tier2: '#666', tier3: '#444' };
+  let lastTier = '';
+
+  sorted.forEach(b => {
+    // Insert tier section header when tier changes
+    if (b.importance !== lastTier) {
+      lastTier = b.importance;
+      grid.innerHTML += `<div style="grid-column:1/-1;padding:12px 0 4px;border-bottom:1px solid ${tierColors[b.importance]}22;margin-top:${b.importance === 'tier1' ? '0' : '8px'}">
+        <span style="font-size:11px;font-weight:700;color:${tierColors[b.importance]};letter-spacing:1px;">${tierLabels[b.importance]}</span>
+      </div>`;
+    }
+
+    const badgeClass = b.confidence === 'high' ? 'badge-high' : b.confidence === 'medium' ? 'badge-medium' : 'badge-low';
+    const pdHtml = b.parkinsons ? `<div class="pd-box"><div class="pd-label">PARKINSON'S RELEVANCE</div><div class="pd-text">${b.parkinsons}</div></div>` : '';
+
+    // Line segment style matching the chart
+    let lineSegment;
+    if (b.importance === 'tier1') {
+      lineSegment = `<span style="display:inline-block;width:28px;height:3px;background:${b.color};border-radius:2px;vertical-align:middle;margin-right:8px;"></span>`;
+    } else if (b.importance === 'tier2') {
+      lineSegment = `<span style="display:inline-block;width:28px;height:2px;background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 6px,transparent 6px,transparent 10px);border-radius:1px;vertical-align:middle;margin-right:8px;opacity:0.7;"></span>`;
+    } else {
+      lineSegment = `<span style="display:inline-block;width:28px;height:1.5px;background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 2px,transparent 2px,transparent 5px);border-radius:1px;vertical-align:middle;margin-right:8px;opacity:0.45;"></span>`;
+    }
+
+    grid.innerHTML += `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">${lineSegment}${b.name}</div>
+          <span class="card-badge ${badgeClass}">${b.confidence}</span>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item"><div class="meta-label">Direction</div><div class="meta-value">${b.direction === 'increases' ? '↑ Increases' : '↓ Decreases'}</div></div>
+          <div class="meta-item"><div class="meta-label">Data Source</div><div class="meta-value">${b.dataSource === 'measurable' ? 'Measurable' : 'Estimated'}</div></div>
+        </div>
+        <div class="card-desc">${b.desc}</div>
+        ${pdHtml}
+        <div class="card-source">${b.source}</div>
+      </div>`;
+  });
+}
+
+
+// ==================== INIT ====================
+window.addEventListener('resize', () => { resizeCanvas(); drawChart(); });
+resizeCanvas();
+buildTierToggles();
+buildLegend();
+drawChart();
+</script>
+</body>
+</html>
