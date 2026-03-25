@@ -28,9 +28,10 @@
   .legend-line { width: 20px; height: 3px; border-radius: 2px; }
 
   /* Hour Input */
-  .hour-control { display: flex; flex-direction: column; gap: 8px; padding: 0 12px; margin-bottom: 12px; }
+  .hour-control { display: flex; flex-direction: column; gap: 8px; padding: 0 10px 0 20px; margin-bottom: 12px; }
   .hour-control label { display: none; }
   .hour-slider-wrap { display: flex; flex-direction: column; gap: 0; width: 100%; }
+  .hour-slider-ticks { padding: 0; }
   .hour-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none;
     background: linear-gradient(to right, #333 0%, #333 20%, #16a34a 20%, #16a34a 60%, #d97706 60%, #d97706 83%, #dc2626 83%, #dc2626 100%); }
   .hour-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
@@ -39,7 +40,7 @@
   .hour-stage { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; }
 
   /* Tier toggles */
-  .tier-toggles { display: flex; gap: 6px; padding: 12px 20px 8px; }
+  .tier-toggles { display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 8px; }
   .tier-btn { padding: 5px 14px; border-radius: 0; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid; user-select: none; font-family: 'JetBrains Mono', monospace; }
   .tier-btn.active { opacity: 1; }
   .tier-btn.inactive { opacity: 0.3; }
@@ -51,7 +52,7 @@
   .tier-btn[data-tier="tier3"].active { background: rgba(255,255,255,0.04); }
 
   /* Threshold lines legend */
-  .threshold-legend { display: flex; gap: 16px; padding: 12px 20px 0; flex-wrap: wrap; }
+  .threshold-legend { display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 0; }
   .threshold-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; }
 
 </style>
@@ -110,58 +111,58 @@
 <script>
 // ==================== BIOMARKER DATA ====================
 const biomarkers = [
-  { id:'ketones', name:'Ketone Bodies (BHB)', color:'#4ade80', category:'metabolic', confidence:'high', dataSource:'measurable', direction:'increases', importance:'tier1',
+  { id:'ketones', name:'Ketone Bodies (BHB)', note:'brain fuel from fat burning', color:'#4ade80', category:'metabolic', confidence:'high', dataSource:'measurable', direction:'increases', importance:'tier1',
     desc:'BHB begins rising as glycogen depletes. Detectable by 12-16h, nutritional ketosis by 24-48h, deep ketosis (3-6 mmol/L) in extended fasts.',
     parkinsons:'Ketones cross the blood-brain barrier and may provide neuroprotective effects by reducing oxidative stress in dopaminergic neurons.',
     source:'Extensive human clinical data, Long-Term Fasting-Induced Ketosis study (1610 subjects)',
     curve: h => h < 10 ? 0.02 : Math.min(0.95, 0.02 + Math.pow((h-10)/50, 0.8)*0.93) },
 
-  { id:'hgh', name:'Human Growth Hormone', color:'#f472b6', category:'hormonal', confidence:'high', dataSource:'estimated', direction:'increases', importance:'tier3',
+  { id:'hgh', name:'Human Growth Hormone', note:'tissue repair, surges during sleep', color:'#f472b6', category:'hormonal', confidence:'high', dataSource:'estimated', direction:'increases', importance:'tier3',
     desc:'HGH surges up to 1,300% in women and 2,000% in men during 24h fasts. Peaks around 24-48h, then plateaus — further fasting yields minimal additional HGH benefit.',
     parkinsons:'HGH supports tissue repair and may help maintain muscle mass, important for managing motor symptoms.',
     source:'Hartman et al., J Clin Invest (1992)',
     // Spikes at 24-48h then clearly plateaus after 72h
     curve: h => h < 6 ? 0.05 : h < 48 ? 0.05 + Math.pow(h/48, 1.2)*0.85 : h < 72 ? 0.9 + (h-48)/24*0.02 : 0.92 + Math.sin((h-72)/40)*0.02 },
 
-  { id:'autophagy', name:'Autophagy', color:'#ff4444', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+  { id:'autophagy', name:'Autophagy', note:'cellular recycling of damaged components', color:'#ff4444', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
     desc:'Cells break down and recycle damaged components. Onset varies (18-32h), significant by 48h, peak around 48-72h. Plateaus after ~72h — diminishing returns. Cannot be directly measured in living humans.',
     parkinsons:'Research suggests autophagy may help clear misfolded alpha-synuclein protein, which accumulates in Parkinson\'s disease. Studies are investigating this relationship.',
     source:'Alirezaei et al., Autophagy (2010); Clinical trial NCT04842864',
     // Peaks at ~72h then plateaus (diminishing returns)
     curve: h => h < 16 ? 0.02 : h < 24 ? 0.02 + (h-16)/8*0.1 : h < 72 ? Math.min(0.92, 0.12 + Math.pow((h-24)/48, 0.7)*0.8) : 0.92 + Math.sin((h-72)/48*0.5)*0.03 },
 
-  { id:'igf1', name:'IGF-1', color:'#a78bfa', category:'metabolic', confidence:'high', dataSource:'estimated', direction:'decreases', importance:'tier2',
+  { id:'igf1', name:'IGF-1', note:'growth signal — drops to enable repair mode', color:'#a78bfa', category:'metabolic', confidence:'high', dataSource:'estimated', direction:'decreases', importance:'tier2',
     desc:'IGF-1 declines during fasting, shifting from growth mode to protection/repair mode. Lower IGF-1 promotes stem cell regeneration (Longo research).',
     parkinsons:'IGF-1 reduction activates protective pathways that may shield neurons. The IGF-1/PKA axis is implicated in stem cell-based neural repair.',
     source:'Longo et al., Cell Stem Cell (2014)',
     curve: h => Math.max(0.1, 1.0 - Math.pow(h/80, 0.8)*0.85) },
 
-  { id:'bdnf', name:'BDNF', color:'#FFD700', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+  { id:'bdnf', name:'BDNF', note:'brain-derived neurotrophic factor — neuron survival', color:'#FFD700', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
     desc:'BDNF supports neuron survival and stimulates new nerve cell generation in the hippocampus. Fasting increases production, plateauing around 72h.',
     parkinsons:'Research indicates BDNF supports dopaminergic neuron survival — the neurons affected in Parkinson\'s disease.',
     source:'Mattson et al., Brain Facts (2018); BDNF meta-review (2021)',
     // Rises then plateaus after ~72h
     curve: h => h < 10 ? 0.05 : h < 72 ? Math.min(0.85, 0.05 + Math.pow((h-10)/62, 0.65)*0.8) : 0.85 + Math.sin((h-72)/30)*0.02 },
 
-  { id:'neurorecovery', name:'Neurological Recovery', color:'#3b82f6', category:'neurological', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+  { id:'neurorecovery', name:'Neurological Recovery', note:'combined neuroprotective mechanisms', color:'#3b82f6', category:'neurological', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
     desc:'Four synergistic mechanisms: (1) D1 receptor upregulation in prefrontal cortex via Drd1→cAMP→PKA→DARPP-32→CREB→BDNF pathway. (2) Enhanced somatodendritic dopamine release dynamics in VTA. (3) BHB ketones bypass impaired mitochondrial Complex I, providing alternative fuel to threatened neurons. (4) Autophagy clears phosphorylated alpha-synuclein aggregates. These mechanisms work together — not in isolation.',
     parkinsons:'A 2025 Nature Communications study (Szegő et al.) found that intermittent fasting in animal models was associated with improved motor function, reduced dopaminergic neuron loss, preserved striatal dopamine, and reduced alpha-synuclein aggregation. Research suggests BHB may bypass impaired mitochondrial Complex I, providing alternative fuel to neurons. These are areas of active scientific investigation.',
     source:'Szegő et al., Nature Comms (2025); Piao et al., Neurobiol Dis (2025); Roseberry, J Neurophysiol (2015); Tieu et al., Frontiers Nutr (2019)',
     curve: h => h < 16 ? 0.03 : h < 24 ? 0.03 + (h-16)/8*0.07 : h < 72 ? Math.min(0.85, 0.1 + Math.pow((h-24)/48, 0.7)*0.75) : 0.85 + Math.sin((h-72)/30)*0.02 },
 
-  { id:'immune', name:'Immune Regeneration', color:'#60a5fa', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+  { id:'immune', name:'Immune Regeneration', note:'old immune cells replaced via stem cells', color:'#60a5fa', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
     desc:'Longo\'s research: 72h fasts trigger stem cell-based immune regeneration. The body breaks down old immune cells, then stem cells rebuild when refeeding begins.',
     parkinsons:'Neuroinflammation plays a significant role in Parkinson\'s. A regenerated immune system may produce less chronic inflammation damaging dopaminergic neurons.',
     source:'Cheng et al., Cell Stem Cell (2014); USC Keck',
     curve: h => h < 48 ? 0.02 : h < 72 ? 0.02 + (h-48)/24*0.3 : Math.min(0.95, 0.32 + Math.pow((h-72)/48, 0.8)*0.63) },
 
-  { id:'stemcells', name:'Stem Cell Activation', color:'#c084fc', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+  { id:'stemcells', name:'Stem Cell Activation', note:'regenerative mode after IGF-1 drops', color:'#c084fc', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
     desc:'PKA must shut down for stem cells to enter regenerative mode. This happens when IGF-1 drops sufficiently. 72h is the key duration from Phase I clinical trial.',
     parkinsons:'Emerging research on whether fasting-activated stem cells contribute to neural repair, though still being studied.',
     source:'Longo et al., Cell Stem Cell (2014); Phase I at USC',
     curve: h => h < 48 ? 0.01 : h < 72 ? 0.01 + (h-48)/24*0.2 : Math.min(0.9, 0.21 + Math.pow((h-72)/48, 0.75)*0.69) },
 
-  { id:'senescent', name:'Senescent Cell Clearance', color:'#fb923c', category:'cellular', confidence:'low', dataSource:'estimated', direction:'increases', importance:'tier3',
+  { id:'senescent', name:'Senescent Cell Clearance', note:'clears zombie cells via autophagy', color:'#fb923c', category:'cellular', confidence:'low', dataSource:'estimated', direction:'increases', importance:'tier3',
     desc:'Autophagy clears senescent "zombie" cells. Prolonged fasting reduces p21, p16, p53 markers. Process is time-dependent, increasing with fast duration.',
     parkinsons:'Senescent cells in the brain contribute to neuroinflammation and may accelerate neurodegeneration.',
     source:'El-Shafey & Elsherbiny, Human Nutrition & Metabolism (2023)',
@@ -220,7 +221,7 @@ function resizeCanvas() {
   ctx.scale(dpr, dpr);
 }
 
-const padding = { top: 20, right: 60, bottom: 40, left: 20 };
+const padding = { top: 20, right: 10, bottom: 40, left: 20 };
 
 function getChartArea() {
   const w = canvas.clientWidth;
@@ -261,13 +262,19 @@ function drawChart() {
     ctx.stroke();
   }
 
-  // Y-axis labels (right side)
-  ctx.fillStyle = '#444';
-  ctx.font = '11px -apple-system, sans-serif';
-  ctx.textAlign = 'left';
+  // Y-axis labels (inside chart, right edge, with background)
+  ctx.font = '11px Inter, -apple-system, sans-serif';
+  ctx.textAlign = 'right';
   const yLabels = ['0%', '25%', '50%', '75%', '100%'];
+  const yNudge = [- 8, 0, 0, 0, 12];
   for (let i = 0; i <= 4; i++) {
-    ctx.fillText(yLabels[i], a.x + a.w + 8, valToY(i * 0.25) + 4);
+    const lx = a.x + a.w - 6;
+    const ly = valToY(i * 0.25) + 4 + yNudge[i];
+    const tw = ctx.measureText(yLabels[i]).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(lx - tw - 4, ly - 11, tw + 8, 16);
+    ctx.fillStyle = '#999';
+    ctx.fillText(yLabels[i], lx, ly);
   }
 
   // Vertical dashed grid lines + X labels
@@ -326,27 +333,33 @@ function drawChart() {
   ctx.fillStyle = 'rgba(220, 38, 38, 0.6)';
   ctx.fillRect(hourToX(100), a.y, hourToX(120) - hourToX(100), 2);
 
-  // ===== ZONE LABELS (top of chart) =====
-  ctx.font = 'bold 11px -apple-system, sans-serif';
+  // ===== ZONE LABELS (centered vertically in chart) =====
+  const midY = a.y + a.h / 2;
   ctx.textAlign = 'center';
 
+  // Optimal window — centered in its zone
+  ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
   ctx.fillStyle = 'rgba(74, 222, 128, 0.7)';
-  ctx.fillText('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, a.y + 16);
-
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.7)';
-  ctx.fillText('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, a.y + 16);
-
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
-  ctx.fillText('DANGER', (hourToX(100) + hourToX(120)) / 2, a.y + 16);
-
-  // ===== ZONE BOTTOM LABELS (supplemental) =====
-  ctx.font = '10px -apple-system, sans-serif';
+  ctx.fillText('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 8);
+  ctx.font = '10px Inter, -apple-system, sans-serif';
   ctx.fillStyle = 'rgba(74, 222, 128, 0.4)';
-  ctx.fillText('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, a.y + 30);
+  ctx.fillText('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, midY + 8);
+
+  // Diminishing returns — in its zone, stacked below optimal
+  ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(245, 158, 11, 0.7)';
+  ctx.fillText('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, midY + 30);
+  ctx.font = '10px Inter, -apple-system, sans-serif';
   ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
-  ctx.fillText('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, a.y + 30);
+  ctx.fillText('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, midY + 44);
+
+  // Danger — in its zone, stacked below diminishing
+  ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+  ctx.fillText('DANGER', (hourToX(100) + hourToX(120)) / 2, midY + 64);
+  ctx.font = '10px Inter, -apple-system, sans-serif';
   ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
-  ctx.fillText('Medical refeeding', (hourToX(100) + hourToX(120)) / 2, a.y + 30);
+  ctx.fillText('Medical refeeding', (hourToX(100) + hourToX(120)) / 2 - 5, midY + 78);
 
   // ===== THRESHOLD LINES =====
   drawThresholdLine(24, '#16a34a', 0.5);   // Autophagy onset
@@ -559,34 +572,31 @@ function buildLegend() {
     const tierBiomarkers = biomarkers.filter(b => b.importance === tier.id);
     if (tierBiomarkers.length === 0) return;
 
-    // Create a row for this tier
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;flex-wrap:wrap;gap:16px;align-items:center;width:100%;padding:4px 0;';
-
-    // Tier label
-    const label = document.createElement('span');
-    label.style.cssText = `font-size:10px;font-weight:600;color:${tier.labelColor};text-transform:uppercase;letter-spacing:0.5px;min-width:72px;`;
+    // Tier label row
+    const label = document.createElement('div');
+    label.style.cssText = `font-size:10px;font-weight:600;color:${tier.labelColor};text-transform:uppercase;letter-spacing:0.5px;padding:8px 0 4px;`;
     label.textContent = tier.label;
-    row.appendChild(label);
+    el.appendChild(label);
 
+    // Each biomarker on its own row
     tierBiomarkers.forEach(b => {
       const item = document.createElement('div');
       item.className = 'legend-item' + (visible[b.id] ? '' : ' dimmed');
+      item.style.cssText = 'padding:2px 0;';
       const lineStyle = tier.id === 'tier1'
         ? `background:${b.color};height:3px`
         : tier.id === 'tier2'
         ? `background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 6px,transparent 6px,transparent 10px);height:2px;opacity:0.7`
         : `background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 2px,transparent 2px,transparent 5px);height:1.5px;opacity:0.45`;
-      item.innerHTML = `<div class="legend-line" style="${lineStyle}"></div>${b.name}`;
+      const noteHtml = b.note ? ` <span style="color:#555;font-style:italic;">(${b.note})</span>` : '';
+      item.innerHTML = `<div class="legend-line" style="${lineStyle}"></div>${b.name}${noteHtml}`;
       item.onclick = () => {
         visible[b.id] = !visible[b.id];
         item.classList.toggle('dimmed');
         drawChart();
       };
-      row.appendChild(item);
+      el.appendChild(item);
     });
-
-    el.appendChild(row);
   });
 }
 
