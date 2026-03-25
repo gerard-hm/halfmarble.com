@@ -28,34 +28,14 @@
   .legend-line { width: 20px; height: 3px; border-radius: 2px; }
 
   /* Hour Input */
-  .hour-control { display: flex; align-items: center; gap: 14px; padding: 0 20px; margin-bottom: 12px; flex-wrap: wrap; }
-  .hour-control label { font-size: 13px; color: #555; font-family: 'JetBrains Mono', monospace; }
+  .hour-control { display: flex; align-items: center; gap: 8px; padding: 0 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .hour-control label { display: none; }
   .hour-slider-wrap { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 150px; }
   .hour-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none;
     background: linear-gradient(to right, #333 0%, #333 20%, #16a34a 20%, #16a34a 60%, #d97706 60%, #d97706 83%, #dc2626 83%, #dc2626 100%); }
   .hour-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
-  .hour-value { font-size: 22px; font-weight: 700; color: #eab308; min-width: 45px; font-family: 'JetBrains Mono', monospace; }
-  .hour-stage { font-size: 13px; color: #666; font-family: 'JetBrains Mono', monospace; }
-
-  /* Mobile */
-  @media (max-width: 640px) {
-    .container { padding: 10px; }
-    .chart-section { padding: 12px 0; }
-    .chart-header { padding: 0 12px; }
-    .chart-title { font-size: 16px; }
-    .chart-subtitle { font-size: 10px; }
-    .hour-control { padding: 0 12px; gap: 8px; }
-    .hour-control label { display: none; }
-    .hour-value { font-size: 18px; }
-    .hour-stage { font-size: 11px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .chart-canvas-wrap { height: 350px; }
-    .tier-toggles { padding: 8px 12px; gap: 4px; flex-wrap: wrap; }
-    .tier-btn { padding: 4px 10px; font-size: 10px; }
-    .chart-legend { padding: 10px 12px 0; }
-    .legend-item { font-size: 10px; }
-    .threshold-legend { padding: 8px 12px 0; gap: 10px; }
-    .threshold-item { font-size: 9px; }
-  }
+  .hour-value { font-size: 18px; font-weight: 700; color: #eab308; min-width: 45px; font-family: 'JetBrains Mono', monospace; }
+  .hour-stage { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
 
   /* Tier toggles */
   .tier-toggles { display: flex; gap: 6px; padding: 12px 20px 8px; }
