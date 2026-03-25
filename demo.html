@@ -111,27 +111,27 @@
 <script>
 // ==================== BIOMARKER DATA ====================
 const biomarkers = [
-  { id:'ketones', name:'Ketone Bodies (BHB)', note:'brain fuel from fat burning', color:'#4ade80', category:'metabolic', confidence:'high', dataSource:'measurable', direction:'increases', importance:'tier1',
+  { id:'ketones', name:'Ketone Bodies (BHB)', note:'efficient brain fuel from fat, crosses blood-brain barrier', color:'#4ade80', category:'metabolic', confidence:'high', dataSource:'measurable', direction:'increases', importance:'tier1',
     desc:'BHB begins rising as glycogen depletes. Detectable by 12-16h, nutritional ketosis by 24-48h, deep ketosis (3-6 mmol/L) in extended fasts.',
     parkinsons:'Ketones cross the blood-brain barrier and may provide neuroprotective effects by reducing oxidative stress in dopaminergic neurons.',
     source:'Extensive human clinical data, Long-Term Fasting-Induced Ketosis study (1610 subjects)',
     curve: h => h < 10 ? 0.02 : Math.min(0.95, 0.02 + Math.pow((h-10)/50, 0.8)*0.93) },
 
-  { id:'hgh', name:'Human Growth Hormone', note:'tissue repair, surges during sleep', color:'#f472b6', category:'hormonal', confidence:'high', dataSource:'estimated', direction:'increases', importance:'tier3',
+  { id:'hgh', name:'Human Growth Hormone', note:'tissue repair, surges 1300–2000% during deep sleep', color:'#f472b6', category:'hormonal', confidence:'high', dataSource:'estimated', direction:'increases', importance:'tier3',
     desc:'HGH surges up to 1,300% in women and 2,000% in men during 24h fasts. Peaks around 24-48h, then plateaus — further fasting yields minimal additional HGH benefit.',
     parkinsons:'HGH supports tissue repair and may help maintain muscle mass, important for managing motor symptoms.',
     source:'Hartman et al., J Clin Invest (1992)',
     // Spikes at 24-48h then clearly plateaus after 72h
     curve: h => h < 6 ? 0.05 : h < 48 ? 0.05 + Math.pow(h/48, 1.2)*0.85 : h < 72 ? 0.9 + (h-48)/24*0.02 : 0.92 + Math.sin((h-72)/40)*0.02 },
 
-  { id:'autophagy', name:'Autophagy', note:'cellular recycling of damaged components', color:'#ff4444', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+  { id:'autophagy', name:'Autophagy', note:'cells break down and recycle damaged components', color:'#ff4444', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
     desc:'Cells break down and recycle damaged components. Onset varies (18-32h), significant by 48h, peak around 48-72h. Plateaus after ~72h — diminishing returns. Cannot be directly measured in living humans.',
     parkinsons:'Research suggests autophagy may help clear misfolded alpha-synuclein protein, which accumulates in Parkinson\'s disease. Studies are investigating this relationship.',
     source:'Alirezaei et al., Autophagy (2010); Clinical trial NCT04842864',
     // Peaks at ~72h then plateaus (diminishing returns)
     curve: h => h < 16 ? 0.02 : h < 24 ? 0.02 + (h-16)/8*0.1 : h < 72 ? Math.min(0.92, 0.12 + Math.pow((h-24)/48, 0.7)*0.8) : 0.92 + Math.sin((h-72)/48*0.5)*0.03 },
 
-  { id:'igf1', name:'IGF-1', note:'growth signal — drops to enable repair mode', color:'#a78bfa', category:'metabolic', confidence:'high', dataSource:'estimated', direction:'decreases', importance:'tier2',
+  { id:'igf1', name:'IGF-1', note:'growth signal — drops to shift body into repair mode', color:'#a78bfa', category:'metabolic', confidence:'high', dataSource:'estimated', direction:'decreases', importance:'tier2',
     desc:'IGF-1 declines during fasting, shifting from growth mode to protection/repair mode. Lower IGF-1 promotes stem cell regeneration (Longo research).',
     parkinsons:'IGF-1 reduction activates protective pathways that may shield neurons. The IGF-1/PKA axis is implicated in stem cell-based neural repair.',
     source:'Longo et al., Cell Stem Cell (2014)',
@@ -144,25 +144,25 @@ const biomarkers = [
     // Rises then plateaus after ~72h
     curve: h => h < 10 ? 0.05 : h < 72 ? Math.min(0.85, 0.05 + Math.pow((h-10)/62, 0.65)*0.8) : 0.85 + Math.sin((h-72)/30)*0.02 },
 
-  { id:'neurorecovery', name:'Neurological Recovery', note:'combined neuroprotective mechanisms', color:'#3b82f6', category:'neurological', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+  { id:'neurorecovery', name:'Neurological Recovery', note:'four synergistic brain-protective mechanisms combined', color:'#3b82f6', category:'neurological', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
     desc:'Four synergistic mechanisms: (1) D1 receptor upregulation in prefrontal cortex via Drd1→cAMP→PKA→DARPP-32→CREB→BDNF pathway. (2) Enhanced somatodendritic dopamine release dynamics in VTA. (3) BHB ketones bypass impaired mitochondrial Complex I, providing alternative fuel to threatened neurons. (4) Autophagy clears phosphorylated alpha-synuclein aggregates. These mechanisms work together — not in isolation.',
     parkinsons:'A 2025 Nature Communications study (Szegő et al.) found that intermittent fasting in animal models was associated with improved motor function, reduced dopaminergic neuron loss, preserved striatal dopamine, and reduced alpha-synuclein aggregation. Research suggests BHB may bypass impaired mitochondrial Complex I, providing alternative fuel to neurons. These are areas of active scientific investigation.',
     source:'Szegő et al., Nature Comms (2025); Piao et al., Neurobiol Dis (2025); Roseberry, J Neurophysiol (2015); Tieu et al., Frontiers Nutr (2019)',
     curve: h => h < 16 ? 0.03 : h < 24 ? 0.03 + (h-16)/8*0.07 : h < 72 ? Math.min(0.85, 0.1 + Math.pow((h-24)/48, 0.7)*0.75) : 0.85 + Math.sin((h-72)/30)*0.02 },
 
-  { id:'immune', name:'Immune Regeneration', note:'old immune cells replaced via stem cells', color:'#60a5fa', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+  { id:'immune', name:'Immune Regeneration', note:'old immune cells broken down, stem cells rebuild new', color:'#60a5fa', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
     desc:'Longo\'s research: 72h fasts trigger stem cell-based immune regeneration. The body breaks down old immune cells, then stem cells rebuild when refeeding begins.',
     parkinsons:'Neuroinflammation plays a significant role in Parkinson\'s. A regenerated immune system may produce less chronic inflammation damaging dopaminergic neurons.',
     source:'Cheng et al., Cell Stem Cell (2014); USC Keck',
     curve: h => h < 48 ? 0.02 : h < 72 ? 0.02 + (h-48)/24*0.3 : Math.min(0.95, 0.32 + Math.pow((h-72)/48, 0.8)*0.63) },
 
-  { id:'stemcells', name:'Stem Cell Activation', note:'regenerative mode after IGF-1 drops', color:'#c084fc', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+  { id:'stemcells', name:'Stem Cell Activation', note:'regenerative mode activates once IGF-1 drops enough', color:'#c084fc', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
     desc:'PKA must shut down for stem cells to enter regenerative mode. This happens when IGF-1 drops sufficiently. 72h is the key duration from Phase I clinical trial.',
     parkinsons:'Emerging research on whether fasting-activated stem cells contribute to neural repair, though still being studied.',
     source:'Longo et al., Cell Stem Cell (2014); Phase I at USC',
     curve: h => h < 48 ? 0.01 : h < 72 ? 0.01 + (h-48)/24*0.2 : Math.min(0.9, 0.21 + Math.pow((h-72)/48, 0.75)*0.69) },
 
-  { id:'senescent', name:'Senescent Cell Clearance', note:'clears zombie cells via autophagy', color:'#fb923c', category:'cellular', confidence:'low', dataSource:'estimated', direction:'increases', importance:'tier3',
+  { id:'senescent', name:'Senescent Cell Clearance', note:'autophagy clears senescent zombie cells from tissue', color:'#fb923c', category:'cellular', confidence:'low', dataSource:'estimated', direction:'increases', importance:'tier3',
     desc:'Autophagy clears senescent "zombie" cells. Prolonged fasting reduces p21, p16, p53 markers. Process is time-dependent, increasing with fast duration.',
     parkinsons:'Senescent cells in the brain contribute to neuroinflammation and may accelerate neurodegeneration.',
     source:'El-Shafey & Elsherbiny, Human Nutrition & Metabolism (2023)',
