@@ -3,45 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Biomarker Timeline</title>
+<title>halfmarble | Biomarker Timeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif; background: #000; color: #e0e0e8; line-height: 1.6; }
+  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
 
   .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
-  h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-  .subtitle { color: #666; font-size: 14px; margin-bottom: 28px; }
-
-
   /* ===== LINE CHART STYLES ===== */
-  .chart-section { background: #000; border-radius: 16px; padding: 20px 0; margin-bottom: 28px; }
+  .chart-section { background: #111111; border: 1px solid #222; border-radius: 0; padding: 20px 0; margin-bottom: 28px; }
   .chart-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; margin-bottom: 16px; }
-  .chart-title { font-size: 18px; font-weight: 600; color: #fff; }
-  .chart-subtitle { font-size: 12px; color: #555; margin-top: 2px; }
+  .chart-title { font-size: 18px; font-weight: 700; color: #fff; }
+  .chart-subtitle { font-size: 12px; color: #555; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
 
   .chart-canvas-wrap { position: relative; width: 100%; height: 520px; }
   canvas#bioChart { width: 100%; height: 100%; }
 
   /* Chart Legend */
   .chart-legend { display: flex; flex-direction: column; gap: 6px; padding: 16px 20px 0; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; cursor: pointer; transition: opacity 0.2s; user-select: none; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; cursor: pointer; transition: opacity 0.2s; user-select: none; font-family: 'JetBrains Mono', monospace; }
   .legend-item.dimmed { opacity: 0.25; }
   .legend-line { width: 20px; height: 3px; border-radius: 2px; }
-  .legend-item .neuro-badge { font-size: 9px; padding: 1px 5px; border-radius: 6px; background: rgba(59,130,246,0.15); color: #3b82f6; margin-left: 2px; font-weight: 600; }
 
   /* Hour Input */
   .hour-control { display: flex; align-items: center; gap: 14px; padding: 0 20px; margin-bottom: 12px; }
-  .hour-control label { font-size: 13px; color: #555; }
+  .hour-control label { font-size: 13px; color: #555; font-family: 'JetBrains Mono', monospace; }
   .hour-slider { -webkit-appearance: none; width: 300px; height: 6px; border-radius: 3px; outline: none;
     background: linear-gradient(to right, #333 0%, #333 20%, #16a34a 20%, #16a34a 60%, #d97706 60%, #d97706 83%, #dc2626 83%, #dc2626 100%); }
   .hour-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
-  .hour-value { font-size: 22px; font-weight: 700; color: #4ade80; min-width: 55px; }
-  .hour-stage { font-size: 13px; color: #666; }
+  .hour-value { font-size: 22px; font-weight: 700; color: #eab308; min-width: 55px; font-family: 'JetBrains Mono', monospace; }
+  .hour-stage { font-size: 13px; color: #666; font-family: 'JetBrains Mono', monospace; }
 
   /* Tier toggles */
   .tier-toggles { display: flex; gap: 6px; padding: 12px 20px 8px; }
-  .tier-btn { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid; user-select: none; }
+  .tier-btn { padding: 5px 14px; border-radius: 0; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid; user-select: none; font-family: 'JetBrains Mono', monospace; }
   .tier-btn.active { opacity: 1; }
   .tier-btn.inactive { opacity: 0.3; }
   .tier-btn[data-tier="tier1"] { border-color: #fff; color: #fff; background: rgba(255,255,255,0.08); }
@@ -53,58 +50,24 @@
 
   /* Threshold lines legend */
   .threshold-legend { display: flex; gap: 16px; padding: 12px 20px 0; flex-wrap: wrap; }
-  .threshold-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; }
-  .threshold-dash { width: 20px; height: 0; border-top: 2px dashed; }
-
-  /* ===== BIOMARKER CARDS ===== */
-  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; margin-bottom: 28px; }
-  .card { background: #0a0a0a; border-radius: 14px; padding: 20px; border: 1px solid #1a1a1a; transition: border-color 0.2s; }
-  .card:hover { border-color: #333; }
-  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-  .card-title { font-size: 15px; font-weight: 600; color: #fff; }
-  .card-badge { font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-  .badge-high { background: rgba(45,140,240,0.12); color: #5aabff; }
-  .badge-medium { background: rgba(230,162,60,0.12); color: #f0c060; }
-  .badge-low { background: rgba(155,89,182,0.12); color: #c084fc; }
-  .card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .meta-item { font-size: 12px; }
-  .meta-label { color: #444; margin-bottom: 1px; }
-  .meta-value { color: #aaa; font-weight: 500; }
-  .card-desc { font-size: 13px; color: #777; line-height: 1.5; }
-  .card-source { font-size: 11px; color: #333; margin-top: 10px; font-style: italic; }
-  .pd-box { margin-top: 10px; padding: 10px; background: rgba(46,204,113,0.06); border-radius: 8px; border: 1px solid rgba(46,204,113,0.1); }
-  .pd-label { font-size: 10px; font-weight: 600; color: #4ade80; margin-bottom: 3px; letter-spacing: 0.5px; }
-  .pd-text { font-size: 12px; color: #6aaa8a; line-height: 1.5; }
-
-  /* ===== REFEEDING ===== */
-  .refeed-section { background: #0a0a0a; border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid #1a1a1a; }
-  .refeed-section.danger { border-color: #2a1515; }
-  .refeed-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 4px; }
-  .refeed-title.red { color: #ff6b6b; }
-  .refeed-subtitle { font-size: 12px; color: #555; margin-bottom: 18px; }
-  .warning-box { background: rgba(231,76,60,0.06); border: 1px solid rgba(231,76,60,0.15); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-  .warning-title { font-size: 14px; font-weight: 600; color: #ff6b6b; margin-bottom: 6px; }
-  .warning-text { font-size: 13px; color: #aa6666; line-height: 1.6; }
-  .phase { background: #050505; border-radius: 10px; padding: 16px; margin-bottom: 10px; border-left: 3px solid; }
-  .phase-1 { border-color: #e74c3c; }
-  .phase-2 { border-color: #e6a23c; }
-  .phase-3 { border-color: #2ecc71; }
-  .phase-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
-  .phase-timing { font-size: 12px; color: #e6a23c; margin-bottom: 6px; }
-  .phase-desc { font-size: 13px; color: #777; line-height: 1.6; }
-
+  .threshold-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; }
 
 </style>
 </head>
 <body>
 
-
+<div style="max-width:1200px;margin:0 auto;padding:16px 20px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="index.html" style="font-size:12px;color:#666;text-decoration:none;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;" onmouseenter="this.style.color='#eab308'" onmouseleave="this.style.color='#666'">&larr; BACK</a>
+    <span style="font-size:12px;color:#444;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;">System // 02 // AI</span>
+  </div>
+</div>
 <div class="container">
 
     <div class="chart-section">
       <div class="chart-header">
         <div>
-          <div class="chart-title">Biomarker Activity Over Fast Duration</div>
+          <div class="chart-title"><span style="color:#eab308;">Biomarker</span> Activity Over <span style="color:#eab308;">Fast</span> Duration</div>
           <div class="chart-subtitle">Estimated relative activity levels (0–120 hours) — hover for details, click legend to toggle</div>
         </div>
       </div>
@@ -112,7 +75,7 @@
       <div class="hour-control">
         <label>Your position:</label>
         <div style="display:flex;flex-direction:column;gap:0;">
-          <input type="range" class="hour-slider" id="hourSlider" min="0" max="120" value="0" oninput="updatePosition()">
+          <input type="range" class="hour-slider" id="hourSlider" min="0" max="120" value="72" oninput="updatePosition()">
           <div style="display:flex;justify-content:space-between;width:300px;padding:2px 2px 0;">
             <span style="font-size:9px;color:#444">0h</span>
             <span style="font-size:9px;color:#444">24h</span>
@@ -681,7 +644,13 @@ window.addEventListener('resize', () => { resizeCanvas(); drawChart(); });
 resizeCanvas();
 buildTierToggles();
 buildLegend();
-drawChart();
+updatePosition();
 </script>
+
+<footer style="padding:40px 0;text-align:center;border-top:1px solid #222;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#444;text-transform:uppercase;letter-spacing:0.3em;margin-bottom:8px;">Identity // halfmarble</div>
+    <p style="font-size:14px;color:#555;">Engineering for the unbridgeable difference.</p>
+</footer>
+
 </body>
 </html>
