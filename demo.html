@@ -659,8 +659,31 @@ function buildCards() {
 }
 
 
+// ==================== ANIMATION ====================
+let animInterval = null;
+function stopAnimation() {
+  if (animInterval) { clearInterval(animInterval); animInterval = null; }
+}
+function startAnimation() {
+  const slider = document.getElementById('hourSlider');
+  slider.value = 0;
+  updatePosition();
+  animInterval = setInterval(() => {
+    let val = parseInt(slider.value) + 1;
+    if (val > 120) val = 0;
+    slider.value = val;
+    updatePosition();
+  }, 167);
+}
+
+// Stop on any user interaction
+document.getElementById('hourSlider').addEventListener('input', stopAnimation);
+document.getElementById('hourSlider').addEventListener('mousedown', stopAnimation);
+document.getElementById('hourSlider').addEventListener('touchstart', stopAnimation);
+
 // ==================== KEYBOARD ====================
 document.addEventListener('keydown', (e) => {
+  stopAnimation();
   const slider = document.getElementById('hourSlider');
   if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
     e.preventDefault();
@@ -678,7 +701,7 @@ window.addEventListener('resize', () => { resizeCanvas(); drawChart(); });
 resizeCanvas();
 buildTierToggles();
 buildLegend();
-updatePosition();
+startAnimation();
 </script>
 
 <footer style="padding:40px 0;text-align:center;border-top:1px solid #222;">
