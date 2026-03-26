@@ -34,7 +34,7 @@
   .hour-control label { display: none; }
   .hour-slider-wrap { display: flex; flex-direction: column; gap: 0; width: 100%; }
   .hour-slider-ticks { padding: 0; }
-  .hour-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none;
+  .hour-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none; position: relative; z-index: 10;
     background: linear-gradient(to right, #333 0%, #333 20%, #16a34a 20%, #16a34a 60%, #d97706 60%, #d97706 83%, #dc2626 83%, #dc2626 100%); }
   .hour-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
   .hour-info { display: flex; align-items: baseline; gap: 10px; height: 28px; overflow: hidden; justify-content: center; }
@@ -655,6 +655,20 @@ function buildCards() {
   });
 }
 
+
+// ==================== KEYBOARD ====================
+document.addEventListener('keydown', (e) => {
+  const slider = document.getElementById('hourSlider');
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    slider.value = Math.min(120, parseInt(slider.value) + 1);
+    updatePosition();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    slider.value = Math.max(0, parseInt(slider.value) - 1);
+    updatePosition();
+  }
+});
 
 // ==================== INIT ====================
 window.addEventListener('resize', () => { resizeCanvas(); drawChart(); });
