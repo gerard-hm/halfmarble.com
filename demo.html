@@ -543,7 +543,7 @@ function updatePosition() {
 
   document.getElementById('hourValue').textContent = val + 'h';
 
-  let stage = 'Not fasting', stageColor = '#666', hourColor = '#4ade80';
+  let stage = 'Not fasting', stageColor = '#666', hourColor = '#666';
   if (val >= 100) { stage = 'DANGER ZONE — medical refeeding required'; stageColor = '#ef4444'; hourColor = '#ef4444'; }
   else if (val >= 72) { stage = 'Diminishing returns — benefits plateauing'; stageColor = '#f59e0b'; hourColor = '#f59e0b'; }
   else if (val >= 48) { stage = 'Deep autophagy — peak benefits zone'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
