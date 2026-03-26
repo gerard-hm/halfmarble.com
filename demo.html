@@ -19,6 +19,7 @@
   .chart-subtitle { font-size: 12px; color: #555; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
 
   .chart-canvas-wrap { position: relative; width: 100%; height: 395px; }
+  .chart-aligned { padding: 0 20px; }
   canvas#bioChart { width: 100%; height: 100%; }
 
   /* Chart Legend */
@@ -30,7 +31,7 @@
   .legend-line { width: 20px; height: 3px; border-radius: 2px; }
 
   /* Hour Input */
-  .hour-control { display: flex; flex-direction: column; gap: 8px; padding: 0 10px 0 20px; margin-bottom: 12px; }
+  .hour-control { display: flex; flex-direction: column; gap: 8px; padding: 0; margin-bottom: 12px; }
   .hour-control label { display: none; }
   .hour-slider-wrap { display: flex; flex-direction: column; gap: 0; width: 100%; }
   .hour-slider-ticks { padding: 0; }
@@ -42,7 +43,7 @@
   .hour-stage { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; }
 
   /* Tier toggles */
-  .tier-toggles { display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 8px; }
+  .tier-toggles { display: flex; flex-direction: column; gap: 6px; padding: 12px 0 8px; }
   .tier-btn { padding: 5px 14px; border-radius: 0; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid; user-select: none; font-family: 'JetBrains Mono', monospace; }
   .tier-btn.active { opacity: 1; }
   .tier-btn.inactive { opacity: 0.3; }
@@ -82,26 +83,28 @@
         <span class="hour-stage" id="hourStage">Not fasting</span>
       </div>
 
-      <div class="chart-canvas-wrap">
-        <canvas id="bioChart"></canvas>
-      </div>
+      <div class="chart-aligned">
+        <div class="chart-canvas-wrap">
+          <canvas id="bioChart"></canvas>
+        </div>
 
-      <div class="hour-control">
-        <label>Your position:</label>
-        <div class="hour-slider-wrap">
-          <input type="range" class="hour-slider" id="hourSlider" min="0" max="120" value="72" oninput="updatePosition()">
-          <div style="display:flex;justify-content:space-between;padding:2px 2px 0;">
-            <span style="font-size:9px;color:#444">0h</span>
-            <span style="font-size:9px;color:#444">24h</span>
-            <span style="font-size:9px;color:#444">48h</span>
-            <span style="font-size:9px;color:#444">72h</span>
-            <span style="font-size:9px;color:#444">96h</span>
-            <span style="font-size:9px;color:#444">120h</span>
+        <div class="hour-control">
+          <label>Your position:</label>
+          <div class="hour-slider-wrap">
+            <input type="range" class="hour-slider" id="hourSlider" min="0" max="120" value="72" oninput="updatePosition()">
+            <div style="display:flex;justify-content:space-between;padding:2px 2px 0;">
+              <span style="font-size:9px;color:#444">0h</span>
+              <span style="font-size:9px;color:#444">24h</span>
+              <span style="font-size:9px;color:#444">48h</span>
+              <span style="font-size:9px;color:#444">72h</span>
+              <span style="font-size:9px;color:#444">96h</span>
+              <span style="font-size:9px;color:#444">120h</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="tier-toggles" id="tierToggles"></div>
+        <div class="tier-toggles" id="tierToggles"></div>
+      </div>
       <div class="chart-legend" id="chartLegend"></div>
 
       <div class="threshold-legend" style="margin-top:14px;padding-top:12px;border-top:1px solid #1a1a1a;">
@@ -224,7 +227,7 @@ function resizeCanvas() {
   ctx.scale(dpr, dpr);
 }
 
-const padding = { top: 20, right: 10, bottom: 40, left: 20 };
+const padding = { top: 20, right: 0, bottom: 40, left: 0 };
 
 function getChartArea() {
   const w = canvas.clientWidth;
