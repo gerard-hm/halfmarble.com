@@ -20,7 +20,7 @@
 
   .chart-canvas-wrap { position: relative; width: 100%; height: 395px; }
   @media (orientation: landscape) and (max-height: 500px) { .chart-canvas-wrap { height: 320px; } }
-  .chart-aligned { padding: 0 20px; }
+  .chart-aligned { padding: 0 20px; overflow: hidden; }
   canvas#bioChart { width: 100%; height: 100%; }
 
   /* Chart Legend */
@@ -696,6 +696,7 @@ document.addEventListener('keydown', (e) => {
 
 // ==================== INIT ====================
 window.addEventListener('resize', () => { resizeCanvas(); drawChart(); });
+window.addEventListener('load', () => { resizeCanvas(); drawChart(); });
 resizeCanvas();
 buildTierToggles();
 buildLegend();
