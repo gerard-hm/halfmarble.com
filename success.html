@@ -5,30 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Initiated | Half Marble</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #0a0a0a; color: #d1d5db; font-family: 'JetBrains Mono', monospace; }
+        body { background-color: #0a0a0a; color: #d1d5db; font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
         .accent { color: #eab308; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-6 antialiased">
 
     <div class="max-w-xl w-full border border-zinc-800 p-10 bg-zinc-950">
-        <div class="text-xs text-zinc-600 uppercase tracking-[0.3em] mb-8">System Status: Acknowledged</div>
-        
-        <h1 class="text-3xl font-bold mb-6 uppercase tracking-tighter"><span class="text-purple-600">Sequence</span> <span class="text-yellow-500">Initiated</span></h1>
-        
+        <div class="mono text-xs text-zinc-600 uppercase tracking-widest mb-6">System Status: Acknowledged</div>
+
+        <h1 class="text-4xl font-extrabold mb-6 tracking-tighter"><span class="text-purple-600">Sequence</span> <span class="text-yellow-500">Initiated</span></h1>
+
         <p class="text-zinc-400 leading-relaxed mb-8">
             Your request for the Autophagy AI beta has been logged. We are currently finalizing the research-backed fasting engine.
         </p>
 
-        <div class="space-y-4 border-l border-zinc-800 pl-6 mb-10">
-            <p class="text-sm text-zinc-500"><span class="accent">>></span> Entry added to deployment queue.</p>
-            <p class="text-sm text-zinc-500"><span class="accent">>></span> Technical brief pending delivery to your inbox.</p>
-            <p class="text-sm text-zinc-500"><span class="accent">>></span> Science is the engine.</p>
+        <div class="space-y-3 mb-12">
+            <div class="flex items-center text-sm mono text-zinc-500">
+                <span class="text-yellow-500 mr-3">●</span> Entry added to deployment queue.
+            </div>
+            <div class="flex items-center text-sm mono text-zinc-500">
+                <span class="text-yellow-500 mr-3">●</span> Technical brief pending delivery to your inbox.
+            </div>
+            <div class="flex items-center text-sm mono text-zinc-500">
+                <span class="text-yellow-500 mr-3">●</span> Science is the engine.
+            </div>
         </div>
 
-        <a href="index.html" class="inline-block border border-zinc-700 px-6 py-3 text-xs font-bold hover:bg-zinc-800 hover:text-zinc-200 transition">
+        <a href="index.html" class="inline-block border border-zinc-700 px-8 py-4 text-center mono text-sm font-bold hover:bg-zinc-800 hover:text-zinc-200 transition duration-300">
             RETURN TO COMMAND CENTER
         </a>
     </div>
