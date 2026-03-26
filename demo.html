@@ -354,16 +354,16 @@ function drawChart() {
   }
 
   // Optimal window
-  labelWithBg('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 28, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.7)');
-  labelWithBg('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, midY - 12, '10px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.4)');
+  labelWithBg('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 12, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.7)');
+  labelWithBg('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, midY + 4, '10px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.4)');
 
   // Diminishing returns
-  labelWithBg('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, midY + 10, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.7)');
-  labelWithBg('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, midY + 24, '10px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.4)');
+  labelWithBg('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, midY + 26, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.7)');
+  labelWithBg('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, midY + 40, '10px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.4)');
 
   // Danger
-  labelWithBg('DANGER', (hourToX(100) + hourToX(120)) / 2, midY + 44, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.8)');
-  labelWithBg('Medical refeeding', (hourToX(100) + hourToX(120)) / 2 - 5, midY + 58, '10px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.5)');
+  labelWithBg('DANGER', (hourToX(100) + hourToX(120)) / 2, midY + 60, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.8)');
+  labelWithBg('Medical refeeding', (hourToX(100) + hourToX(120)) / 2 - 5, midY + 74, '10px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.5)');
 
   // ===== THRESHOLD LINES =====
   drawThresholdLine(24, '#16a34a', 0.5);   // Autophagy onset
