@@ -344,29 +344,26 @@ function drawChart() {
   const midY = a.y + a.h / 2;
   ctx.textAlign = 'center';
 
-  // Optimal window — centered in its zone
-  ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(74, 222, 128, 0.7)';
-  ctx.fillText('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 28);
-  ctx.font = '10px Inter, -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(74, 222, 128, 0.4)';
-  ctx.fillText('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, midY - 12);
+  function labelWithBg(text, x, y, font, color) {
+    ctx.font = font;
+    const tw = ctx.measureText(text).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(x - tw/2 - 4, y - 11, tw + 8, 16);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
 
-  // Diminishing returns — in its zone, stacked below optimal
-  ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.7)';
-  ctx.fillText('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, midY + 10);
-  ctx.font = '10px Inter, -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(245, 158, 11, 0.4)';
-  ctx.fillText('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, midY + 24);
+  // Optimal window
+  labelWithBg('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 28, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.7)');
+  labelWithBg('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, midY - 12, '10px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.4)');
 
-  // Danger — in its zone, stacked below diminishing
-  ctx.font = 'bold 11px Inter, -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
-  ctx.fillText('DANGER', (hourToX(100) + hourToX(120)) / 2, midY + 44);
-  ctx.font = '10px Inter, -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
-  ctx.fillText('Medical refeeding', (hourToX(100) + hourToX(120)) / 2 - 5, midY + 58);
+  // Diminishing returns
+  labelWithBg('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, midY + 10, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.7)');
+  labelWithBg('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, midY + 24, '10px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.4)');
+
+  // Danger
+  labelWithBg('DANGER', (hourToX(100) + hourToX(120)) / 2, midY + 44, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.8)');
+  labelWithBg('Medical refeeding', (hourToX(100) + hourToX(120)) / 2 - 5, midY + 58, '10px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.5)');
 
   // ===== THRESHOLD LINES =====
   drawThresholdLine(24, '#16a34a', 0.5);   // Autophagy onset
