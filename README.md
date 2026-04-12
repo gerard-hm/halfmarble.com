@@ -1,34 +1,27 @@
-# halfmarble // Web Command Center
+# Halfmarble: Open-Source Bio Platform
 
-> "When you're racing against your own biology, the **story** is just the exhaust; the **science is the engine** and my time is the fuel."
+**Halfmarble** is an open-source, strict "Glass Box" bioinformatics platform designed for the Parkinson's Disease (PD) community. 
 
-This repository hosts the static landing page and beta-entry portal for **halfmarble Engineering**. 
+As a neurodegenerative data architecture, Halfmarble is engineered to track deterministic Pharmacokinetic (PK) modeling against objective motor testing and continuous metabolic state. 
 
-## 🛠 Project Scope
+### The Core Architecture
+In an era of dangerous algorithmic hallucinations in healthcare, Halfmarble rejects the "black box." Every parameter, absorption curve, and metric traces directly to published, verifiable clinical science. 
 
-halfmarble is a technical response to the biological reality of Parkinson's Disease. This site serves as the central hub for two primary workstreams:
+The platform currently consists of functional web prototypes:
+*   **SteadyDoseTracker:** Deterministic Bateman absorption modeling for levodopa pharmacokinetics.
+*   **SteadyFastingTracker:** Metabolic window tracking aligned with neuro-compromised needs.
+*   **SteadyFuelTracker:** Engineered explicitly around Therapeutic Carbohydrate Restriction (TCR) protocols to track therapeutic nutritional ketosis. 
 
-1. **Steady Hand Tool (Hardware):** An open-source SMD soldering stabilizer designed to bridge the gap between a wandering hand and a perfect joint.
-2. **SteadyFastingTracker (Software):** A specialized fasting engine powered by an AI model trained on autophagy research for neuro-protective management.
+### Data Privacy & Glass Box Math
+Patient data is not a commodity. Our privacy framework utilizes explicit, verifiable mathematical models:
+*   `k ≥ 50` Anonymity
+*   `ε = 1.0` Differential Privacy
 
-## ⚙️ Technical Stack
+### The Mission & Pledges
+Halfmarble is not a startup; it is a patient-led R&D fight. The science is the engine—we just built the dashboard. 
 
-* **Architecture:** Static HTML/CSS
-* **Styling:** Tailwind CSS (via CDN for zero-build overhead)
-* **Typography:** Inter & JetBrains Mono
-* **Backend:** Formspree (Beta Inquiry Handling)
+To ensure the underlying science continues to advance, we legally pledge a flat percentage of our software net profits to the institutions driving the vanguard of research:
+*   **2.5%** to the Michael J. Fox Foundation (MJFF)
+*   **2.5%** to the Public Health Collaboration (PHC UK)
 
-## ⚓ The Mission
-
-This project is not a marketing exercise. It is a lifeline. I am building these tools because they are the only tools I have to help me and others manage our own **slice of PD hell.** We believe that while biology provides the constraints, it should never define the limits of human creativity.
-
-## 🔩 Deployment
-
-The site is designed for high-performance, low-cost static hosting (GitHub Pages / Vercel / Netlify). 
-
-1. Ensure `index.html` and `success.html` are in the root directory.
-2. Update the `Formspree` ID in `index.html` to initiate the beta queue.
-
----
-
-**Gerard Ziemski** *Founder, halfmarble Engineering* [halfmarble.com](https://halfmarble.com)
+*For live prototypes and full clinical documentation, visit [halfmarble.com](https://halfmarble.com).*
