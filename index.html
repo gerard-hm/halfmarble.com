@@ -53,6 +53,15 @@
             100% { transform: translate(0, 0) rotate(0); opacity: 1; }
         }
         .tremor { animation: tremor 6s ease-in-out infinite; }
+
+        /* Founders section: animations start paused, trigger on scroll
+           with a 2s delay so the user reads the text before the tremor hits */
+        #founders .tremor,
+        #founders .tremor-text,
+        #founders .fight-text { animation-play-state: paused; animation-delay: 2s; }
+        #founders.in-view .tremor,
+        #founders.in-view .tremor-text,
+        #founders.in-view .fight-text { animation-play-state: running; }
         @keyframes tremor-text {
             0%   { color: inherit; }
             4%   { color: #D12C3B; }
@@ -315,7 +324,7 @@
         </a>
     </section>
 
-    <section class="max-w-4xl mx-auto px-6 py-24 text-center border-t border-zinc-900">
+    <section id="founders" class="max-w-4xl mx-auto px-6 py-24 text-center border-t border-zinc-900">
         <div class="mono text-xs text-zinc-600 uppercase tracking-[0.3em] mb-12">
             The "we" in "we need this"
         </div>
@@ -494,6 +503,20 @@
     </style>
 
     <script>
+        // Trigger founders section animations when scrolled into view
+        const foundersSection = document.getElementById('founders');
+        if (foundersSection) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        foundersSection.classList.add('in-view');
+                        observer.unobserve(foundersSection); // fire once
+                    }
+                });
+            }, { threshold: 0.4 }); // trigger when 40% visible
+            observer.observe(foundersSection);
+        }
+
         function openBio(id) {
             document.getElementById(id).classList.add('active');
             document.body.style.overflow = 'hidden';
