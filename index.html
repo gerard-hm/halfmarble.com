@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>halfmarble | Science is the Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #0a0a0a; 
+            color: #d1d5db; 
+            font-family: 'Inter', sans-serif; 
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .accent { color: #eab308; } /* Industrial Yellow */
+        .card { background: #111111; border: 1px solid #222; transition: border 0.3s ease; }
+        .card:hover { border-color: #444; }
+        .quote-bg { background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%); }
+        .founder-photo {
+            filter: grayscale(100%);
+            border: 1px solid #333;
+            transition: filter 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .founder-photo:hover {
+            filter: grayscale(0%);
+            border-color: #eab308;
+            box-shadow: 0 0 24px rgba(234, 179, 8, 0.35);
+        }
+
+        /* PD rest tremor on the hero logo — episodic, subtle, honest.
+           ~2s of 4-6 Hz micro-displacement, then ~4s of stillness.
+           The logo trembles like its founder's hands. The tools
+           halfmarble builds are meant to make it stop. */
+        @keyframes tremor {
+            0%   { transform: translate(0, 0) rotate(0); opacity: 1; }
+            2%   { transform: translate(1.5px, -1px) rotate(0.6deg); opacity: 0.5; }
+            4%   { transform: translate(-2px, 0.8px) rotate(-0.5deg); opacity: 0.6; }
+            6%   { transform: translate(1px, 1.5px) rotate(0.8deg); opacity: 0.4; }
+            8%   { transform: translate(-1.5px, -0.6px) rotate(-0.7deg); opacity: 0.5; }
+            10%  { transform: translate(1.2px, -1.2px) rotate(0.5deg); opacity: 0.4; }
+            12%  { transform: translate(-0.8px, 1px) rotate(-0.8deg); opacity: 0.6; }
+            14%  { transform: translate(2px, 0.5px) rotate(0.6deg); opacity: 0.4; }
+            16%  { transform: translate(-1.2px, -1.5px) rotate(-0.5deg); opacity: 0.5; }
+            18%  { transform: translate(0.6px, 0.8px) rotate(0.3deg); opacity: 0.6; }
+            20%  { transform: translate(-1px, -0.5px) rotate(-0.3deg); opacity: 0.7; }
+            22%  { transform: translate(0.8px, 0.6px) rotate(0.4deg); opacity: 0.6; }
+            24%  { transform: translate(-0.6px, 1px) rotate(-0.4deg); opacity: 0.7; }
+            26%  { transform: translate(1.2px, -0.8px) rotate(0.6deg); opacity: 0.6; }
+            28%  { transform: translate(-1.5px, 0.4px) rotate(-0.3deg); opacity: 0.8; }
+            30%  { transform: translate(0.5px, -0.6px) rotate(0.2deg); opacity: 0.9; }
+            33%  { transform: translate(0, 0) rotate(0); opacity: 1; }
+            100% { transform: translate(0, 0) rotate(0); opacity: 1; }
+        }
+        .tremor { animation: tremor 6s ease-in-out infinite; }
+        @keyframes tremor-text {
+            0%   { color: inherit; }
+            4%   { color: #D12C3B; }
+            14%  { color: #D12C3B; }
+            28%  { color: inherit; }
+            33%  { color: inherit; }
+            100% { color: inherit; }
+        }
+        .tremor-text { animation: tremor-text 6s ease-in-out infinite; }
+        @keyframes fight-text {
+            0%   { color: inherit; }
+            20%  { color: inherit; }
+            26%  { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
+            33%  { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
+            40%  { color: inherit; text-shadow: none; }
+            100% { color: inherit; text-shadow: none; }
+        }
+        .fight-text { animation: fight-text 6s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+            .tremor, .tremor-text, .fight-text { animation: none !important; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <section class="min-h-screen flex flex-col justify-center items-center px-6 py-24 text-center quote-bg border-b border-zinc-900">
+        <div class="max-w-5xl">
+            <div class="flex flex-col items-center mb-12">
+                <img src="assets/logo.png" alt="halfmarble logo"
+                     class="w-20 h-20 mb-4 tremor"
+                     style="filter: brightness(0) invert(1); opacity: 0.9;">
+                <div class="mono text-xs text-zinc-500 uppercase tracking-[0.4em]">halfmarble</div>
+            </div>
+            <h1 class="text-3xl md:text-6xl font-extrabold leading-tight tracking-tighter text-white">
+                “When you are racing against your own biology:
+                <br> <span class="text-zinc-600 italic">story is just the exhaust</span>
+                <br> <span class="accent">the science is the engine</span>
+                <br> <span class="text-purple-600">and our time is the fuel</span>”
+            </h1>
+            <p class="mt-10 mono text-zinc-500 uppercase tracking-[0.3em] text-xs">Gerard Ziemski // halfmarble cofounder // bio platform architect</p>
+        </div>
+    </section>
+
+    <section class="py-32 px-6 bg-zinc-950 border-b border-zinc-900">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-2xl md:text-4xl font-bold text-white leading-snug">
+                "The only tools we have to manage our own <span class="text-red-800">slice of PD hell.</span>"
+            </h2>
+            <div class="mt-8 h-1 w-24 bg-red-900 mx-auto"></div>
+            <p class="mt-8 text-zinc-400 text-lg leading-relaxed max-w-2xl mx-auto">
+                I am not building for a market. I am building for a race. Whether it's hardware to stabilize a trembling hand or software to track the science behind cellular repair — these are the mechanics of survival.
+            </p>
+        </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 py-32">
+        <div class="grid md:grid-cols-2 gap-16 items-start">
+            
+            <div class="card p-10 rounded-none self-start">
+                <div>
+                    <div class="mono text-xs mb-6 text-zinc-600 uppercase tracking-widest">System // 01 // Hardware</div>
+                    <h3 class="text-4xl font-bold mb-6 text-white">SteadyHandTool</h3>
+                    <p class="text-zinc-400 mb-8 leading-relaxed">
+                        A high-stability SMD soldering aid designed to dampen tremors. Born from the need to keep tinkering when biology tries to stop it. Open-source because community is the only way forward.
+                    </p>
+                    <div class="space-y-3 mb-12">
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-zinc-500 mr-3">●</span> CERN-OHL-S-2.0 (OPEN SOURCE)
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-zinc-500 mr-3">●</span> HIGH-MASS VIBRATION DAMPENING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-zinc-500 mr-3">●</span> BUILT FOR PRECISION PCB WORK
+                        </div>
+                    </div>
+                </div>
+                <a href="https://www.crowdsupply.com/halfmarble/steady-hand-tool" class="block border border-zinc-700 px-8 py-4 text-center mono text-sm font-bold hover:bg-zinc-800 hover:text-zinc-200 transition duration-300 w-full">
+                    COMING SOON TO CROWD SUPPLY
+                </a>
+                <a href="gallery.html" class="block border border-zinc-700 px-8 py-3 text-center mono text-sm text-zinc-400 font-bold hover:bg-zinc-800 transition duration-300 mt-3 w-full">
+                    SEE THE HARDWARE
+                </a>
+            </div>
+
+            <div class="card p-10 rounded-none border-purple-900/20 flex flex-col justify-between bg-gradient-to-br from-zinc-900 to-black">
+                <div class="mono text-xs mb-6 text-zinc-600 uppercase tracking-widest">System // 02 // Software</div>
+
+                <div class="mb-10">
+                    <h3 class="text-4xl font-bold mb-6 text-purple-500">SteadyDoseTracker</h3>
+                    <p class="text-zinc-400 mb-8 leading-relaxed">
+                        A pharmacokinetic visualizer that models the blood concentration curves of the medication schedule your doctor prescribed. Half-life math shows how your levels rise and fall in real-time — not to tell you what to take, but to help you and your clinician see what is already happening. The Bridge: PK validates what you can feel (ON/OFF states), building trust for the autophagy states you can’t.
+                    </p>
+                    <div class="space-y-3 mb-8">
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> BATEMAN PHARMACOKINETIC MODEL
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> FASTING-AWARE ABSORPTION
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> REAL-WORLD EVIDENCE CAPTURE
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> GLASS BOX SOURCE TRACING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> MENTAL STATE &amp; MOOD TRACKING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> OBJECTIVE MOTOR TESTING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> FOCAL SYMPTOM LOGGING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> GLUCOSE / KETONE CORRELATION
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-purple-500 mr-3">●</span> CALENDAR → MOTOR DEMAND PREDICTION
+                        </div>
+                    </div>
+                    <a href="steady_dose_tracker_demo.html" class="block border border-purple-900/40 px-8 py-4 text-center mono text-sm text-purple-500 font-bold hover:bg-purple-500/10 transition duration-300">
+                        SEE THE ENGINE
+                    </a>
+                </div>
+
+                <div class="border-t border-zinc-800 pt-10">
+                    <h3 class="text-4xl font-bold mb-6 text-yellow-500">SteadyFastingTracker</h3>
+                    <p class="text-zinc-400 mb-8 leading-relaxed">
+                        A technical solution for a biological war. This isn’t a lifestyle app; it’s a specialized fasting engine grounded in the latest autophagy research. The science is the engine — we just built the dashboard.
+                    </p>
+                    <div class="space-y-3 mb-8">
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-yellow-500 mr-3">●</span> AI-DRIVEN STATE ESTIMATION
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-yellow-500 mr-3">●</span> NEURO-PROTECTIVE PROTOCOLS
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-yellow-500 mr-3">●</span> THERAPEUTIC CARBOHYDRATE RESTRICTION (TCR) PROTOCOLS
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-yellow-500 mr-3">●</span> GLASS BOX SOURCE TRACING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-yellow-500 mr-3">●</span> MENTAL STATE &amp; COGNITIVE CLARITY
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-yellow-500 mr-3">●</span> GKI &amp; METABOLIC TRACKING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-yellow-500 mr-3">●</span> SAFETY CIRCLE PROTOCOLS &mdash; HUMAN-IN-THE-LOOP ESCALATION
+                        </div>
+                    </div>
+                    <a href="steady_fasting_tracker_demo.html" class="block border border-yellow-900/40 px-8 py-4 text-center mono text-sm text-yellow-600 font-bold hover:bg-yellow-600/10 transition duration-300">
+                        SEE THE ENGINE
+                    </a>
+                </div>
+
+                <div class="border-t border-zinc-800 pt-10 mt-10">
+                    <h3 class="text-4xl font-bold mb-6 text-emerald-500">SteadyFuelTracker</h3>
+                    <p class="text-zinc-400 mb-8 leading-relaxed">
+                        A specialized metabolic intake engine built on the Therapeutic Carbohydrate Restriction (TCR) guidelines championed by the Public Health Collaboration UK. This is not a diet app. It is a precise macro-nutrient tracker designed to help patients induce the therapeutic nutritional ketosis required to fuel a neuro-compromised brain, while monitoring protein timing to prevent levodopa interference at the blood-brain barrier.
+                    </p>
+                    <div class="space-y-3 mb-8">
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-emerald-500 mr-3">●</span> TCR PROTOCOL ALIGNMENT (PHC UK)
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-emerald-500 mr-3">●</span> LEVODOPA / PROTEIN INTERFERENCE LOGGING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-emerald-500 mr-3">●</span> GLUCOSE &amp; KETONE (GKI) SYNCING
+                        </div>
+                        <div class="flex items-center text-sm mono text-zinc-500">
+                            <span class="text-emerald-500 mr-3">●</span> MACRO-TO-MOTOR STATE CORRELATION
+                        </div>
+                    </div>
+                    <div class="block border border-emerald-900/40 px-8 py-4 text-center mono text-sm text-emerald-600 font-bold mt-8">
+                        IN DEVELOPMENT
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section class="max-w-4xl mx-auto px-6 py-16">
+        <div class="border border-zinc-800 p-8 md:p-10" style="background: linear-gradient(135deg, #111111 0%, #0f0f0f 100%);">
+            <div class="mono text-xs text-zinc-600 uppercase tracking-[0.3em] mb-4">
+                Target <span class="text-yellow-600">//</span> June 2026 <span class="text-yellow-600">//</span> Clinical Deployment
+            </div>
+            <h3 class="text-xl md:text-2xl font-bold text-white mb-4"><a href="https://www.dcinetwork.org/patients2026#top" target="_blank" rel="noopener" class="transition duration-300" style="text-decoration:none;border-bottom:1px solid transparent;" onmouseover="this.style.borderColor='#eab308'" onmouseout="this.style.borderColor='transparent'">Patients 2026 Conference &rarr;</a></h3>
+            <p class="mono text-xs text-zinc-500 uppercase tracking-widest mb-6">Harvard Medical School / Beth Israel Deaconess Medical Center // Boston</p>
+            <p class="text-zinc-400 text-base leading-relaxed mb-8">
+                halfmarble is officially registered for the DCI Network's Patients 2026 Conference in Boston. We are bringing our "Glass Box" architecture to the clinical informatics community to demonstrate how patient-engineered PK visualizations can safely capture the <span class="text-yellow-500 italic">"Messy Middle"</span> of Real-World Evidence (RWE) that researchers need, with zero AI drift.
+            </p>
+
+            <div class="mono text-xs text-zinc-600 uppercase tracking-[0.2em] mb-4">What we are demonstrating</div>
+            <div class="space-y-2 mb-8">
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-purple-500 mr-3 flex-shrink-0">●</span>
+                    <span><strong class="text-zinc-300">SteadyDoseTracker</strong> &mdash; pharmacokinetic visualizer with Bateman modeling, continuous pump infusion support, BBB protein-competition modeling, and calendar-driven motor demand prediction</span>
+                </div>
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-yellow-500 mr-3 flex-shrink-0">●</span>
+                    <span><strong class="text-zinc-300">SteadyFastingTracker</strong> &mdash; autophagy and fasting engine with biomarker timelines, tiered safety protocols, and an on-device AI grounded in the Foundational 60 research corpus</span>
+                </div>
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-emerald-500 mr-3 flex-shrink-0">●</span>
+                    <span><strong class="text-zinc-300">SteadyFuelTracker</strong> <span class="mono text-xs text-emerald-700">[IN DEVELOPMENT]</span> &mdash; architecture review: clinical feedback on TCR protocol alignment for PD metabolic management</span>
+                </div>
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-yellow-600 mr-3 flex-shrink-0">●</span>
+                    <span><strong class="text-zinc-300">Glass Box Architecture</strong> &mdash; every parameter traces to a published source, every data field is documented, every "we will never" is legally codified. No black-box AI. No hallucinations. No drift.</span>
+                </div>
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-zinc-400 mr-3 flex-shrink-0">●</span>
+                    <span><strong class="text-zinc-300">SteadyHandTool</strong> &mdash; open-source hardware for tremor compensation in fine-motor work (coming soon to <a href="https://www.crowdsupply.com/halfmarble/steady-hand-tool" target="_blank" rel="noopener" class="text-zinc-300 underline decoration-zinc-600 hover:decoration-zinc-300 transition">Crowd Supply</a>)</span>
+                </div>
+            </div>
+
+            <div class="mono text-xs text-zinc-600 uppercase tracking-[0.2em] mb-4">What we are seeking</div>
+            <div class="space-y-2 mb-8">
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-zinc-500 mr-3 flex-shrink-0">→</span>
+                    <span>Research partners interested in PD real-world evidence at the intersection of PK modeling, fasting, and metabolic state</span>
+                </div>
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-zinc-500 mr-3 flex-shrink-0">→</span>
+                    <span>Clinical feedback on our PK model accuracy from movement disorder specialists and PD neurologists</span>
+                </div>
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-zinc-500 mr-3 flex-shrink-0">→</span>
+                    <span>IRB pathway guidance for our opt-in anonymized data sharing model (k-anonymity k&ge;50, differential privacy &epsilon;=1.0)</span>
+                </div>
+                <div class="flex items-baseline text-sm text-zinc-400">
+                    <span class="text-zinc-500 mr-3 flex-shrink-0">→</span>
+                    <span>Early-adopter clinicians willing to pilot the tools with their PD patients</span>
+                </div>
+            </div>
+
+            <p class="text-zinc-500 text-sm leading-relaxed italic">
+                halfmarble was not built by a health tech company. It was built by a patient and a nurse &mdash; because the tools we needed did not exist. We are coming to Patients 2026 to find out if the clinical community wants what we have built.
+            </p>
+        </div>
+    </section>
+
+    <section class="max-w-3xl mx-auto px-6 py-20 text-center border-t border-zinc-900">
+        <div class="mono text-xs text-zinc-600 uppercase tracking-[0.3em] mb-6">
+            Glass Box <span style="color:#D12C3B;">//</span> Data Transparency
+        </div>
+        <p class="text-zinc-400 text-base md:text-lg leading-relaxed mb-8 max-w-xl mx-auto">
+            Every field we capture. Every transformation we apply. Every <span style="color:#D12C3B;" class="italic">"we will never."</span> Documented, public, plain language.
+        </p>
+        <a href="glass-box/data.html" class="inline-block border px-8 py-4 mono text-sm font-bold transition duration-300" style="border-color:rgba(209,44,59,0.4);color:#D12C3B;" onmouseover="this.style.backgroundColor='rgba(209,44,59,0.1)'" onmouseout="this.style.backgroundColor='transparent'">
+            SEE EXACTLY WHAT GETS SHARED &rarr;
+        </a>
+    </section>
+
+    <section class="max-w-4xl mx-auto px-6 py-24 text-center border-t border-zinc-900">
+        <div class="mono text-xs text-zinc-600 uppercase tracking-[0.3em] mb-12">
+            The "we" in "we need this"
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-center items-center md:items-start gap-8 md:gap-12 mb-10" style="max-width:600px;margin-left:auto;margin-right:auto;">
+            <div class="text-center flex-1">
+                <div class="tremor" style="display:flex;justify-content:center;">
+                <img src="assets/gerard.jpg" alt="Gerard Ziemski"
+                     onclick="openBio('bio-gerard')"
+                     class="founder-photo w-32 h-32 rounded-full object-cover mb-4 cursor-pointer">
+                </div>
+                <div class="text-white text-sm font-bold">Gerard Ziemski</div>
+                <div class="mono text-xs text-yellow-600 uppercase tracking-widest mt-1 md:whitespace-nowrap">Cofounder // Bio Platform Architect</div>
+            </div>
+            <div class="text-center flex-1">
+                <div style="display:flex;justify-content:center;">
+                <img src="assets/anya.jpg" alt="Anya Ziemski"
+                     onclick="openBio('bio-anya')"
+                     class="founder-photo w-32 h-32 rounded-full object-cover mb-4 cursor-pointer">
+                </div>
+                <div class="text-white text-sm font-bold">Anya Ziemski</div>
+                <div class="mono text-xs text-yellow-600 uppercase tracking-widest mt-1 md:whitespace-nowrap">Cofounder // Patient Care Architect</div>
+            </div>
+        </div>
+
+        <p class="text-zinc-500 text-base leading-relaxed max-w-xl mx-auto italic">
+            "My wife and I are building this because I have <span class="tremor-text">Parkinson's Disease</span>.
+            Halfmarble is not a startup. It's a <span class="fight-text">fight</span>."
+        </p>
+
+        <p class="mono text-xs text-zinc-600 uppercase tracking-widest mt-8">
+            A nurse and a programmer. We built this. Just us.
+        </p>
+    </section>
+
+    <section class="max-w-3xl mx-auto px-6 py-20 text-center border-t border-zinc-900">
+        <div class="mono text-xs text-zinc-600 uppercase tracking-[0.3em] mb-6">
+            Giving Back <span class="text-yellow-600">//</span> 5% of Net Profits
+        </div>
+        <p class="text-zinc-400 text-base md:text-lg leading-relaxed mb-8 max-w-2xl mx-auto">
+            Halfmarble donates <span class="text-yellow-500 font-bold">5% of net profits</span> to the organizations whose research our tools stand on. Not charity in the abstract &mdash; reinvestment in the intellectual commons we depend on.
+        </p>
+        <div class="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-6">
+            <a href="https://www.michaeljfox.org" target="_blank" rel="noopener" class="block border border-zinc-800 p-6 text-left hover:border-yellow-900 transition duration-300">
+                <div class="mono text-xs text-yellow-600 uppercase tracking-widest mb-2">2.5%</div>
+                <div class="text-white text-lg font-bold mb-2">Michael J. Fox Foundation</div>
+                <div class="text-zinc-500 text-sm leading-relaxed">The largest non-governmental funder of Parkinson's research in the world. They fund the science halfmarble learns from. Additionally, 10% of the net profit from selling the open-source SteadyHandTool goes directly to support <strong class="text-zinc-400">Team Fox</strong>, the grassroots fundraising program of The Michael J. Fox Foundation for Parkinson's Research.</div>
+            </a>
+            <a href="https://phcuk.org" target="_blank" rel="noopener" class="block border border-zinc-800 p-6 text-left hover:border-yellow-900 transition duration-300">
+                <div class="mono text-xs text-yellow-600 uppercase tracking-widest mb-2">2.5%</div>
+                <div class="text-white text-lg font-bold mb-2">Public Health Collaboration UK</div>
+                <div class="text-zinc-500 text-sm leading-relaxed">The low-carb, real-food metabolic health community that informed halfmarble's approach to fasting, TCR, and meal timing.</div>
+            </a>
+        </div>
+        <p class="mono text-xs text-zinc-600 uppercase tracking-widest mt-8">
+            Annual donations published. Legally codified. Non-negotiable.
+        </p>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 pb-32">
+        <div class="card p-10 rounded-none">
+            <div class="mono text-xs mb-4 text-zinc-500 uppercase tracking-widest text-center">Join the fight</div>
+            <form action="https://formspree.io/f/mlgoreag" method="POST" class="flex flex-col sm:flex-row gap-3">
+                <input type="hidden" name="_next" value="https://halfmarble.com/success.html">
+                <input type="email" name="email" placeholder="your@email.com" required
+                    class="flex-1 bg-black border border-zinc-700 px-4 py-4 mono text-sm text-white placeholder-zinc-600 focus:border-zinc-400 focus:outline-none transition">
+                <button type="submit" class="bg-zinc-700 text-zinc-200 px-8 py-4 mono text-sm font-bold hover:bg-zinc-600 hover:text-white transition duration-300 whitespace-nowrap">
+                    REQUEST BETA ACCESS
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 pb-16">
+        <div class="mono text-xs text-zinc-600 uppercase tracking-widest mb-4 text-center">Open Source</div>
+        <div class="flex flex-wrap gap-x-8 gap-y-2 justify-center">
+            <a href="https://github.com/halfmarble/upMonitor" class="mono text-xs text-zinc-600 transition" style="text-decoration:none;border-bottom:1px solid transparent;" onmouseover="this.style.borderColor='#eab308'" onmouseout="this.style.borderColor='transparent'">upmonitor (MIT)</a>
+            <a href="https://github.com/halfmarble/hm-panelizer" class="mono text-xs text-zinc-600 transition" style="text-decoration:none;border-bottom:1px solid transparent;" onmouseover="this.style.borderColor='#eab308'" onmouseout="this.style.borderColor='transparent'">hm_panelizer (MIT)</a>
+            <a href="https://github.com/gerard-hm/steady-hand-tool" class="mono text-xs text-zinc-600 transition" style="text-decoration:none;border-bottom:1px solid transparent;" onmouseover="this.style.borderColor='#eab308'" onmouseout="this.style.borderColor='transparent'">SteadyHandTool (CERN-OHL-S-2.0)</a>
+        </div>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 pb-16">
+        <div class="mono text-xs text-zinc-600 uppercase tracking-widest mb-4 text-center">Transparency</div>
+        <div class="flex flex-wrap gap-x-8 gap-y-2 justify-center">
+            <a href="glass-box/data.html" class="mono text-xs text-zinc-600 transition" style="text-decoration:none;border-bottom:1px solid transparent;" onmouseover="this.style.borderColor='#eab308'" onmouseout="this.style.borderColor='transparent'">Glass Box: Your Data, Transparent</a>
+        </div>
+    </section>
+
+    <footer class="py-20 text-center border-t border-zinc-900">
+        <div class="mono text-xs text-zinc-600 uppercase tracking-widest mb-4">Identity // halfmarble</div>
+        <p class="text-zinc-500 text-sm">Engineering for the unbridgeable difference.</p>
+        <a href="mailto:info@halfmarble.com" class="mt-6 inline-block text-zinc-500 font-bold" style="text-decoration:none;border-bottom:1px solid #444;" onmouseover="this.style.borderColor='#d1d5db'" onmouseout="this.style.borderColor='#444'">info@halfmarble.com</a>
+    </footer>
+
+    <!-- ============ BIO MODALS ============ -->
+    <div id="bio-gerard" class="bio-modal" onclick="if(event.target===this)closeBio('bio-gerard')">
+        <div class="bio-modal-card">
+            <button class="bio-close" onclick="closeBio('bio-gerard')" aria-label="Close">&times;</button>
+            <div class="flex flex-col sm:flex-row gap-6 items-start mb-6">
+                <img src="assets/gerard.jpg" alt="Gerard Ziemski"
+                     class="w-24 h-24 rounded-full object-cover flex-shrink-0"
+                     style="filter: grayscale(100%); border: 1px solid #333;">
+                <div>
+                    <h3 class="text-white text-xl font-bold">Gerard Ziemski</h3>
+                    <div class="mono text-xs text-yellow-600 uppercase tracking-widest mt-1 md:whitespace-nowrap">Cofounder // Bio Platform Architect</div>
+                </div>
+            </div>
+            <div class="text-zinc-400 text-sm leading-relaxed space-y-4">
+                <p>Honors bachelor's degree in software engineering from Western University in 1998, plus two years toward an M.Sc. &mdash; dropped out to join Apple. Twenty-five years writing software. New Media Lab. Apple. Sun Microsystems. Oracle. Two patents along the way. Early open source contributor to gl4java and jogl &mdash; Java bindings for OpenGL &mdash; back when Java on the desktop still felt like the future.</p>
+                <p>Diagnosed with Parkinson's Disease over 10 years ago. Halfmarble is the engine built out of necessity to fight it.</p>
+                <p>Born in Poland. Educated in Canada. Cut my teeth in Silicon Valley. Now building halfmarble from Charlottesville, Virginia.</p>
+                <p class="text-zinc-500 italic">Off the clock: hiking, kayaking, books and games, tinkering with microcontrollers, and love for the company of dogs.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="bio-anya" class="bio-modal" onclick="if(event.target===this)closeBio('bio-anya')">
+        <div class="bio-modal-card">
+            <button class="bio-close" onclick="closeBio('bio-anya')" aria-label="Close">&times;</button>
+            <div class="flex flex-col sm:flex-row gap-6 items-start mb-6">
+                <img src="assets/anya.jpg" alt="Anya Ziemski"
+                     class="w-24 h-24 rounded-full object-cover flex-shrink-0"
+                     style="filter: grayscale(100%); border: 1px solid #333;">
+                <div>
+                    <h3 class="text-white text-xl font-bold">Anya Ziemski</h3>
+                    <div class="mono text-xs text-yellow-600 uppercase tracking-widest mt-1 md:whitespace-nowrap">Cofounder // Patient Care Architect</div>
+                </div>
+            </div>
+            <div class="text-zinc-400 text-sm leading-relaxed space-y-4">
+                <p>Nursing education and training in the United States. Fourteen years as a nurse. Most of them caring for geriatric patients &mdash; the population hit hardest by chronic disease, medication complexity, and the day-to-day reality of living with conditions that don't get better. Known to my employer and co-workers as a fierce patient advocate.</p>
+                <p>Born and raised in Ukraine. Volunteer as an English-to-Russian interpreter for immigration cases. Now building halfmarble from Charlottesville, Virginia.</p>
+                <p class="text-zinc-500 italic">Off the clock: cooking healthy meals for my family, hiking, and kayaking.</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .bio-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+        }
+        .bio-modal.active { display: flex; }
+        .bio-modal-card {
+            background: #111111;
+            border: 1px solid #333;
+            max-width: 560px;
+            width: 100%;
+            padding: 32px 28px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .bio-close {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 28px;
+            cursor: pointer;
+            padding: 4px 8px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        .bio-close:hover { color: #eab308; }
+    </style>
+
+    <script>
+        function openBio(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeBio(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.bio-modal.active').forEach(function(m) {
+                    m.classList.remove('active');
+                });
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+
+</body>
+</html>
+

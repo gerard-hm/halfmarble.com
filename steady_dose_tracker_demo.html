@@ -1,0 +1,2218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>halfmarble | SteadyDoseTracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  .chart-section { background: #111111; border: 1px solid #222; border-radius: 0; padding: 20px 0; margin-bottom: 28px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; margin-bottom: 16px; }
+  .chart-title { font-size: 18px; font-weight: 700; color: #fff; }
+  .chart-subtitle { font-size: 12px; color: #555; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+  .chart-canvas-wrap { position: relative; width: 100%; height: 395px; }
+  @media (orientation: landscape) and (max-height: 500px) { .chart-canvas-wrap { height: 320px; } }
+  .chart-aligned { padding: 0 20px; overflow: hidden; }
+  canvas { width: 100%; height: 100%; display: block; }
+
+  /* Controls */
+  .controls { padding: 0 20px; }
+  .control-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .dose-btn { padding: 8px 20px; border: 1px solid #555; background: rgba(255,255,255,0.05); color: #d1d5db; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .dose-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .dose-btn.food { border-color: #854d0e; color: #fbbf24; background: rgba(133,77,14,0.1); }
+  .dose-btn.food:hover { background: rgba(133,77,14,0.25); }
+  .dose-btn.food.active { background: rgba(133,77,14,0.35); border-color: #fbbf24; }
+  .dose-btn.reset { border-color: #333; color: #666; background: transparent; }
+  .dose-btn.reset:hover { background: rgba(255,255,255,0.05); color: #999; }
+
+  /* Dose log */
+  .dose-log { padding: 12px 20px 0; }
+  .dose-entry { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; padding: 4px 6px; cursor: pointer; transition: all 0.2s; border-left: 2px solid transparent; }
+  .dose-entry:hover { color: #fff; border-left-color: #fff; background: rgba(255,255,255,0.05); }
+  .dose-entry.editing { color: #fff; border-left-color: #fff; background: rgba(255,255,255,0.05); }
+  .dose-entry .delete-btn { margin-left: auto; font-size: 10px; color: transparent; cursor: pointer; padding: 3px 8px; border: 1px solid transparent; transition: all 0.2s; }
+  .dose-entry:hover .delete-btn { color: #555; border-color: #333; }
+  .dose-entry .delete-btn:hover { color: #dc2626; border-color: #dc2626; background: rgba(220,38,38,0.1); }
+  .dose-dot { width: 6px; height: 6px; border-radius: 50%; transition: background 0.2s; }
+
+  /* Stats bar */
+  .stats-bar { display: flex; flex-wrap: wrap; gap: 16px; padding: 14px 20px; border-top: 1px solid #1a1a1a; margin-top: 14px; }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-label { font-size: 10px; color: #555; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat-value { font-size: 16px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+  /* Legend */
+  .threshold-legend { display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 0; }
+  .threshold-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; }
+
+  /* Profile selector */
+  .profile-select { background: #0a0a0a; border: 1px solid #333; color: #d1d5db; padding: 8px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; cursor: pointer; outline: none; }
+  .profile-select:focus { border-color: #888; }
+
+  /* Vertical separator between control-row groups */
+  .ctrl-divider { display: inline-block; width: 1px; height: 24px; background: #2a2a2a; align-self: center; margin: 0 4px; }
+
+  /* VYALEV background-infusion toggle */
+  .vyalev-toggle { border-color: #5b2d8a !important; color: #a855f7 !important; background: rgba(168,85,247,0.06) !important; }
+  .vyalev-toggle:hover { background: rgba(168,85,247,0.15) !important; }
+  .vyalev-toggle.active { border-color: #a855f7 !important; background: rgba(168,85,247,0.25) !important; color: #fff !important; }
+
+  /* VYALEV pump EXTRA DOSE button (manual SC bolus — purple to match VYALEV) */
+  .vyalev-extra { border-color: #5b2d8a !important; color: #a855f7 !important; background: rgba(168,85,247,0.06) !important; }
+  .vyalev-extra:hover { background: rgba(168,85,247,0.20) !important; color: #fff !important; }
+  .vyalev-extra.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+  /* Collapsible sections */
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::before { content: '▶ '; color: #f97316; font-size: 12px; margin-right: 6px; }
+  details[open] > summary::before { content: '▼ '; }
+  #vyalevInfo > summary::before { color: #a855f7; }
+  #vyalevInfo[open] > summary::before { color: #a855f7; }
+
+  /* Calendar → Demand demo */
+  .cal-event { display: flex; align-items: center; gap: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 6px; color: #888; }
+  .cal-event:hover { background: rgba(255,255,255,0.03); }
+  .cal-event .cal-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cal-event .cal-remove { margin-left: auto; font-size: 10px; color: transparent; cursor: pointer; padding: 2px 6px; border: 1px solid transparent; transition: all 0.2s; }
+  .cal-event:hover .cal-remove { color: #555; border-color: #333; }
+  .cal-event .cal-remove:hover { color: #dc2626; border-color: #dc2626; }
+
+  /* Pump rate selector (LOW / BASE / HIGH) — radio-style, only one active */
+  .vyalev-rate { border-color: #5b2d8a !important; color: #a855f7 !important; background: rgba(168,85,247,0.06) !important; padding: 4px 12px !important; font-size: 10px !important; }
+  .vyalev-rate:hover { background: rgba(168,85,247,0.15) !important; }
+  .vyalev-rate.active { border-color: #a855f7 !important; background: rgba(168,85,247,0.25) !important; color: #fff !important; }
+  .vyalev-rate.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+  /* Eating windows */
+  .meal-row { display: flex; align-items: center; gap: 8px; font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 3px 0; }
+  .meal-toggle { width: 14px; height: 14px; border: 1px solid #555; background: transparent; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; color: transparent; font-size: 10px; }
+  .meal-toggle.active { border-color: #f97316; background: rgba(249,115,22,0.15); color: #f97316; }
+  .meal-protein { height: 16px; padding: 0 6px; border: 1px solid #444; background: transparent; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; color: #555; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; }
+  .meal-protein.active { border-color: #f97316; background: rgba(249,115,22,0.15); color: #f97316; }
+  .meal-time { background: #0a0a0a; border: 1px solid #333; color: #d1d5db; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; width: 85px; text-align: center; }
+  .meal-time::-webkit-calendar-picker-indicator { display: none; }
+  .meal-time::-webkit-inner-spin-button, .meal-time::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .meal-dur { background: #0a0a0a; border: 1px solid #333; color: #d1d5db; padding: 4px 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; width: 50px; text-align: center; cursor: pointer; }
+
+  /* Slider */
+  .pk-slider { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; background: #222; outline: none; }
+  .pk-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; cursor: pointer; }
+  .slider-row { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+  .slider-label { font-size: 11px; color: #555; font-family: 'JetBrains Mono', monospace; min-width: 90px; }
+  .slider-value { font-size: 12px; color: #d1d5db; font-family: 'JetBrains Mono', monospace; min-width: 200px; width: 200px; text-align: right; white-space: nowrap; }
+
+  /* Activity demand bar */
+  .demand-section { padding: 0 20px; margin-top: 8px; }
+  .demand-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .demand-canvas-wrap { position: relative; width: 100%; height: 48px; cursor: pointer; }
+  .demand-canvas-wrap canvas { width: 100%; height: 100%; display: block; }
+  .demand-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+  .demand-preset-btn { padding: 3px 10px; border: 1px solid #333; background: transparent; color: #555; font-family: 'JetBrains Mono', monospace; font-size: 10px; cursor: pointer; transition: all 0.2s; }
+  .demand-preset-btn:hover { border-color: #f97316; color: #f97316; }
+  .demand-preset-btn.active { border-color: #f97316; color: #f97316; background: rgba(249,115,22,0.1); }
+  .optimize-btn { padding: 8px 20px; border: 1px solid #16a34a; background: rgba(22,163,74,0.1); color: #4ade80; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .optimize-btn:hover { background: rgba(22,163,74,0.25); }
+  .optimize-btn:active { background: rgba(22,163,74,0.4); }
+</style>
+</head>
+<body>
+
+<div style="max-width:1200px;margin:0 auto;padding:16px 20px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="index.html" style="font-size:12px;color:#666;text-decoration:none;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;border-bottom:1px solid transparent;" onmouseenter="this.style.borderColor='#a855f7'" onmouseleave="this.style.borderColor='transparent'">&larr; BACK</a>
+    <a href="index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="assets/logo.png" alt="halfmarble" style="width:22px;height:22px;filter:brightness(0) invert(1);opacity:0.7;">
+      <span style="font-size:11px;color:#666;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;">halfmarble</span>
+    </a>
+    <span style="font-size:12px;color:#444;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;">02 // PK</span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="chart-section">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title"><span style="color:#a855f7;">SteadyDoseTracker</span> — Pharmacokinetic Visualizer</div>
+        <div class="chart-subtitle">Bateman model: C(t) = A(e<sup>-ke&middot;t</sup> - e<sup>-ka&middot;t</sup>) &mdash; click chart to set NOW, then add doses</div>
+        <div class="chart-subtitle" style="margin-top:2px;">Y-axis: 100% = peak concentration of one full dose taken fasting &middot; therapeutic min ~25%, dyskinesia ~80%</div>
+        <div style="margin-top:8px;padding:6px 10px;border:1px solid #333;font-size:10px;color:#666;font-family:'JetBrains Mono',monospace;line-height:1.5;">THIS TOOL VISUALIZES — IT DOES NOT PRESCRIBE. It mathematically models the decay of the medication schedule your doctor already prescribed. It does not account for individual physiology, drug interactions, or clinical context. No output is medical advice. Always consult your physician before making any changes to your medication schedule.</div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:baseline;gap:10px;padding:0 20px;margin-bottom:8px;">
+      <span class="mono" style="font-size:18px;font-weight:700;color:#fff;" id="nowTimeDisplay">2:00 PM</span>
+      <span class="mono" style="font-size:11px;color:#555;">NOW — drag on chart to move</span>
+    </div>
+
+    <div class="chart-aligned">
+      <div class="chart-canvas-wrap">
+        <canvas id="pkChart"></canvas>
+      </div>
+
+      <div class="demand-section">
+        <div class="demand-header">
+          <span class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.1em;">Activity Demand — click/drag to paint</span>
+          <div class="demand-presets">
+            <button class="demand-preset-btn active" onclick="setDemandPreset('pd_typical')">PD TYPICAL</button>
+            <button class="demand-preset-btn" onclick="setDemandPreset('flat')">FLAT</button>
+            <button class="demand-preset-btn" onclick="setDemandPreset('morning')">MORNING ACTIVE</button>
+            <button class="demand-preset-btn" onclick="setDemandPreset('midday')">MIDDAY HIKE</button>
+            <button class="demand-preset-btn" onclick="setDemandPreset('evening')">EVENING WALK</button>
+          </div>
+        </div>
+        <div class="demand-canvas-wrap">
+          <canvas id="demandBar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <details open style="margin:12px 20px 0; border:1px solid #222; background:#0f0f0f;">
+      <summary style="padding:12px 14px;">
+        <span class="mono" style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:0.1em;">Calendar → Demand (demo)</span>
+      </summary>
+      <div style="padding:0 14px 14px;">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button class="dose-btn" onclick="event.stopPropagation();loadSampleDay()" style="padding:3px 10px;font-size:10px;border-color:#f97316;color:#f97316;">SAMPLE DAY</button>
+        <button class="dose-btn reset" onclick="event.stopPropagation();clearCalendarEvents()" style="padding:3px 10px;font-size:10px;">CLEAR</button>
+      </div>
+      <div style="font-size:11px;color:#555;margin-bottom:10px;line-height:1.5;">In the real app, this reads your phone's calendar automatically. Here, add events to see how your day's activities shape the demand curve above.</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+        <input type="time" id="calEventTime" value="09:00" class="meal-time" style="width:85px;">
+        <select id="calEventType" class="profile-select" style="width:auto;font-size:11px;padding:4px 8px;">
+          <option value="physical_therapy">Physical Therapy</option>
+          <option value="gym">Gym / Exercise</option>
+          <option value="walk">Walk</option>
+          <option value="errands">Grocery / Errands</option>
+          <option value="social">Social / Dinner</option>
+          <option value="work">Work / Meeting</option>
+          <option value="meal">Meal (non-exercise)</option>
+          <option value="rest">Rest / Nap</option>
+        </select>
+        <select id="calEventDur" class="profile-select" style="width:auto;font-size:11px;padding:4px 8px;">
+          <option value="30">30 min</option>
+          <option value="60" selected>1 hr</option>
+          <option value="120">2 hr</option>
+          <option value="180">3 hr</option>
+        </select>
+        <button class="dose-btn" onclick="addCalendarEvent()" style="padding:4px 14px;font-size:10px;">+ ADD EVENT</button>
+      </div>
+      <div id="calEventList"></div>
+
+      <div style="border-top:1px solid #222;margin-top:14px;padding-top:12px;">
+        <span class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.1em;">Eating Windows — meals marked PROTEIN reduce levodopa absorption</span>
+        <div style="margin-top:6px;">
+          <div class="meal-row">
+            <button class="meal-toggle" id="mealToggle0" onclick="toggleMealWindow(0)">&#10003;</button>
+            <span style="color:#555;">Meal 1</span>
+            <input type="time" class="meal-time" id="mealStart0" value="11:00" onchange="updateMealWindows()">
+            <select class="meal-dur" id="mealDur0" onchange="updateMealWindows()">
+              <option value="30" selected>30m</option>
+              <option value="60">1h</option>
+              <option value="90">1.5h</option>
+              <option value="120">2h</option>
+            </select>
+            <button class="meal-protein" id="mealProtein0" onclick="toggleMealProtein(0)" title="High-protein meal — enough protein to compete with levodopa for LNAA transport. Off does not mean zero protein, just below the clinically significant threshold (~10–15 g).">PROTEIN</button>
+            <span style="color:#444;font-size:10px;" id="mealRange0">11:00 AM – 11:30 AM</span>
+          </div>
+          <div class="meal-row">
+            <button class="meal-toggle active" id="mealToggle1" onclick="toggleMealWindow(1)">&#10003;</button>
+            <span style="color:#555;">Meal 2</span>
+            <input type="time" class="meal-time" id="mealStart1" value="17:00" onchange="updateMealWindows()">
+            <select class="meal-dur" id="mealDur1" onchange="updateMealWindows()">
+              <option value="30" selected>30m</option>
+              <option value="60">1h</option>
+              <option value="90">1.5h</option>
+              <option value="120">2h</option>
+            </select>
+            <button class="meal-protein active" id="mealProtein1" onclick="toggleMealProtein(1)" title="High-protein meal — enough protein to compete with levodopa for LNAA transport. Off does not mean zero protein, just below the clinically significant threshold (~10–15 g).">PROTEIN</button>
+            <span style="color:#444;font-size:10px;" id="mealRange1">5:00 PM – 5:30 PM</span>
+          </div>
+          <div class="meal-row">
+            <button class="meal-toggle active" id="mealToggle2" onclick="toggleMealWindow(2)">&#10003;</button>
+            <span style="color:#555;">Meal 3</span>
+            <input type="time" class="meal-time" id="mealStart2" value="20:00" onchange="updateMealWindows()">
+            <select class="meal-dur" id="mealDur2" onchange="updateMealWindows()">
+              <option value="30" selected>30m</option>
+              <option value="60">1h</option>
+              <option value="90">1.5h</option>
+              <option value="120">2h</option>
+            </select>
+            <button class="meal-protein active" id="mealProtein2" onclick="toggleMealProtein(2)" title="High-protein meal — enough protein to compete with levodopa for LNAA transport. Off does not mean zero protein, just below the clinically significant threshold (~10–15 g).">PROTEIN</button>
+            <span style="color:#444;font-size:10px;" id="mealRange2">8:00 PM – 8:30 PM</span>
+          </div>
+        </div>
+      </div>
+      </div>
+    </details>
+
+    <div class="controls" style="margin-top:12px;">
+      <div class="control-row">
+        <button id="vyalevToggle" class="dose-btn vyalev-toggle" onclick="toggleVyalev()" title="24-hour subcutaneous infusion of foslevodopa/foscarbidopa via a wearable pump. Runs in the background on top of the selected oral medication.">+ PUMP INFUSION</button>
+        <button class="dose-btn vyalev-rate disabled" onclick="setVyalevRate('low')">LOW</button>
+        <button class="dose-btn vyalev-rate active disabled" onclick="setVyalevRate('base')">BASE</button>
+        <button class="dose-btn vyalev-rate disabled" onclick="setVyalevRate('high')">HIGH</button>
+        <button class="dose-btn vyalev-extra disabled" onclick="addVyalevExtraDose(0.25)" title="Manual EXTRA DOSE on the infusion pump — adds a subcutaneous bolus at the NOW marker. The real pump limits this to once every 2 hours; this simulation does not enforce that limit so you can explore what-if scenarios. Available only when PUMP INFUSION is active.">+ EXTRA DOSE</button>
+        <span class="ctrl-divider"></span>
+        <select id="profileSelect" class="profile-select" onchange="changeProfile()">
+          <option value="sinemet_ir">Levodopa IR 100 mg (t½ 90 min)</option>
+          <option value="sinemet_cr">Levodopa CR 200 mg (t½ 90 min, F 71%)</option>
+          <option value="rytary">Levodopa ER, dual-phase</option>
+          <option value="generic">Generic (adjustable)</option>
+        </select>
+        <button class="dose-btn" onclick="addDose(1.0)">+ FULL DOSE</button>
+        <button class="dose-btn" onclick="addDose(0.5)">+ HALF DOSE</button>
+      </div>
+
+      <details id="vyalevInfo" open style="display:none; margin-top:10px; margin-bottom:14px; border-left:2px solid #a855f7; background:rgba(168,85,247,0.06); font-size:11px; color:#999; line-height:1.55;">
+        <summary style="padding:12px 14px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#a855f7;text-transform:uppercase;letter-spacing:0.1em;">24-hour SC infusion — foslevodopa/foscarbidopa pump</span>
+        </summary>
+        <div style="padding:0 14px 14px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#d1d5db;margin-bottom:8px;">
+          LOW <span style="color:#a855f7;">0.20</span> mL/hr  &middot;  BASE <span style="color:#a855f7;">0.25</span>  &middot;  HIGH <span style="color:#a855f7;">0.30</span>  &middot;  EXTRA DOSE <span style="color:#a855f7;">0.10</span> mL  &middot;  PUMP CYCLE <span style="color:#a855f7;">~20 min</span>
+        </div>
+        Foslevodopa/foscarbidopa delivered subcutaneously via a wearable infusion pump in <strong style="color:#d1d5db;">discrete ~20-minute pulses</strong> — each cycle delivers a tiny SC bolus, summing to a near-flat baseline with visible saw-tooth oscillation at the 90-min systemic levodopa half-life. The chart shows the actual pulse pattern, not a smoothed line. <strong style="color:#d1d5db;">Protein meals still matter</strong>: even though SC delivery bypasses the gut, dietary LNAAs (leucine, isoleucine, valine, phenylalanine, tyrosine…) compete with levodopa at the LAT1 transporter on the blood-brain barrier. Plasma stays at the pulse-summed baseline, but <em>effective brain</em> levodopa dips during and after protein meals — many patients on continuous infusion still report slowing down at meal time. The chart shows this as a dip in the baseline during meals marked PROTEIN. Bolus doses you add (manual EXTRA DOSE on the pump) appear as larger Bateman peaks layered on top.
+        <div style="margin-top:8px;font-size:10px;color:#666;">
+          FDA approved Oct 2024 &middot;
+          <a href="https://www.vyalev.com" target="_blank" rel="noopener" style="color:#a855f7;text-decoration:none;border-bottom:1px solid #5b2d8a;">vyalev.com</a> &middot;
+          <a href="https://www.rxabbvie.com/pdf/vyalev_pi.pdf" target="_blank" rel="noopener" style="color:#a855f7;text-decoration:none;border-bottom:1px solid #5b2d8a;">prescribing info</a> &middot;
+          <a href="https://www.rxabbvie.com/pdf/vyalev_medguide.pdf" target="_blank" rel="noopener" style="color:#a855f7;text-decoration:none;border-bottom:1px solid #5b2d8a;">medication guide</a>
+        </div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #2a1a3a;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#a855f7;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Infusion Baseline &mdash; where the infusion saw-tooth sits on the chart</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="bgBaselineSlider" min="10" max="90" value="55" step="1" oninput="updateBGBaseline()" class="pk-slider" style="flex:1;">
+            <span id="bgBaselineVal" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#d1d5db;min-width:160px;text-align:right;">baseline <span style="color:#a855f7;">55%</span></span>
+          </div>
+          <div style="font-size:10px;color:#666;margin-top:4px;line-height:1.5;">Personal calibration: where the SC infusion saw-tooth averages on the chart (y-axis units, same scale as everything else). Default 55% &mdash; drag lower if your morning routine peaks without dyskinesia suggest your real baseline is lower, higher if you feel close to dyskinesia on pump-only.</div>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#a855f7;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Personal BBB Factor &mdash; brain levodopa multiplier with food</div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="bbbSlider" min="50" max="100" value="80" step="1" oninput="updateBBBFactor()" class="pk-slider" style="flex:1;">
+            <span id="bbbVal" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#d1d5db;min-width:160px;text-align:right;">food <span style="color:#a855f7;">80%</span> &middot; protein <span style="color:#a855f7;">60%</span></span>
+          </div>
+          <div style="font-size:10px;color:#666;margin-top:4px;line-height:1.5;">Set how much your effective brain levodopa drops during meals. Default 80% (mild 20% dip with any food). Protein meals automatically double the reduction (LNAAs from protein compete much more strongly than carbs or fat for LAT1 transport).</div>
+        </div>
+        </div>
+      </details>
+
+      <div id="sliders" style="display:none; padding: 8px 0 4px;">
+        <div class="slider-row">
+          <span class="slider-label">HALF-LIFE</span>
+          <input type="range" class="pk-slider" id="halfLifeSlider" min="30" max="300" value="90" step="5" oninput="updateSliders()">
+          <span class="slider-value" id="halfLifeVal">90 min</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Tmax</span>
+          <input type="range" class="pk-slider" id="tmaxSlider" min="10" max="180" value="45" step="5" oninput="updateSliders()">
+          <span class="slider-value" id="tmaxVal">45 min</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">BIOAVAIL (F)</span>
+          <input type="range" class="pk-slider" id="bioavailSlider" min="10" max="100" value="99" step="1" oninput="updateSliders()">
+          <span class="slider-value" id="bioavailVal">0.99</span>
+        </div>
+      </div>
+
+      <div class="control-row" style="align-items:center;">
+        <button class="optimize-btn" onclick="optimizeSchedule()">AUTO</button>
+        <button class="dose-btn reset" onclick="resetAll()">RESET</button>
+        <span class="ctrl-divider"></span>
+        <span class="mono" style="font-size:11px;color:#555;">DYSKINESIA TOLERANCE</span>
+        <select id="dkSelect" class="profile-select" style="width:auto;color:#f97316;border-color:#333;" onchange="updateDKSlider()">
+          <option value="0">None — hard limit (0%)</option>
+          <option value="1" selected>Low — avoid (5%)</option>
+          <option value="2">Moderate (15%)</option>
+          <option value="3">High — tolerable (30%)</option>
+          <option value="4">Ignore DK (100%)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid #1a1a1a;margin-top:10px;padding:10px 20px 0;">
+      <span class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.1em;">Dose Log</span>
+    </div>
+    <div class="dose-log" id="doseLog"></div>
+
+    <div class="stats-bar" id="statsBar">
+      <div class="stat" title="Total number of doses added to the chart (manual + auto-filled). Does not count continuous pump infusion pulses.">
+        <span class="stat-label">DOSES TODAY</span>
+        <span class="stat-value" id="statDoses" style="color:#fff;">0</span>
+      </div>
+      <div class="stat" title="Estimated blood concentration at the NOW marker position on the chart. Green = in therapeutic range, red = below minimum or above dyskinesia threshold.">
+        <span class="stat-label">CURRENT LEVEL</span>
+        <span class="stat-value" id="statLevel" style="color:#fff;">0%</span>
+      </div>
+      <div class="stat" title="Time In Range — percentage of the day where your predicted blood concentration stays within the therapeutic window (above the demand-adjusted minimum, below the dyskinesia threshold). Higher is better; 70%+ is a good target.">
+        <span class="stat-label">TIME IN RANGE</span>
+        <span class="stat-value" id="statTIR" style="color:#16a34a;">—</span>
+      </div>
+      <div class="stat" title="Predicted time until your blood concentration drops below the therapeutic minimum after the NOW marker. Tells you roughly when you might start feeling OFF.">
+        <span class="stat-label">NEXT DOSE IN</span>
+        <span class="stat-value" id="statNext" style="color:#fbbf24;">—</span>
+      </div>
+      <div class="stat" title="Individual pharmacokinetic variability — how much your actual blood level could differ from the model's prediction due to personal differences in absorption, metabolism, body mass, and hydration. Shown as the shaded confidence band around the red PK line on the chart. Lower = more predictable (e.g., pump infusion ±8%). Higher = less predictable (e.g., oral IR ±50%).">
+        <span class="stat-label">VARIABILITY</span>
+        <span class="stat-value" id="statVar" style="color:#a855f7;">±50%</span>
+      </div>
+    </div>
+
+    <div class="threshold-legend" style="margin-top:14px;padding-top:12px;border-top:1px solid #1a1a1a;">
+      <div class="threshold-item"><div style="width:20px;height:3px;background:#dc2626"></div> Expected blood concentration (Bateman equation)</div>
+      <div class="threshold-item"><div style="width:20px;height:10px;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.3)"></div> Confidence band (population variability in absorption &amp; elimination)</div>
+      <div class="threshold-item"><div style="width:20px;height:10px;background:rgba(22,163,74,0.3);border:1px solid rgba(22,163,74,0.5)"></div> Therapeutic window (effective range without dyskinesia)</div>
+      <div class="threshold-item"><div style="width:20px;height:10px;background:rgba(74,222,128,0.10);border:1px solid rgba(74,222,128,0.3)"></div> Circadian zones — morning peak (best absorption), afternoon dip (wearing off risk), wind-down</div>
+      <div class="threshold-item"><div style="width:20px;height:10px;background:rgba(249,115,22,0.4);border:1px solid rgba(249,115,22,0.5)"></div> Activity demand — modulates therapeutic window (higher demand = higher coverage needed)</div>
+      <div class="threshold-item"><div style="width:20px;height:10px;background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4)"></div> Eating window — reduced levodopa absorption (protein competes for LNAA transport)</div>
+    </div>
+  </div>
+
+<script>
+// ==================== MEDICATION PROFILES ====================
+const profiles = {
+  sinemet_ir: {
+    name: 'Levodopa IR 100 mg',
+    halfLifeMin: 90,
+    tmaxFastingMin: 45,
+    bioavailability: 0.99,
+    doseStrengthMg: 100,
+    therapeuticMin: 0.25,
+    therapeuticMax: 0.80,
+    isDualPhase: false,
+    variability: 0.50,
+  },
+  sinemet_cr: {
+    name: 'Levodopa CR 200 mg',
+    halfLifeMin: 90,
+    tmaxFastingMin: 120,
+    bioavailability: 0.71,
+    doseStrengthMg: 200,
+    therapeuticMin: 0.20,
+    therapeuticMax: 0.75,
+    isDualPhase: false,
+    variability: 0.55,
+  },
+  rytary: {
+    name: 'Levodopa ER',
+    halfLifeMin: 90,
+    tmaxFastingMin: 60,
+    bioavailability: 0.99,
+    doseStrengthMg: 100,
+    therapeuticMin: 0.25,
+    therapeuticMax: 0.80,
+    isDualPhase: true,
+    fastPhaseFraction: 0.4,
+    tmaxSlowMin: 150,
+    variability: 0.35,
+  },
+  generic: {
+    name: 'Generic',
+    halfLifeMin: 90,
+    tmaxFastingMin: 45,
+    bioavailability: 0.99,
+    doseStrengthMg: 100,
+    therapeuticMin: 0.25,
+    therapeuticMax: 0.80,
+    isDualPhase: false,
+    variability: 0.50,
+  },
+  vyalev: {
+    name: 'Foslevodopa/foscarbidopa SC infusion',
+    // Typical wearable-pump settings (mL/hr — pump delivers in ~20 min cycles).
+    // These are example defaults within the published typical range; the user
+    // calibrates the actual chart baseline via the INFUSION BASELINE slider.
+    baseRateMlPerHr: 0.25,   // continuous daytime rate
+    highRateMlPerHr: 0.30,   // user-triggered higher rate
+    lowRateMlPerHr:  0.20,   // user-triggered lower rate (e.g. sleep)
+    extraDoseMl:     0.10,   // manual bolus for breakthrough OFF
+    pumpCycleMin:    20,     // pump pulses every ~20 min (averages to flat at 90 min t½)
+    // PK (for any bolus dose; the continuous component is handled separately)
+    halfLifeMin: 90,         // systemic levodopa t½ once cleaved from prodrug
+    tmaxFastingMin: 30,      // fast SC absorption for bolus
+    bioavailability: 1.0,    // SC bypasses first-pass; effectively complete
+    doseStrengthMg: 24,      // 0.10 mL bolus ≈ 24 mg levodopa equivalent
+    therapeuticMin: 0.25,
+    therapeuticMax: 0.80,
+    isDualPhase: false,
+    isContinuous: true,      // 24-hr continuous infusion via Vyafuser pump
+    variability: 0.08,       // very low — eliminates peak/trough variability
+  },
+};
+
+// ==================== STATE ====================
+let currentProfileId = 'sinemet_ir';
+let doses = []; // { timeMin, amount, fasting } — timeMin is minutes from chart start (5 AM)
+let vyalevPulses = []; // virtual pump pulses generated when vyalevActive is true
+let vyalevActive = false; // VYALEV background SC infusion runs alongside the selected oral profile
+let baseBBBFactor = 0.80; // personal BBB factor for any food (1 = no effect, lower = more reduction).
+                          // Protein meals double the reduction: proteinFactor = 2 × baseBBBFactor − 1.
+let vyalevBaselineTarget = 0.55; // personal calibration: chart-normalized value where the SC
+                                 // infusion saw-tooth averages. Default 0.55 (mid-therapeutic);
+                                 // drag lower if your morning routine suggests real baseline is
+                                 // lower, higher if you feel close to dyskinesia on pump-only.
+const CHART_START_HOUR = 5; // chart starts at 5 AM
+let nowMarkerMin = 480; // default: 1 PM (480 min after 5 AM)
+let isDraggingNow = false;
+
+// DK tolerance: 0 = zero tolerance, 4 = don't care
+// Maps to how far above the dyskinesia threshold the optimizer is allowed to go
+const DK_LABELS = ['None — hard limit (0%)', 'Low — avoid (5%)', 'Moderate (15%)', 'High — tolerable (30%)', 'Ignore DK (100%)'];
+const DK_OVERSHOOT = [0.0, 0.05, 0.15, 0.30, 1.0];
+let dkTolerance = 1; // default: low
+let editingDoseIndex = null; // when hovering a log entry, buttons edit instead of add
+const WINDOW_HOURS = 24;
+const WINDOW_MIN = WINDOW_HOURS * 60;
+
+// Food state modifiers
+const FOOD_KA_MULT = { fasting: 1.0, fed: 0.35 };
+const FOOD_CMAX_MULT = { fasting: 1.0, fed: 0.70 };
+
+// ==================== ACTIVITY DEMAND ====================
+// 24 slots, one per hour. Value 0-1 where 0 = rest/sleep, 1 = high activity.
+// Modulates the therapeutic window: higher demand = need more medication coverage.
+const DEMAND_SLOTS = 24;
+// Default: typical PD daily motor-demand curve (see demandPresets.pd_typical).
+// Hardcoded here because const `demandPresets` is defined later in the file
+// and isn't accessible yet at initialization time.
+let demandProfile = [0.15,0.30,0.70,0.90,0.95,0.80,0.65,0.55,0.50,0.35,0.30,0.40,0.55,0.70,0.70,0.60,0.40,0.25,0.15,0.10,0.05,0.05,0.05,0.10];
+let currentDemandPreset = 'pd_typical';
+let isDemandPainting = false;
+
+// ==================== EATING WINDOWS ====================
+// Up to 3 eating windows. Each has: enabled, startMin (chart-relative), durationMin
+let mealWindows = [
+  { enabled: false, hasProtein: false, startMin: (11 - CHART_START_HOUR) * 60, durationMin: 30 },
+  { enabled: true,  hasProtein: true,  startMin: (17 - CHART_START_HOUR) * 60, durationMin: 30 },
+  { enabled: true,  hasProtein: true,  startMin: (20 - CHART_START_HOUR) * 60, durationMin: 30 },
+];
+
+// Absorption penalty extends 30 min before and 60 min after the eating window
+const MEAL_BUFFER_BEFORE = 0;   // no buffer before (dose before meal is fine)
+const MEAL_BUFFER_AFTER  = 60;  // 60 min after meal for gut to clear
+
+function toggleMealWindow(i) {
+  mealWindows[i].enabled = !mealWindows[i].enabled;
+  document.getElementById('mealToggle' + i).classList.toggle('active', mealWindows[i].enabled);
+  drawChart();
+}
+
+function toggleMealProtein(i) {
+  mealWindows[i].hasProtein = !mealWindows[i].hasProtein;
+  document.getElementById('mealProtein' + i).classList.toggle('active', mealWindows[i].hasProtein);
+  drawChart();
+}
+
+function updateMealWindows() {
+  for (let i = 0; i < 3; i++) {
+    const timeVal = document.getElementById('mealStart' + i).value;
+    const durVal = parseInt(document.getElementById('mealDur' + i).value);
+    if (timeVal) {
+      const [h, m] = timeVal.split(':').map(Number);
+      mealWindows[i].startMin = (h - CHART_START_HOUR) * 60 + m;
+    }
+    mealWindows[i].durationMin = durVal;
+    // Update range label
+    const startClockMin = CHART_START_HOUR * 60 + mealWindows[i].startMin;
+    const endClockMin = startClockMin + mealWindows[i].durationMin;
+    document.getElementById('mealRange' + i).textContent = formatClockRange(startClockMin, endClockMin);
+  }
+  drawChart();
+}
+
+function formatClockRange(startMin, endMin) {
+  return formatClock(startMin) + ' – ' + formatClock(endMin);
+}
+
+function formatClock(totalMin) {
+  let h = Math.floor(totalMin / 60) % 24;
+  const m = totalMin % 60;
+  const ap = h < 12 ? 'AM' : 'PM';
+  if (h === 0) h = 12;
+  else if (h > 12) h -= 12;
+  return h + ':' + String(m).padStart(2, '0') + ' ' + ap;
+}
+
+// Check if a given chart-minute falls within any active eating window (including buffer)
+function isInMealZone(min) {
+  for (const mw of mealWindows) {
+    if (!mw.enabled) continue;
+    if (!mw.hasProtein) continue;
+    const start = mw.startMin - MEAL_BUFFER_BEFORE;
+    const end = mw.startMin + mw.durationMin + MEAL_BUFFER_AFTER;
+    if (min >= start && min <= end) return true;
+  }
+  return false;
+}
+
+// Check if a given chart-minute falls within any active eating window (exact, no buffer)
+function isInMealWindow(min) {
+  for (const mw of mealWindows) {
+    if (!mw.enabled) continue;
+    if (!mw.hasProtein) continue;
+    if (min >= mw.startMin && min <= mw.startMin + mw.durationMin) return true;
+  }
+  return false;
+}
+
+// Returns 'protein' if queryMin is inside a protein-tagged meal zone (with
+// after-buffer), 'food' if inside a non-protein meal zone, or null otherwise.
+// Used by the BBB-competition multiplier so protein and non-protein meals can
+// apply different reduction factors. Protein wins on overlap.
+function mealZoneTypeAt(min) {
+  let type = null;
+  for (const mw of mealWindows) {
+    if (!mw.enabled) continue;
+    const start = mw.startMin - MEAL_BUFFER_BEFORE;
+    const end = mw.startMin + mw.durationMin + MEAL_BUFFER_AFTER;
+    if (min >= start && min <= end) {
+      if (mw.hasProtein) return 'protein';
+      type = 'food';
+    }
+  }
+  return type;
+}
+
+// Returns a smooth BBB multiplier at queryMin, modeling LNAA blood kinetics:
+// LNAAs rise gradually over ~30 min after eating starts, plateau through the
+// meal, then clear over ~60 min after eating stops. This replaces the
+// rectangular on/off step that produced visible cliffs at meal boundaries
+// (dramatic drops at meal start, snap-backs at the end-of-buffer).
+//
+// Outside any meal zone: returns 1.0 (no reduction).
+// Inside: returns a multiplier between 1.0 and the meal's factor, linearly
+// interpolated through a ramp-in (30 min), plateau, and ramp-out (60 min).
+// Overlapping meals use the most aggressive (lowest) factor.
+function mealFactorAt(min) {
+  const RAMP_IN  = 30;  // min for LNAAs to rise after meal starts
+  const RAMP_OUT = 60;  // min for LNAAs to clear after meal ends
+  let factor = 1.0;
+  for (const mw of mealWindows) {
+    if (!mw.enabled) continue;
+    const mealStart = mw.startMin;
+    const mealEnd   = mealStart + mw.durationMin;
+    const zoneEnd   = mealEnd + RAMP_OUT;
+    if (min < mealStart || min > zoneEnd) continue;
+
+    const targetFactor = mw.hasProtein ? (2 * baseBBBFactor - 1) : baseBBBFactor;
+    let localFactor;
+    if (min < mealStart + RAMP_IN) {
+      // Ramp from 1.0 down to targetFactor over RAMP_IN minutes
+      const t = (min - mealStart) / RAMP_IN;
+      localFactor = 1.0 + (targetFactor - 1.0) * t;
+    } else if (min > mealEnd) {
+      // Ramp from targetFactor back to 1.0 over RAMP_OUT minutes
+      const t = (min - mealEnd) / RAMP_OUT;
+      localFactor = targetFactor + (1.0 - targetFactor) * t;
+    } else {
+      // Plateau at targetFactor
+      localFactor = targetFactor;
+    }
+    if (localFactor < factor) factor = localFactor;
+  }
+  return factor;
+}
+
+const demandPresets = {
+  // Typical PD daily motor-demand curve. Slot 0 = chart start (5 AM), one slot per hour.
+  // Shape:
+  //   5-6 AM:      waking, demand very low (0.15-0.30)
+  //   7-9 AM:      morning rush peak — showering, dressing, breakfast (0.70-0.95)
+  //   10-12 PM:    post-morning plateau, gradual decline (0.80 → 0.55)
+  //   1-3 PM:      afternoon dip ("afternoon wall") — rest/nap window (0.50 → 0.30)
+  //   4-7 PM:      evening recovery: dinner, social, family activity (0.40 → 0.70)
+  //   8-10 PM:     wind-down (0.60 → 0.25)
+  //   11 PM-4 AM:  sleep, near-zero demand (0.15 → 0.05), slight uptick at 4 AM
+  pd_typical: () => [0.15,0.30,0.70,0.90,0.95,0.80,0.65,0.55,0.50,0.35,0.30,0.40,0.55,0.70,0.70,0.60,0.40,0.25,0.15,0.10,0.05,0.05,0.05,0.10],
+  flat:    () => new Array(24).fill(0.5),
+  morning: () => [0.1,0.3,0.8,0.9,1.0,0.9,0.7,0.5,0.4,0.3,0.3,0.3,0.3,0.3,0.2,0.2,0.2,0.2,0.1,0.1,0.1,0.1,0.1,0.1],
+  midday:  () => [0.2,0.3,0.3,0.4,0.5,0.7,0.9,1.0,1.0,0.9,0.7,0.5,0.4,0.3,0.3,0.2,0.2,0.2,0.1,0.1,0.1,0.1,0.1,0.1],
+  evening: () => [0.2,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.4,0.5,0.7,0.9,1.0,0.9,0.7,0.4,0.3,0.2,0.1,0.1,0.1,0.1,0.1,0.1],
+  split:   () => [0.1,0.3,0.7,0.9,0.7,0.4,0.3,0.3,0.3,0.4,0.7,0.9,0.7,0.4,0.3,0.2,0.2,0.1,0.1,0.1,0.1,0.1,0.1,0.1],
+};
+
+function setDemandPreset(name) {
+  demandProfile = demandPresets[name]();
+  currentDemandPreset = name;
+  document.querySelectorAll('.demand-preset-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.toLowerCase().replace(/\s+/g,'') === name.toLowerCase().replace(/\s+/g,'') ||
+      (name === 'pd_typical' && btn.textContent === 'PD TYPICAL') ||
+      (name === 'flat' && btn.textContent === 'FLAT') ||
+      (name === 'morning' && btn.textContent === 'MORNING ACTIVE') ||
+      (name === 'midday' && btn.textContent === 'MIDDAY HIKE') ||
+      (name === 'evening' && btn.textContent === 'EVENING WALK') ||
+      false);
+  });
+  drawDemandBar();
+  drawChart();
+}
+
+// ==================== CALENDAR → DEMAND ====================
+// Maps calendar event types to motor-demand levels (0-1) and display metadata.
+// In the real app, events come from iOS EventKit / Android CalendarProvider;
+// here they're added manually to demonstrate the concept.
+const activityDemand = {
+  physical_therapy: { demand: 0.95, label: 'Physical Therapy', color: '#dc2626' },
+  gym:              { demand: 0.95, label: 'Gym / Exercise',   color: '#dc2626' },
+  walk:             { demand: 0.75, label: 'Walk',             color: '#4ade80' },
+  errands:          { demand: 0.80, label: 'Grocery / Errands', color: '#f97316' },
+  social:           { demand: 0.70, label: 'Social / Dinner',  color: '#a855f7' },
+  work:             { demand: 0.65, label: 'Work / Meeting',   color: '#3b82f6' },
+  meal:             { demand: 0.55, label: 'Meal',             color: '#eab308' },
+  rest:             { demand: 0.15, label: 'Rest / Nap',       color: '#555555' },
+};
+
+let calendarEvents = []; // { timeMin (chart-relative), durationMin, type }
+
+function addCalendarEvent() {
+  const timeVal = document.getElementById('calEventTime').value;
+  if (!timeVal) return;
+  const [h, m] = timeVal.split(':').map(Number);
+  const timeMin = (h - CHART_START_HOUR) * 60 + m;
+  const durationMin = parseInt(document.getElementById('calEventDur').value);
+  const type = document.getElementById('calEventType').value;
+  calendarEvents.push({ timeMin, durationMin, type });
+  calendarEvents.sort((a, b) => a.timeMin - b.timeMin);
+  generateDemandFromCalendar();
+  renderCalendarEvents();
+}
+
+function removeCalendarEvent(index) {
+  calendarEvents.splice(index, 1);
+  generateDemandFromCalendar();
+  renderCalendarEvents();
+}
+
+function clearCalendarEvents() {
+  calendarEvents = [];
+  renderCalendarEvents();
+  setDemandPreset('pd_typical');
+}
+
+function loadSampleDay() {
+  calendarEvents = [
+    { timeMin: (7  - CHART_START_HOUR) * 60,      durationMin: 30,  type: 'meal' },
+    { timeMin: (9  - CHART_START_HOUR) * 60,      durationMin: 60,  type: 'physical_therapy' },
+    { timeMin: (11 - CHART_START_HOUR) * 60,      durationMin: 60,  type: 'errands' },
+    { timeMin: (12 - CHART_START_HOUR) * 60 + 30, durationMin: 30,  type: 'meal' },
+    { timeMin: (14 - CHART_START_HOUR) * 60,      durationMin: 60,  type: 'rest' },
+    { timeMin: (16 - CHART_START_HOUR) * 60,      durationMin: 60,  type: 'walk' },
+    { timeMin: (18 - CHART_START_HOUR) * 60 + 30, durationMin: 120, type: 'social' },
+  ];
+  generateDemandFromCalendar();
+  renderCalendarEvents();
+}
+
+function generateDemandFromCalendar() {
+  // Start from PD-typical as the base curve (provides overnight/gap defaults)
+  const base = demandPresets.pd_typical();
+
+  for (const event of calendarEvents) {
+    const info = activityDemand[event.type];
+    if (!info) continue;
+    const startSlot = Math.max(0, Math.floor(event.timeMin / 60));
+    const endSlot = Math.min(DEMAND_SLOTS, Math.ceil((event.timeMin + event.durationMin) / 60));
+    for (let s = startSlot; s < endSlot; s++) {
+      if (event.type === 'rest') {
+        base[s] = Math.min(base[s], info.demand); // rest can pull below baseline
+      } else {
+        base[s] = Math.max(base[s], info.demand); // activity pushes above baseline
+      }
+    }
+  }
+
+  demandProfile = base;
+  currentDemandPreset = null;
+  document.querySelectorAll('.demand-preset-btn').forEach(btn => btn.classList.remove('active'));
+  drawDemandBar();
+  drawChart();
+}
+
+function renderCalendarEvents() {
+  const el = document.getElementById('calEventList');
+  if (calendarEvents.length === 0) {
+    el.innerHTML = '<div style="font-size:10px;color:#444;font-family:\'JetBrains Mono\',monospace;padding:4px 0;">No events — click + ADD EVENT or SAMPLE DAY to start</div>';
+    return;
+  }
+  el.innerHTML = calendarEvents.map((ev, i) => {
+    const info = activityDemand[ev.type] || { label: ev.type, color: '#888', demand: 0.5 };
+    const totalMin = CHART_START_HOUR * 60 + ev.timeMin;
+    const h = Math.floor(totalMin / 60) % 24;
+    const m = totalMin % 60;
+    const ap = h < 12 ? 'AM' : 'PM';
+    const ch = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    const time = ch + ':' + String(m).padStart(2, '0') + ' ' + ap;
+    const durLabel = ev.durationMin >= 60
+      ? (ev.durationMin / 60) + 'h'
+      : ev.durationMin + 'm';
+    return `<div class="cal-event">
+      <div class="cal-dot" style="background:${info.color}"></div>
+      ${time} · ${durLabel} · ${info.label}
+      <span style="color:#444;font-size:10px;">(demand ${Math.round(info.demand * 100)}%)</span>
+      <span class="cal-remove" onclick="removeCalendarEvent(${i})">remove</span>
+    </div>`;
+  }).join('');
+}
+
+// Initialize empty calendar event list display
+renderCalendarEvents();
+
+// Get demand at a given minute (interpolated between hourly slots)
+function demandAt(min) {
+  const hr = min / 60;
+  const idx = Math.floor(hr);
+  const frac = hr - idx;
+  const a = demandProfile[Math.min(idx, DEMAND_SLOTS - 1)];
+  const b = demandProfile[Math.min(idx + 1, DEMAND_SLOTS - 1)];
+  return a + (b - a) * frac;
+}
+
+// Dynamic therapeutic window based on demand
+function therapeuticMinAt(min, profile) {
+  const d = demandAt(min);
+  // Higher demand = higher minimum needed
+  // Range: profile.therapeuticMin (at rest) to profile.therapeuticMax * 0.85 (at peak demand)
+  return profile.therapeuticMin + d * (profile.therapeuticMax * 0.7 - profile.therapeuticMin);
+}
+
+function therapeuticMaxAt(min, profile) {
+  // Max stays relatively constant but shifts slightly up with demand
+  return profile.therapeuticMax + demandAt(min) * 0.15;
+}
+
+// ==================== PK MATH ====================
+function keFromHalfLife(halfLifeMin) {
+  return Math.log(2) / halfLifeMin;
+}
+
+function kaFromTmax(tmaxMin, ke) {
+  // Newton-Raphson: solve tmax = ln(ka/ke) / (ka - ke) for ka
+  let ka = 2.0 / tmaxMin; // initial guess
+  for (let i = 0; i < 20; i++) {
+    const f = Math.log(ka / ke) / (ka - ke) - tmaxMin;
+    const denom = ka - ke;
+    const df = (1 / ka * denom - Math.log(ka / ke)) / (denom * denom);
+    const step = f / df;
+    ka -= step;
+    if (Math.abs(step) < 1e-10) break;
+    if (ka <= ke) ka = ke * 1.01; // guard
+  }
+  return ka;
+}
+
+function batemanSingle(tMin, ka, ke, f) {
+  if (tMin <= 0) return 0;
+  if (Math.abs(ka - ke) < 1e-10) {
+    // L'Hopital limit: C(t) = f * ka * t * exp(-ke*t)
+    return f * ka * tMin * Math.exp(-ke * tMin);
+  }
+  const raw = (f * ka / (ka - ke)) * (Math.exp(-ke * tMin) - Math.exp(-ka * tMin));
+  return Math.max(0, raw);
+}
+
+function batemanNormalized(tMin, ka, ke, f) {
+  // Find Cmax for normalization
+  const tmaxCalc = Math.log(ka / ke) / (ka - ke);
+  const cmax = batemanSingle(tmaxCalc, ka, ke, f);
+  if (cmax <= 0) return 0;
+  return batemanSingle(tMin, ka, ke, f) / cmax;
+}
+
+function batemanDualPhase(tMin, kaFast, kaSlow, ke, f, fastFrac) {
+  const tmaxF = Math.log(kaFast / ke) / (kaFast - ke);
+  const cmaxF = batemanSingle(tmaxF, kaFast, ke, f);
+  const tmaxS = Math.log(kaSlow / ke) / (kaSlow - ke);
+  const cmaxS = batemanSingle(tmaxS, kaSlow, ke, f);
+  // Find combined peak for normalization
+  let combinedMax = 0;
+  for (let t = 0; t <= 600; t += 1) {
+    const c = fastFrac * batemanSingle(t, kaFast, ke, f) / cmaxF
+            + (1 - fastFrac) * batemanSingle(t, kaSlow, ke, f) / cmaxS;
+    if (c > combinedMax) combinedMax = c;
+  }
+  if (combinedMax <= 0) return 0;
+  const val = fastFrac * batemanSingle(tMin, kaFast, ke, f) / cmaxF
+            + (1 - fastFrac) * batemanSingle(tMin, kaSlow, ke, f) / cmaxS;
+  return Math.max(0, val / combinedMax);
+}
+
+function concentrationAt(queryMin, profile) {
+  const ke = keFromHalfLife(profile.halfLifeMin);
+  let total = 0;
+  for (const dose of doses) {
+    const elapsed = queryMin - dose.timeMin;
+    if (elapsed < 0) continue;
+
+    // Each dose can override the chart profile (e.g., the VYALEV optimizer adds
+    // oral Sinemet IR supplementation around protein meals — those doses use
+    // their own PK parameters instead of the chart's continuous profile).
+    const dp = dose.profileId ? profiles[dose.profileId] : profile;
+    const ke_d = keFromHalfLife(dp.halfLifeMin);
+
+    const foodState = dose.fasting ? 'fasting' : 'fed';
+    const kaMult = FOOD_KA_MULT[foodState];
+    const cmaxMult = FOOD_CMAX_MULT[foodState];
+    const weight = dose.amount * cmaxMult;
+
+    if (dp.isDualPhase) {
+      const kaFast = kaFromTmax(dp.tmaxFastingMin, ke_d) * kaMult;
+      const kaSlow = kaFromTmax(dp.tmaxSlowMin, ke_d) * kaMult;
+      total += weight * batemanDualPhase(elapsed, kaFast, kaSlow, ke_d, dp.bioavailability, dp.fastPhaseFraction);
+    } else {
+      const ka = kaFromTmax(dp.tmaxFastingMin, ke_d) * kaMult;
+      total += weight * batemanNormalized(elapsed, ka, ke_d, dp.bioavailability);
+    }
+  }
+
+  // VYALEV background infusion (separate toggle, runs alongside the selected
+  // oral profile): the Vyafuser pump delivers a tiny SC bolus every pumpCycleMin
+  // (~20 min). Each pulse is its own small Bateman curve; their sum produces a
+  // near-flat baseline with visible saw-tooth oscillation at the pump cycle
+  // frequency. SC bypasses the gut so no food modifier on individual pulses.
+  // Uses VYALEV's own PK parameters (profiles.vyalev), independent of whichever
+  // oral profile is selected as the chart's primary.
+  if (vyalevActive && vyalevPulses.length > 0) {
+    const vp = profiles.vyalev;
+    const vpKe = keFromHalfLife(vp.halfLifeMin);
+    const vpKa = kaFromTmax(vp.tmaxFastingMin, vpKe);
+    for (const pulse of vyalevPulses) {
+      const elapsed = queryMin - pulse.timeMin;
+      if (elapsed < 0) continue;
+      total += pulse.amount * batemanNormalized(elapsed, vpKa, vpKe, vp.bioavailability);
+    }
+  }
+
+  // BBB protein competition: dietary LNAAs (leucine, isoleucine, valine,
+  // phenylalanine, tyrosine, etc.) compete with levodopa at the LAT1 transporter
+  // on the blood-brain barrier. When the SC infusion is supplying continuous
+  // brain levodopa, plasma stays at the pulse-summed baseline but effective
+  // *brain* levodopa dips during and after meals.
+  //
+  // Uses mealFactorAt() to produce a smooth trapezoid factor (ramp-in 30 min,
+  // plateau, ramp-out 60 min) rather than the old hard-step boundaries that
+  // produced visible cliffs at meal start and end-of-buffer. The plateau
+  // value comes from baseBBBFactor (default 0.80) for food meals and
+  // 2·baseBBBFactor−1 (default 0.60) for protein meals — protein roughly
+  // doubles the reduction because LNAAs from protein compete much more
+  // strongly than carbs/fats for LAT1.
+  if (vyalevActive) {
+    total *= mealFactorAt(queryMin);
+  }
+
+  return Math.min(total, 2.0); // cap at 2x for display
+}
+
+// Generate virtual pump pulses for continuous-infusion profiles. Called when
+// the profile changes. Per-pulse amount is derived from the steady-state
+// averaging identity for repeated dosing:
+//   average_ss = f × amount / (ke × pulseInterval)
+//   →  amount = baseline × ke × pulseInterval / f
+function regenerateContinuousPulses() {
+  vyalevPulses = [];
+  if (!vyalevActive) return;
+  const vp = profiles.vyalev;
+  const pulseInterval = vp.pumpCycleMin || 20;
+  const ke = keFromHalfLife(vp.halfLifeMin);
+  // Baseline is a personal calibration (user-adjusted via the INFUSION BASELINE
+  // slider). The mL/hr pump rates in profiles.vyalev are displayed in the info
+  // banner as typical-setup reference values, but the chart's saw-tooth sits
+  // at whatever the user's personal body response says the effective brain
+  // level is.
+  const baseline = vyalevBaselineTarget;
+  const perPulseAmount = baseline * ke * pulseInterval / vp.bioavailability;
+  // Start well BEFORE the chart window so the steady state has already
+  // established by t=0 (otherwise the first hour shows a startup ramp).
+  for (let t = -pulseInterval * 30; t < WINDOW_MIN; t += pulseInterval) {
+    vyalevPulses.push({ timeMin: t, amount: perPulseAmount });
+  }
+}
+
+// Confidence band: symmetric percentage spread around the mid line.
+// Simpler and produces smooth curves without normalization artifacts.
+function concentrationBand(queryMin, profile) {
+  const mid = concentrationAt(queryMin, profile);
+  const v = profile.variability;
+  return {
+    low: Math.max(0, mid * (1 - v)),
+    mid: mid,
+    high: Math.min(2.0, mid * (1 + v)),
+  };
+}
+
+// ==================== CANVAS CHART ====================
+const canvas = document.getElementById('pkChart');
+const ctx = canvas.getContext('2d');
+let hoveredMinute = null;
+
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = wrap.clientWidth * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  canvas.style.width = wrap.clientWidth + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+const padding = { top: 20, right: 0, bottom: 40, left: 0 };
+
+function getChartArea() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  return { x: padding.left, y: padding.top, w: w - padding.left - padding.right, h: h - padding.top - padding.bottom };
+}
+
+function minToX(min) {
+  const a = getChartArea();
+  return a.x + (min / WINDOW_MIN) * a.w;
+}
+
+function valToY(val) {
+  const a = getChartArea();
+  const maxY = 1.3; // chart scales to 130% to show overshoot
+  return a.y + a.h - (val / maxY) * a.h;
+}
+
+function xToMin(x) {
+  const a = getChartArea();
+  return Math.max(0, Math.min(WINDOW_MIN, ((x - a.x) / a.w) * WINDOW_MIN));
+}
+
+function drawChart() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (w === 0 || h === 0) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const a = getChartArea();
+  const profile = profiles[currentProfileId];
+  const maxY = 1.3;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid lines
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1;
+  for (let v = 0; v <= maxY; v += 0.25) {
+    const y = valToY(v);
+    ctx.beginPath();
+    ctx.moveTo(a.x, y);
+    ctx.lineTo(a.x + a.w, y);
+    ctx.stroke();
+  }
+
+  // Y-axis labels
+  ctx.font = '11px Inter, -apple-system, sans-serif';
+  ctx.textAlign = 'right';
+  const ySteps = [0, 0.25, 0.5, 0.75, 1.0, 1.25];
+  const yLabels = ['0%', '25%', '50%', '75%', '100%', '125%'];
+  const yNudge = [-8, 0, 0, 0, 0, 12];
+  ySteps.forEach((v, i) => {
+    const lx = a.x + a.w - 6;
+    const ly = valToY(v) + 4 + yNudge[i];
+    const tw = ctx.measureText(yLabels[i]).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(lx - tw - 4, ly - 11, tw + 8, 16);
+    ctx.fillStyle = '#999';
+    ctx.fillText(yLabels[i], lx, ly);
+  });
+
+  // ===== CIRCADIAN ZONES =====
+  // Each zone: [startHour, endHour, label, color rgba, pkNote]
+  const circadianZones = [
+    { start: 23, end: 29, label: 'DEEP SLEEP',      color: [100, 100, 180], alpha: 0.06, note: 'HGH peak, no dosing' },
+    { start:  5, end:  7, label: 'CORTISOL SURGE',   color: [168, 130, 50],  alpha: 0.05, note: 'Body activating' },
+    { start:  7, end: 10, label: 'MORNING PEAK',     color: [ 74, 222, 128], alpha: 0.06, note: 'Best absorption' },
+    { start: 10, end: 13, label: 'MIDDAY',            color: [ 34, 211, 238], alpha: 0.04, note: 'Good absorption' },
+    { start: 13, end: 15, label: 'AFTERNOON DIP',    color: [249, 115,  22], alpha: 0.06, note: 'Wearing off risk' },
+    { start: 15, end: 18, label: 'SECOND WIND',      color: [ 74, 222, 128], alpha: 0.04, note: 'Metabolism up' },
+    { start: 18, end: 21, label: 'WIND-DOWN',        color: [168, 130,  50], alpha: 0.04, note: 'Slowing metabolism' },
+    { start: 21, end: 23, label: 'PRE-SLEEP',        color: [100, 100, 180], alpha: 0.04, note: 'Poor absorption' },
+  ];
+
+  ctx.font = '8px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+
+  circadianZones.forEach(zone => {
+    // Convert clock hours to chart minutes (relative to CHART_START_HOUR)
+    let s = (zone.start - CHART_START_HOUR) * 60;
+    let e = (zone.end - CHART_START_HOUR) * 60;
+    // Clamp to chart window
+    if (e <= 0 || s >= WINDOW_MIN) return;
+    s = Math.max(0, s);
+    e = Math.min(WINDOW_MIN, e);
+
+    const x1 = minToX(s);
+    const x2 = minToX(e);
+    const [r, g, b] = zone.color;
+
+    // Background fill
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${zone.alpha})`;
+    ctx.fillRect(x1, a.y, x2 - x1, a.h);
+
+    // Top accent line
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${zone.alpha * 4})`;
+    ctx.fillRect(x1, a.y, x2 - x1, 1.5);
+
+    // Zone label at bottom
+    const midX = (x1 + x2) / 2;
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.4)`;
+    ctx.fillText(zone.label, midX, a.y + a.h - 14);
+
+    // PK note below label
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, 0.25)`;
+    ctx.font = '7px "JetBrains Mono", monospace';
+    ctx.fillText(zone.note, midX, a.y + a.h - 5);
+    ctx.font = '8px "JetBrains Mono", monospace';
+  });
+
+  // ===== EATING WINDOWS =====
+  mealWindows.forEach((mw, i) => {
+    if (!mw.enabled) return;
+    // Both protein and non-protein meals affect the BBB multiplier when VYALEV
+    // is active (protein factor is roughly double the food factor). Both shade
+    // the chart so the line dips have a visible cause.
+    const s = Math.max(0, mw.startMin);
+    const e = Math.min(WINDOW_MIN, mw.startMin + mw.durationMin);
+    if (e <= 0 || s >= WINDOW_MIN) return;
+
+    const x1 = minToX(s);
+    const x2 = minToX(e);
+
+    // Eating window fill
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.08)';
+    ctx.fillRect(x1, a.y, x2 - x1, a.h);
+
+    // Border lines
+    ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x1, a.y); ctx.lineTo(x1, a.y + a.h);
+    ctx.moveTo(x2, a.y); ctx.lineTo(x2, a.y + a.h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Absorption penalty zone (after meal)
+    const bufferEnd = Math.min(WINDOW_MIN, mw.startMin + mw.durationMin + MEAL_BUFFER_AFTER);
+    if (bufferEnd > e) {
+      const bx1 = minToX(e);
+      const bx2 = minToX(bufferEnd);
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.03)';
+      ctx.fillRect(bx1, a.y, bx2 - bx1, a.h);
+    }
+
+    // Label
+    const midX = (x1 + x2) / 2;
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.5)';
+    ctx.font = '8px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('MEAL ' + (i + 1), midX, a.y + 12);
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.3)';
+    ctx.font = '7px "JetBrains Mono", monospace';
+    ctx.fillText('reduced absorption', midX, a.y + 22);
+    ctx.font = '8px "JetBrains Mono", monospace';
+  });
+
+  // X-axis: clock time
+  ctx.textAlign = 'center';
+  for (let hr = 0; hr <= WINDOW_HOURS; hr += 2) {
+    const x = minToX(hr * 60);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, a.y);
+    ctx.lineTo(x, a.y + a.h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const clockHr = (CHART_START_HOUR + hr) % 24;
+    const ampm = clockHr < 12 ? 'a' : 'p';
+    const display = clockHr === 0 ? '12a' : clockHr <= 12 ? clockHr + ampm : (clockHr - 12) + ampm;
+    ctx.fillStyle = '#666';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.textAlign = hr === 0 ? 'left' : hr === WINDOW_HOURS ? 'right' : 'center';
+    ctx.fillText(display, x, a.y + a.h + 20);
+  }
+  ctx.textAlign = 'center';
+
+  // ===== DYNAMIC THERAPEUTIC WINDOW (demand-responsive) =====
+  const thStep = 1; // sample every 1 minute for smooth curves
+
+  // Draw filled therapeutic band
+  ctx.beginPath();
+  for (let m = 0; m <= WINDOW_MIN; m += thStep) {
+    const x = minToX(m);
+    const y = valToY(therapeuticMaxAt(m, profile));
+    if (m === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  for (let m = WINDOW_MIN; m >= 0; m -= thStep) {
+    ctx.lineTo(minToX(m), valToY(therapeuticMinAt(m, profile)));
+  }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(22, 163, 74, 0.08)';
+  ctx.fill();
+
+  // Upper bound line (dyskinesia)
+  ctx.strokeStyle = 'rgba(22, 163, 74, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  for (let m = 0; m <= WINDOW_MIN; m += thStep) {
+    const x = minToX(m);
+    const y = valToY(therapeuticMaxAt(m, profile));
+    if (m === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Lower bound line (therapeutic min)
+  ctx.beginPath();
+  for (let m = 0; m <= WINDOW_MIN; m += thStep) {
+    const x = minToX(m);
+    const y = valToY(therapeuticMinAt(m, profile));
+    if (m === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels at the start
+  ctx.font = '10px "JetBrains Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(22, 163, 74, 0.5)';
+  ctx.fillText('DEMAND MIN', a.x + 6, valToY(therapeuticMinAt(0, profile)) - 4);
+  ctx.fillText('DYSKINESIA', a.x + 6, valToY(therapeuticMaxAt(0, profile)) + 12);
+
+  // Danger zone above therapeutic max (use max of the max curve)
+  const peakThMax = Math.max(...Array.from({length: Math.floor(WINDOW_MIN / thStep) + 1}, (_, i) => therapeuticMaxAt(i * thStep, profile)));
+  const dangerY = valToY(peakThMax);
+  const dangerGrad = ctx.createLinearGradient(0, valToY(maxY), 0, dangerY);
+  dangerGrad.addColorStop(0, 'rgba(220, 38, 38, 0.06)');
+  dangerGrad.addColorStop(1, 'rgba(220, 38, 38, 0.02)');
+  ctx.fillStyle = dangerGrad;
+  ctx.fillRect(a.x, valToY(maxY), a.w, dangerY - valToY(maxY));
+
+  // ===== NOW MARKER (always visible) =====
+  const nowX = minToX(nowMarkerMin);
+  const isNearDose = doses.some(d => Math.abs(nowMarkerMin - d.timeMin) <= 10);
+  ctx.strokeStyle = isNearDose ? '#fff' : '#ffffff';
+  ctx.lineWidth = isNearDose ? 2.5 : 2;
+  ctx.globalAlpha = isNearDose ? 0.9 : 0.7;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(nowX, a.y);
+  ctx.lineTo(nowX, a.y + a.h);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // Time label at marker
+  const _tm = CHART_START_HOUR * 60 + nowMarkerMin;
+  const _ch = Math.floor(_tm / 60) % 24;
+  const _cm = Math.round(_tm % 60);
+  const _ap = _ch < 12 ? 'AM' : 'PM';
+  const _dh = _ch === 0 ? 12 : _ch > 12 ? _ch - 12 : _ch;
+  const _nowLabel = _dh + ':' + _cm.toString().padStart(2, '0') + ' ' + _ap;
+  ctx.fillStyle = isNearDose ? '#fff' : '#ffffff';
+  ctx.font = 'bold 10px "JetBrains Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText(isNearDose ? _nowLabel + ' (editing)' : _nowLabel, nowX, a.y - 6);
+  // Triangle at bottom
+  ctx.beginPath();
+  ctx.moveTo(nowX - 5, a.y + a.h + 2);
+  ctx.lineTo(nowX + 5, a.y + a.h + 2);
+  ctx.lineTo(nowX, a.y + a.h - 4);
+  ctx.closePath();
+  ctx.fill();
+  updateNowDisplay();
+
+  if (doses.length === 0 && !vyalevActive) {
+    // Empty state message — only when neither doses nor VYALEV background are
+    // contributing anything to draw. When VYALEV is active, the pulse-summed
+    // baseline draws even with no manual doses added.
+    ctx.font = '14px Inter, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#444';
+    ctx.fillText('Add doses to see pharmacokinetic curves', a.x + a.w / 2, a.y + a.h / 2 - 10);
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#333';
+    ctx.fillText('Click chart to set time, then add doses', a.x + a.w / 2, a.y + a.h / 2 + 12);
+    updateStats();
+    return;
+  }
+
+  // ===== CONFIDENCE BAND =====
+  const sampleStep = 1;
+  const bandPoints = [];
+  for (let m = 0; m <= WINDOW_MIN; m += sampleStep) {
+    const band = concentrationBand(m, profile);
+    bandPoints.push({ min: m, ...band });
+  }
+
+  // Draw filled confidence band
+  ctx.beginPath();
+  bandPoints.forEach((p, i) => {
+    const x = minToX(p.min);
+    const y = valToY(p.high);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  for (let i = bandPoints.length - 1; i >= 0; i--) {
+    ctx.lineTo(minToX(bandPoints[i].min), valToY(bandPoints[i].low));
+  }
+  ctx.closePath();
+
+  // Color the band: green where in range, red where out
+  const bandGrad = ctx.createLinearGradient(0, valToY(1.3), 0, valToY(0));
+  bandGrad.addColorStop(0, 'rgba(220, 38, 38, 0.12)');
+  bandGrad.addColorStop(0.3, 'rgba(34, 211, 238, 0.12)');
+  bandGrad.addColorStop(0.7, 'rgba(34, 211, 238, 0.12)');
+  bandGrad.addColorStop(1, 'rgba(220, 38, 38, 0.08)');
+  ctx.fillStyle = bandGrad;
+  ctx.fill();
+
+  // Band edges
+  ctx.strokeStyle = 'rgba(34, 211, 238, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  bandPoints.forEach((p, i) => {
+    const x = minToX(p.min);
+    if (i === 0) ctx.moveTo(x, valToY(p.high)); else ctx.lineTo(x, valToY(p.high));
+  });
+  ctx.stroke();
+  ctx.beginPath();
+  bandPoints.forEach((p, i) => {
+    const x = minToX(p.min);
+    if (i === 0) ctx.moveTo(x, valToY(p.low)); else ctx.lineTo(x, valToY(p.low));
+  });
+  ctx.stroke();
+
+  // ===== MAIN CONCENTRATION LINE =====
+  ctx.strokeStyle = '#dc2626';
+  ctx.lineWidth = 2.5;
+  ctx.globalAlpha = 0.95;
+  ctx.beginPath();
+  for (let m = 0; m <= WINDOW_MIN; m += sampleStep) {
+    const x = minToX(m);
+    const y = valToY(concentrationAt(m, profile));
+    if (m === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Glow
+  ctx.strokeStyle = '#dc2626';
+  ctx.lineWidth = 8;
+  ctx.globalAlpha = 0.08;
+  ctx.beginPath();
+  for (let m = 0; m <= WINDOW_MIN; m += sampleStep) {
+    const x = minToX(m);
+    const y = valToY(concentrationAt(m, profile));
+    if (m === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // ===== DOSE MARKERS =====
+  doses.forEach(dose => {
+    const x = minToX(dose.timeMin);
+    const conc = concentrationAt(dose.timeMin + 1, profile);
+    const dotColor = dose.fasting ? '#d1d5db' : '#fbbf24';
+
+    // Vertical line at dose time
+    ctx.strokeStyle = dotColor;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.3;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, a.y);
+    ctx.lineTo(x, a.y + a.h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Dose dot at bottom
+    const dotY = a.y + a.h - 4;
+    const dotR = 5;
+    if (dose.amount === 1.0) {
+      // Full dose: filled circle
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+    } else {
+      // Half dose: empty circle with horizontal line through it
+      ctx.beginPath();
+      ctx.arc(x, dotY, dotR, 0, Math.PI * 2);
+      ctx.strokeStyle = dotColor;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Line across
+      ctx.beginPath();
+      ctx.moveTo(x - dotR, dotY);
+      ctx.lineTo(x + dotR, dotY);
+      ctx.stroke();
+    }
+
+    // Label
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = dotColor;
+    const label = dose.amount === 1.0 ? '1.0' : '0.5';
+    const tag = dose.fasting ? '' : ' (fed)';
+    ctx.fillText(label + tag, x, a.y + a.h - 14);
+  });
+
+  // ===== NOW MARKER concentration dot (drawn on top of curves) =====
+  {
+    const nowConc = concentrationAt(nowMarkerMin, profile);
+    const nowPct = Math.round(nowConc * 100);
+    const concColor = nowConc < therapeuticMinAt(nowMarkerMin, profile) ? '#dc2626'
+      : nowConc > therapeuticMaxAt(nowMarkerMin, profile) ? '#dc2626' : '#4ade80';
+    const concY = valToY(nowConc);
+    ctx.beginPath();
+    ctx.arc(nowX, concY, 5, 0, Math.PI * 2);
+    ctx.fillStyle = concColor;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.font = 'bold 11px "JetBrains Mono", monospace';
+    ctx.fillStyle = concColor;
+    ctx.textAlign = 'left';
+    ctx.fillText(nowPct + '%', nowX + 10, concY + 4);
+  }
+
+  // ===== HOVER CROSSHAIR =====
+  if (hoveredMinute !== null && hoveredMinute >= 0) {
+    const x = minToX(hoveredMinute);
+    const band = concentrationBand(hoveredMinute, profile);
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.4;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, a.y);
+    ctx.lineTo(x, a.y + a.h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Value tooltip with clock time
+    const totalClockMin = CHART_START_HOUR * 60 + hoveredMinute;
+    const clockH = Math.floor(totalClockMin / 60) % 24;
+    const clockM = Math.round(totalClockMin % 60);
+    const ap = clockH < 12 ? 'AM' : 'PM';
+    const ch = clockH === 0 ? 12 : clockH > 12 ? clockH - 12 : clockH;
+    const pct = Math.round(band.mid * 100);
+    const lo = Math.round(band.low * 100);
+    const hi = Math.round(band.high * 100);
+    const text = `${ch}:${clockM.toString().padStart(2,'0')} ${ap} — ${pct}% [${lo}–${hi}%]`;
+
+    ctx.font = '11px "JetBrains Mono", monospace';
+    const tw = ctx.measureText(text).width;
+    let tx = x + 10;
+    if (tx + tw + 8 > a.x + a.w) tx = x - tw - 18;
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(tx, a.y + 4, tw + 12, 20);
+    ctx.fillStyle = '#dc2626';
+    ctx.textAlign = 'left';
+    ctx.fillText(text, tx + 6, a.y + 17);
+
+    // Dot on main line
+    const midY = valToY(band.mid);
+    ctx.beginPath();
+    ctx.arc(x, midY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#dc2626';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  updateStats();
+}
+
+// ==================== STATS ====================
+function updateStats() {
+  const profile = profiles[currentProfileId];
+  document.getElementById('statDoses').textContent = doses.length;
+
+  if (doses.length === 0) {
+    document.getElementById('statLevel').textContent = '0%';
+    document.getElementById('statLevel').style.color = '#666';
+    document.getElementById('statTIR').textContent = '—';
+    document.getElementById('statNext').textContent = '—';
+    return;
+  }
+
+  // Current level at NOW marker
+  const currentLevel = concentrationAt(nowMarkerMin, profile);
+  const pct = Math.round(currentLevel * 100);
+  const levelEl = document.getElementById('statLevel');
+  levelEl.textContent = pct + '%';
+  levelEl.style.color = currentLevel < profile.therapeuticMin ? '#dc2626'
+    : currentLevel > profile.therapeuticMax ? '#dc2626' : '#fff';
+
+  // Time in therapeutic range (dynamic window)
+  let inRange = 0, total = 0;
+  for (let m = 0; m <= WINDOW_MIN; m += 5) {
+    const c = concentrationAt(m, profile);
+    if (c > 0.01) { // only count time after first dose effect
+      total++;
+      if (c >= therapeuticMinAt(m, profile) && c <= therapeuticMaxAt(m, profile)) inRange++;
+    }
+  }
+  const tirEl = document.getElementById('statTIR');
+  if (total > 0) {
+    const tirPct = Math.round(inRange / total * 100);
+    tirEl.textContent = tirPct + '%';
+    tirEl.style.color = tirPct > 70 ? '#16a34a' : tirPct > 40 ? '#fbbf24' : '#dc2626';
+  } else {
+    tirEl.textContent = '—';
+  }
+
+  // Next dose prediction: when does level drop below dynamic therapeutic min?
+  let nextDoseMin = null;
+  for (let m = nowMarkerMin + 1; m <= WINDOW_MIN; m++) {
+    const c = concentrationAt(m, profile);
+    if (c <= therapeuticMinAt(m, profile) && c > 0.01) {
+      nextDoseMin = m;
+      break;
+    }
+  }
+  const nextEl = document.getElementById('statNext');
+  if (nextDoseMin !== null) {
+    const fromNow = nextDoseMin - nowMarkerMin;
+    const hrs = Math.floor(fromNow / 60);
+    const mins = fromNow % 60;
+    nextEl.textContent = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+  } else {
+    nextEl.textContent = '—';
+  }
+
+  // Variability
+  document.getElementById('statVar').textContent = '±' + Math.round(profile.variability * 100) + '%';
+}
+
+// ==================== INTERACTIONS ====================
+function addDose(amount) {
+  if (editingDoseIndex !== null && editingDoseIndex < doses.length) {
+    // Edit existing dose amount
+    doses[editingDoseIndex].amount = amount;
+    buildDoseLog();
+    drawChart();
+    return;
+  }
+  const timeMin = Math.round(nowMarkerMin / 5) * 5;
+  doses.push({ timeMin, amount, fasting: !isInMealZone(timeMin) });
+  doses.sort((a, b) => a.timeMin - b.timeMin);
+  buildDoseLog();
+  drawChart();
+}
+
+// VYALEV pump EXTRA DOSE: simulates pressing the manual-bolus button on the
+// Vyafuser pump. Adds a 0.10 mL SC bolus at the NOW marker — uses VYALEV's own
+// PK params via per-dose profileId override (SC route, fast tmax, F = 1.0).
+// Sized at amount = 0.25 to match the chart scale of a 0.10 mL bolus
+// (~24 mg levodopa equivalent ≈ ¼ of a Sinemet IR full dose).
+function addVyalevExtraDose(amount) {
+  if (!vyalevActive) return;
+  const timeMin = Math.round(nowMarkerMin / 5) * 5;
+  doses.push({
+    timeMin,
+    amount: amount || 0.25,  // default to base if no arg
+    fasting: true,           // SC route — gut state irrelevant
+    profileId: 'vyalev',     // use pump PK, not the dropdown's oral profile
+  });
+  doses.sort((a, b) => a.timeMin - b.timeMin);
+  buildDoseLog();
+  drawChart();
+}
+
+// ==================== SCHEDULE OPTIMIZER ====================
+// Conservative, left-to-right fill. Never removes existing doses.
+// Never exceeds dyskinesia threshold. Prefers being low over being high.
+//
+// Algorithm:
+// 1. Start from the last existing dose (or 6 AM if none)
+// 2. Scan forward: find the earliest time where adding a dose won't
+//    push the peak above the dyskinesia threshold
+// 3. Try half dose first (safer), use full only if half is too weak
+// 4. Repeat until end of waking hours
+
+// VYALEV-supplementation variant: when the background infusion is on, the
+// optimizer doesn't try to schedule a primary dosing regimen (the pump handles
+// that). Instead it adds oral doses ~30 min before each enabled protein meal so
+// the oral peak lands at meal onset to compensate for the BBB-competition dip.
+// Uses whichever oral profile is currently selected in the dropdown.
+function optimizeContinuousMealCompensation() {
+  const SUPPLEMENT_LEAD_MIN = 30; // dose ~30 min before meal start so peak ≈ meal onset
+
+  // Headroom math: the oral dose peak adds onto the BG infusion baseline.
+  // Outside the meal zone (where BBB doesn't help), the combined value is
+  // baseline + dose_peak, and the hard ceiling is the oral profile's
+  // dyskinesia threshold (therapeuticMax). So the maximum safe dose peak is
+  // (therapeuticMax − BG baseline), which in a normalized-Bateman single-dose
+  // model equals the dose `amount` directly (a full dose of amount=1.0 peaks
+  // at 1.0 on the chart). Clamp to [0, 1.0] for sanity.
+  //
+  // Example: baseline 0.55, therapeuticMax 0.80 → amount 0.25 (matches the
+  // old hardcoded default). Baseline 0.30 → amount 0.50. Baseline 0.75 → 0.05.
+  const oralProfile = profiles[currentProfileId];
+  const headroom = oralProfile.therapeuticMax - vyalevBaselineTarget;
+  const SUPPLEMENT_AMOUNT = Math.max(0, Math.min(1.0, headroom));
+
+  // Strip any prior auto-added supplementation doses, preserve manual doses
+  doses = doses.filter(d => !d.auto);
+
+  // If the baseline leaves no meaningful headroom, supplementation would be
+  // either pointless or unsafe — clear auto doses and bail.
+  if (SUPPLEMENT_AMOUNT < 0.05) {
+    buildDoseLog();
+    drawChart();
+    return;
+  }
+
+  for (const mw of mealWindows) {
+    if (!mw.enabled || !mw.hasProtein) continue;
+    const doseTime = mw.startMin - SUPPLEMENT_LEAD_MIN;
+    if (doseTime < 0 || doseTime >= WINDOW_MIN) continue;
+    doses.push({
+      timeMin: doseTime,
+      amount: SUPPLEMENT_AMOUNT,
+      fasting: true,  // taken before the meal — gut still empty
+      auto: true,     // tag so the next OPTIMIZE clears it before re-adding
+    });
+  }
+
+  doses.sort((a, b) => a.timeMin - b.timeMin);
+  buildDoseLog();
+  drawChart();
+}
+
+function optimizeSchedule() {
+  const profile = profiles[currentProfileId];
+  // VYALEV background mode: optimize supplementation around protein meals
+  // instead of scheduling a primary regimen. The pump handles the baseline.
+  if (vyalevActive) {
+    optimizeContinuousMealCompensation();
+    return;
+  }
+  const firstDoseMin = (6 - CHART_START_HOUR) * 60;
+  const lastDoseMin = (22 - CHART_START_HOUR) * 60;
+  const maxTotal = 12;
+
+  // Delete all doses at or after the NOW marker, keep earlier ones
+  doses = doses.filter(d => d.timeMin < nowMarkerMin);
+
+  // Start from NOW marker (or after last kept dose if one is close)
+  let searchFrom = Math.max(firstDoseMin, nowMarkerMin);
+  if (doses.length > 0) {
+    const lastKept = doses[doses.length - 1];
+    searchFrom = Math.max(searchFrom, lastKept.timeMin + 30);
+  }
+
+  // Helper: simulate adding a dose and check if it exceeds dyskinesia threshold + tolerance
+  const allowedOvershoot = DK_OVERSHOOT[dkTolerance];
+  function wouldOvershoot(timeMin, amount) {
+    const isFastingDose = !isInMealZone(timeMin);
+    const testDose = { timeMin, amount, fasting: isFastingDose };
+    const testDoses = [...doses, testDose];
+    const savedDoses = doses;
+    doses = testDoses;
+    let over = false;
+    for (let m = timeMin; m <= Math.min(timeMin + profile.tmaxFastingMin * 3, WINDOW_MIN); m += 2) {
+      const conc = concentrationAt(m, profile);
+      const maxTh = therapeuticMaxAt(m, profile) * (1 + allowedOvershoot);
+      if (conc > maxTh) { over = true; break; }
+    }
+    doses = savedDoses;
+    return over;
+  }
+
+  // Helper: what's the concentration at a time if we add a dose?
+  function concWithDose(queryMin, doseTimeMin, amount) {
+    const isFastingDose = !isInMealZone(doseTimeMin);
+    const testDose = { timeMin: doseTimeMin, amount, fasting: isFastingDose };
+    const testDoses = [...doses, testDose];
+    const savedDoses = doses;
+    doses = testDoses;
+    const c = concentrationAt(queryMin, profile);
+    doses = savedDoses;
+    return c;
+  }
+
+  // Fill left to right
+  let cursor = searchFrom;
+  while (cursor <= lastDoseMin && doses.length < maxTotal) {
+
+    // Find the next time we should dose: when current concentration
+    // is about to drop below therapeutic min (or already is)
+    let needsDose = false;
+    let doseTime = cursor;
+
+    for (let m = cursor; m <= lastDoseMin; m += 5) {
+      const conc = concentrationAt(m, profile);
+      const minTh = therapeuticMinAt(m, profile);
+      if (conc <= minTh) {
+        // We're below threshold — we need a dose
+        // Back up by Tmax so the peak arrives around now
+        doseTime = Math.max(cursor, m - Math.round(profile.tmaxFastingMin * 0.8));
+        needsDose = true;
+        break;
+      }
+    }
+
+    if (!needsDose) break; // covered until end of day
+
+    // If dose would land inside an eating window, push it to after the window + buffer
+    if (isInMealWindow(doseTime)) {
+      for (const mw of mealWindows) {
+        if (!mw.enabled) continue;
+        if (!mw.hasProtein) continue;
+        if (doseTime >= mw.startMin && doseTime <= mw.startMin + mw.durationMin) {
+          doseTime = mw.startMin + mw.durationMin + MEAL_BUFFER_AFTER;
+          break;
+        }
+      }
+      if (doseTime > lastDoseMin) break;
+    }
+
+    // First dose of the session: always full to get into therapeutic range fast
+    const isFirstDose = doses.length === 0 ||
+      (doses.length > 0 && doseTime - doses[doses.length - 1].timeMin > profile.halfLifeMin * 5);
+
+    let amount;
+    if (isFirstDose) {
+      // Full dose — even if it briefly touches DK, getting into range matters more
+      amount = 1.0;
+    } else {
+      // Subsequent doses: try half first (conservative)
+      amount = 0.5;
+      if (wouldOvershoot(doseTime, 0.5)) {
+        // Even half dose overshoots — skip this slot, try later
+        cursor = doseTime + 30;
+        continue;
+      }
+
+      // Check if half dose provides enough coverage
+      const coverageEnd = doseTime + profile.halfLifeMin * 1.5;
+      let halfCoversWell = true;
+      for (let m = doseTime; m <= Math.min(coverageEnd, WINDOW_MIN); m += 10) {
+        if (concWithDose(m, doseTime, 0.5) < therapeuticMinAt(m, profile) * 0.8) {
+          halfCoversWell = false;
+          break;
+        }
+      }
+
+      // Only upgrade to full if half is insufficient AND full doesn't overshoot
+      if (!halfCoversWell && !wouldOvershoot(doseTime, 1.0)) {
+        amount = 1.0;
+      }
+    }
+
+    // If dose lands in a meal zone, mark as fed for reduced absorption
+    const isFastingDose = !isInMealZone(doseTime);
+    doses.push({ timeMin: doseTime, amount, fasting: isFastingDose });
+    doses.sort((a, b) => a.timeMin - b.timeMin);
+
+    // Move cursor past this dose's peak
+    cursor = doseTime + Math.round(profile.tmaxFastingMin * 1.5);
+  }
+
+  buildDoseLog();
+  drawChart();
+}
+
+function computeTIR(profile) {
+  let inRange = 0, total = 0;
+  for (let m = 0; m <= WINDOW_MIN; m += 5) {
+    const c = concentrationAt(m, profile);
+    if (c > 0.01) {
+      total++;
+      if (c >= therapeuticMinAt(m, profile) && c <= therapeuticMaxAt(m, profile)) inRange++;
+    }
+  }
+  return total > 0 ? Math.round(inRange / total * 100) : 0;
+}
+
+function selectDose(index) {
+  nowMarkerMin = doses[index].timeMin;
+  startEdit(index);
+  drawChart();
+}
+
+function startEdit(index) {
+  editingDoseIndex = index;
+  // Highlight the entry
+  document.querySelectorAll('.dose-entry').forEach((el, i) => {
+    el.classList.toggle('editing', i === index);
+  });
+  // Update button labels
+  document.querySelector('[onclick="addDose(1.0)"]').textContent = 'SET FULL';
+  document.querySelector('[onclick="addDose(0.5)"]').textContent = 'SET HALF';
+}
+
+function stopEdit() {
+  editingDoseIndex = null;
+  document.querySelectorAll('.dose-entry').forEach(el => el.classList.remove('editing'));
+  // Restore button labels
+  document.querySelector('[onclick="addDose(1.0)"]').textContent = '+ FULL DOSE';
+  document.querySelector('[onclick="addDose(0.5)"]').textContent = '+ HALF DOSE';
+}
+
+function deleteDose(index) {
+  editingDoseIndex = null;
+  doses.splice(index, 1);
+  buildDoseLog();
+  drawChart();
+}
+
+function resetAll() {
+  doses = [];
+  editingDoseIndex = null;
+  buildDoseLog();
+  drawChart();
+}
+
+function changeProfile() {
+  currentProfileId = document.getElementById('profileSelect').value;
+  const sliders = document.getElementById('sliders');
+  sliders.style.display = currentProfileId === 'generic' ? 'block' : 'none';
+  drawChart();
+}
+
+// VYALEV background infusion is a separate toggle from the oral profile
+// dropdown. The user can have any oral profile selected (Sinemet IR, CR,
+// Rytary, Generic) and turn VYALEV on/off independently. When active, VYALEV
+// runs in the background and the chart sums its pulse baseline on top of the
+// oral profile's PK from any added doses.
+function toggleVyalev() {
+  vyalevActive = !vyalevActive;
+  document.getElementById('vyalevToggle').classList.toggle('active', vyalevActive);
+  document.querySelectorAll('.vyalev-extra, .vyalev-rate').forEach(btn => btn.classList.toggle('disabled', !vyalevActive));
+  document.getElementById('vyalevInfo').style.display = vyalevActive ? '' : 'none';
+  regenerateContinuousPulses();
+  drawChart();
+}
+
+function updateBBBFactor() {
+  const v = parseInt(document.getElementById('bbbSlider').value);
+  baseBBBFactor = v / 100;
+  const proteinPct = Math.round((2 * baseBBBFactor - 1) * 100);
+  document.getElementById('bbbVal').innerHTML =
+    `food <span style="color:#a855f7;">${v}%</span> &middot; protein <span style="color:#a855f7;">${proteinPct}%</span>`;
+  drawChart();
+}
+
+function updateBGBaseline() {
+  const v = parseInt(document.getElementById('bgBaselineSlider').value);
+  vyalevBaselineTarget = v / 100;
+  document.getElementById('bgBaselineVal').innerHTML =
+    `baseline <span style="color:#a855f7;">${v}%</span>`;
+  // Deselect rate buttons — user is in custom/override mode
+  document.querySelectorAll('.vyalev-rate').forEach(btn => btn.classList.remove('active'));
+  regenerateContinuousPulses();
+  drawChart();
+}
+
+// Pump rate selector: LOW / BASE / HIGH. Each maps to a proportional baseline
+// via a fixed calibration factor (base rate 0.25 → 55% baseline by default).
+// Clicking a rate button updates vyalevBaselineTarget, syncs the slider, and
+// redraws. The slider can still override after (which deselects the buttons).
+function setVyalevRate(rate) {
+  if (!vyalevActive) return;
+  const vp = profiles.vyalev;
+  const rates = { low: vp.lowRateMlPerHr, base: vp.baseRateMlPerHr, high: vp.highRateMlPerHr };
+  const calibFactor = 0.55 / vp.baseRateMlPerHr; // base rate → 55% baseline
+  vyalevBaselineTarget = rates[rate] * calibFactor;
+  // Sync the slider position
+  const pct = Math.round(vyalevBaselineTarget * 100);
+  document.getElementById('bgBaselineSlider').value = pct;
+  document.getElementById('bgBaselineVal').innerHTML =
+    `baseline <span style="color:#a855f7;">${pct}%</span>`;
+  // Radio-style: only the clicked button is active
+  document.querySelectorAll('.vyalev-rate').forEach(btn => {
+    const btnRate = btn.textContent.trim().toLowerCase();
+    btn.classList.toggle('active', btnRate === rate);
+  });
+  regenerateContinuousPulses();
+  drawChart();
+}
+
+function updateDKSlider() {
+  dkTolerance = parseInt(document.getElementById('dkSelect').value);
+  drawChart();
+}
+
+function updateSliders() {
+  const hl = parseInt(document.getElementById('halfLifeSlider').value);
+  const tm = parseInt(document.getElementById('tmaxSlider').value);
+  const f = parseInt(document.getElementById('bioavailSlider').value) / 100;
+  document.getElementById('halfLifeVal').textContent = hl + ' min';
+  document.getElementById('tmaxVal').textContent = tm + ' min';
+  document.getElementById('bioavailVal').textContent = f.toFixed(2);
+  profiles.generic.halfLifeMin = hl;
+  profiles.generic.tmaxFastingMin = tm;
+  profiles.generic.bioavailability = f;
+  drawChart();
+}
+
+function buildDoseLog() {
+  const el = document.getElementById('doseLog');
+  if (doses.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = doses.map((d, i) => {
+    const totalMin = CHART_START_HOUR * 60 + d.timeMin;
+    const clockH = Math.floor(totalMin / 60) % 24;
+    const clockM = totalMin % 60;
+    const ap = clockH < 12 ? 'AM' : 'PM';
+    const ch = clockH === 0 ? 12 : clockH > 12 ? clockH - 12 : clockH;
+    const time = `${ch}:${clockM.toString().padStart(2, '0')} ${ap}`;
+    const color = d.fasting ? '#d1d5db' : '#fbbf24';
+    const label = d.fasting ? 'fasting' : 'fed';
+    const amount = d.amount === 1.0 ? 'Full' : 'Half';
+    return `<div class="dose-entry" onclick="selectDose(${i})">
+      <div class="dose-dot" style="${d.amount === 1.0 ? 'background:' + color : 'border:1.5px solid ' + color + ';background:transparent'}"></div>
+      ${time} — ${amount} dose (${label})
+      <span class="delete-btn" onclick="event.stopPropagation();deleteDose(${i})">remove</span>
+    </div>`;
+  }).join('');
+}
+
+canvas.addEventListener('mouseleave', () => {
+  hoveredMinute = null;
+  drawChart();
+});
+
+// Touch support
+canvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const x = e.touches[0].clientX - rect.left;
+  hoveredMinute = xToMin(x);
+  drawChart();
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+  hoveredMinute = null;
+  drawChart();
+});
+
+// ==================== NOW MARKER DISPLAY & DRAG ====================
+function updateNowDisplay() {
+  const totalMin = CHART_START_HOUR * 60 + nowMarkerMin;
+  const clockH = Math.floor(totalMin / 60) % 24;
+  const clockM = Math.round(totalMin % 60);
+  const ap = clockH < 12 ? 'AM' : 'PM';
+  const ch = clockH === 0 ? 12 : clockH > 12 ? clockH - 12 : clockH;
+  document.getElementById('nowTimeDisplay').textContent = ch + ':' + clockM.toString().padStart(2, '0') + ' ' + ap;
+
+  // Check if NOW marker is near a dose — if so, enter edit mode for that dose
+  const SNAP_THRESHOLD = 10; // minutes
+  let nearestIdx = null;
+  let nearestDist = Infinity;
+  for (let i = 0; i < doses.length; i++) {
+    const dist = Math.abs(nowMarkerMin - doses[i].timeMin);
+    if (dist < nearestDist) { nearestDist = dist; nearestIdx = i; }
+  }
+
+  if (nearestIdx !== null && nearestDist <= SNAP_THRESHOLD) {
+    if (editingDoseIndex !== nearestIdx) startEdit(nearestIdx);
+  } else {
+    if (editingDoseIndex !== null) stopEdit();
+  }
+}
+
+// Drag to move NOW marker
+canvas.addEventListener('mousedown', (e) => {
+  isDraggingNow = true;
+  nowMarkerMin = Math.round(xToMin(e.clientX - canvas.getBoundingClientRect().left) / 5) * 5;
+  nowMarkerMin = Math.max(0, Math.min(WINDOW_MIN, nowMarkerMin));
+  drawChart();
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (isDraggingNow) {
+    nowMarkerMin = Math.round(xToMin(e.clientX - canvas.getBoundingClientRect().left) / 5) * 5;
+    nowMarkerMin = Math.max(0, Math.min(WINDOW_MIN, nowMarkerMin));
+    drawChart();
+  } else {
+    // Hover tooltip
+    const rect = canvas.getBoundingClientRect();
+    hoveredMinute = xToMin(e.clientX - rect.left);
+    drawChart();
+  }
+});
+
+window.addEventListener('mouseup', () => { isDraggingNow = false; });
+
+// ==================== DEMAND BAR ====================
+const demandCanvas = document.getElementById('demandBar');
+const dctx = demandCanvas.getContext('2d');
+
+function resizeDemandCanvas() {
+  const wrap = demandCanvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  demandCanvas.width = wrap.clientWidth * dpr;
+  demandCanvas.height = wrap.clientHeight * dpr;
+  demandCanvas.style.width = wrap.clientWidth + 'px';
+  demandCanvas.style.height = wrap.clientHeight + 'px';
+  dctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function drawDemandBar() {
+  const w = demandCanvas.clientWidth;
+  const h = demandCanvas.clientHeight;
+  const barH = h - 4;
+  const slotW = w / DEMAND_SLOTS;
+
+  dctx.clearRect(0, 0, w, h);
+
+  // Draw each hour slot
+  for (let i = 0; i < DEMAND_SLOTS; i++) {
+    const x = i * slotW;
+    const val = demandProfile[i];
+    const fillH = val * barH;
+
+    // Background
+    dctx.fillStyle = '#0a0a0a';
+    dctx.fillRect(x + 1, 0, slotW - 2, barH);
+
+    // Filled portion (gradient from orange to red at high demand)
+    const r = Math.round(249 * val + 80 * (1 - val));
+    const g = Math.round(115 * val + 40 * (1 - val));
+    const b = Math.round(22 * val + 20 * (1 - val));
+    dctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${0.3 + val * 0.5})`;
+    dctx.fillRect(x + 1, barH - fillH, slotW - 2, fillH);
+
+    // Border
+    dctx.strokeStyle = '#222';
+    dctx.lineWidth = 1;
+    dctx.strokeRect(x + 1, 0, slotW - 2, barH);
+  }
+
+  // Label
+  dctx.font = '8px "JetBrains Mono", monospace';
+  dctx.textAlign = 'left';
+  dctx.fillStyle = '#444';
+  dctx.fillText('REST', 4, barH - 3);
+  dctx.textAlign = 'right';
+  dctx.fillText('HIGH', w - 4, 10);
+}
+
+// Demand bar painting interaction
+function demandBarXToSlot(clientX) {
+  const rect = demandCanvas.getBoundingClientRect();
+  const x = clientX - rect.left;
+  const w = demandCanvas.clientWidth;
+  return Math.max(0, Math.min(DEMAND_SLOTS - 1, Math.floor(x / w * DEMAND_SLOTS)));
+}
+
+function demandBarYToVal(clientY) {
+  const rect = demandCanvas.getBoundingClientRect();
+  const y = clientY - rect.top;
+  const h = demandCanvas.clientHeight - 4;
+  return Math.max(0, Math.min(1, 1 - y / h));
+}
+
+function paintDemand(e) {
+  const slot = demandBarXToSlot(e.clientX);
+  const val = demandBarYToVal(e.clientY);
+  demandProfile[slot] = Math.round(val * 10) / 10;
+  currentDemandPreset = null;
+  document.querySelectorAll('.demand-preset-btn').forEach(btn => btn.classList.remove('active'));
+  drawDemandBar();
+  drawChart();
+}
+
+demandCanvas.addEventListener('mousedown', (e) => {
+  isDemandPainting = true;
+  paintDemand(e);
+});
+demandCanvas.addEventListener('mousemove', (e) => {
+  if (isDemandPainting) paintDemand(e);
+});
+window.addEventListener('mouseup', () => { isDemandPainting = false; });
+
+// Touch support for demand bar
+demandCanvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  isDemandPainting = true;
+  paintDemand(e.touches[0]);
+}, { passive: false });
+demandCanvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (isDemandPainting) paintDemand(e.touches[0]);
+}, { passive: false });
+demandCanvas.addEventListener('touchend', () => { isDemandPainting = false; });
+
+// ==================== INIT ====================
+// Set NOW marker to current local time
+const _now = new Date();
+const _minsFromChartStart = (_now.getHours() * 60 + _now.getMinutes()) - CHART_START_HOUR * 60;
+nowMarkerMin = Math.max(0, Math.min(WINDOW_MIN, _minsFromChartStart));
+
+resizeCanvas();
+resizeDemandCanvas();
+updateNowDisplay();
+updateMealWindows();
+drawDemandBar();
+drawChart();
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  resizeDemandCanvas();
+  drawDemandBar();
+  drawChart();
+});
+// Redraw once fonts finish loading (may change text metrics)
+document.fonts.ready.then(() => {
+  drawDemandBar();
+  drawChart();
+});
+</script>
+
+    <div class="chart-section" style="padding:28px 0;margin-bottom:0;">
+      <div style="padding:0 20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <span style="font-size:22px;font-weight:700;color:#a855f7;">Glass Box</span>
+            <span class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;">// what the AI reads</span>
+        </div>
+        <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.6;">
+            No black box. Every paper and data source behind the pharmacokinetic model is listed here. You see what the math sees — nothing hidden, nothing invented. The source code will be released for independent review.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#a855f7;">ANCHORED</span>
+                <span style="color:#555;">The PK model is pinned to published pharmacokinetic parameters — not a drifting LLM. The math cannot silently change between updates.</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#a855f7;">ON-DEVICE</span>
+                <span style="color:#555;">The PK model runs on your phone. No cloud. No server. All computation is local.</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#a855f7;">LOCAL</span>
+                <span style="color:#555;">Your dose logs and subjective reports stay on your phone by default. Join the fight beyond your own case: opt in to share anonymized, aggregated patterns with researchers &mdash; never your identity, never automatic, never without consent. <a href="glass-box/data.html" style="color:#a855f7;text-decoration:none;border-bottom:1px solid #333;">See exactly what gets shared &rarr;</a></span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#a855f7;">TRACEABLE</span>
+                <span style="color:#555;">Every parameter in the Bateman equation traces to a published source below. If it's not in the Glass Box, the model won't use it.</span>
+            </div>
+        </div>
+
+        <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;">Pharmacokinetic Model Sources</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">01</span>
+                <a href="https://doi.org/10.1097/00002826-198403000-00002" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">Pharmacokinetics of levodopa</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Nutt &amp; Fellman — Clinical Neuropharmacology, 1984</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">02</span>
+                <a href="https://doi.org/10.1016/S1474-4422(13)70025-5" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">IPX066 (Rytary): pharmacokinetics of extended-release carbidopa-levodopa</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Hauser et al. — Lancet Neurology, 2013</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">03</span>
+                <a href="https://doi.org/10.1016/S1474-4422(06)70521-X" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">Continuous dopaminergic stimulation in Parkinson's disease</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Olanow et al. — The Lancet Neurology, 2006</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">04</span>
+                <span style="color:#d1d5db;">Population pharmacokinetics of levodopa in Parkinson's disease patients</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Clinical Pharmacokinetics, 2020</span> <span class="mono" style="color:#dc2626;font-size:9px;">DOI PENDING</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">05</span>
+                <span style="color:#d1d5db;">Sinemet CR pharmacokinetics: bioavailability and absorption characteristics</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Yeh et al. — Neurology, 1989</span> <span class="mono" style="color:#dc2626;font-size:9px;">DOI PENDING</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">06</span>
+                <span style="color:#d1d5db;">Effect of food on the pharmacokinetics of levodopa formulations</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Baruzzi et al. — Clinical Neuropharmacology, 1987</span> <span class="mono" style="color:#dc2626;font-size:9px;">DOI PENDING</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">07</span>
+                <a href="https://www.rxabbvie.com/pdf/vyalev_pi.pdf" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">VYALEV (foslevodopa/foscarbidopa) — Full Prescribing Information</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">AbbVie — FDA approved Oct 2024</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">08</span>
+                <a href="https://www.rxabbvie.com/pdf/vyalev_medguide.pdf" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">VYALEV — Medication Guide (patient-facing)</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">AbbVie</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">09</span>
+                <a href="https://www.vyalev.com" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">vyalev.com — Product information &amp; Vyafuser pump usage</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">AbbVie</span>
+            </div>
+        </div>
+
+        <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;">Clinical Framework</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">10</span>
+                <a href="https://doi.org/10.1002/mds.27390" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">Low-fat versus ketogenic diet in Parkinson's disease: A pilot randomized controlled trial</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Phillips et al. — Movement Disorders, 2018</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">11</span>
+                <span style="color:#d1d5db;">Wearing off and motor complications in Parkinson's disease</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Stocchi et al. — Neurology, 2010</span> <span class="mono" style="color:#dc2626;font-size:9px;">DOI PENDING</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">12</span>
+                <span style="color:#d1d5db;">Motor fluctuations and dyskinesia in Parkinson's disease: clinical guide and practical tips</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Vijayakumar &amp; Jankovic — Drugs, 2016</span> <span class="mono" style="color:#dc2626;font-size:9px;">DOI PENDING</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#a855f7;margin-right:10px;min-width:20px;" class="mono">13</span>
+                <a href="https://en.wikipedia.org/wiki/Bateman_equation" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='#333'">Bateman, H. — The solution of a system of differential equations in pharmacokinetics</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Proc. Cambridge Phil. Soc., 1910</span>
+            </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
+            <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:4px;">Simulation Parameters Derived From</div>
+            <div style="font-size:11px;color:#555;line-height:1.6;">
+                <span style="color:#888;">Levodopa IR:</span> t½ 90 min, Tmax 30-60 min, F=99% — from FDA prescribing label + Nutt &amp; Fellman (1984)<br>
+                <span style="color:#888;">Levodopa CR:</span> t½ 90 min, Tmax 120 min, F=71% — from FDA prescribing label + Yeh et al. (1989)<br>
+                <span style="color:#888;">Levodopa ER (dual-phase):</span> 60% fast / 40% slow, Tmax 1h/4h — from Hauser et al. (2013) + FDA label<br>
+                <span style="color:#888;">Foslevodopa/foscarbidopa SC infusion:</span> continuous wearable pump, ~20-min cycles, F≈100% (subcutaneous, bypasses first-pass) — from prescribing info (citation #07)<br>
+                <span style="color:#888;">Food effect:</span> high-protein meals delay Tmax by ~30 min, reduce Cmax — from competitive amino acid transport literature
+            </div>
+        </div>
+
+        <div style="border:1px solid #222;padding:12px 14px;font-size:11px;color:#555;line-height:1.6;" class="mono">
+            <span style="color:#a855f7;">GLASS_BOX_POLICY:</span> Every parameter in this simulation traces to a published pharmacokinetic source. The Bateman equation is the standard one-compartment oral absorption model used in clinical pharmacology. No proprietary algorithms. No hidden tuning. No synthetic data.
+        </div>
+      </div>
+    </div>
+</div>
+
+<div style="max-width:600px;margin:40px auto;padding:0 20px;">
+    <div style="border:1px solid #222;padding:24px;background:#111111;text-align:center;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.3em;margin-bottom:12px;">Join the fight</div>
+        <form action="https://formspree.io/f/mlgoreag" method="POST" style="display:flex;gap:8px;max-width:440px;margin:0 auto;">
+            <input type="hidden" name="_next" value="https://halfmarble.com/success.html">
+            <input type="email" name="email" placeholder="your@email.com" required
+                style="flex:1;background:#0a0a0a;border:1px solid #333;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#d1d5db;outline:none;">
+            <button type="submit"
+                style="background:#333;border:1px solid #555;color:#d1d5db;padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">REQUEST BETA ACCESS</button>
+        </form>
+    </div>
+</div>
+
+<footer style="padding:40px 0;text-align:center;border-top:1px solid #222;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#444;text-transform:uppercase;letter-spacing:0.3em;margin-bottom:8px;">Identity // halfmarble</div>
+    <p style="font-size:14px;color:#555;">Engineering for the unbridgeable difference.</p>
+</footer>
+
+</body>
+</html>

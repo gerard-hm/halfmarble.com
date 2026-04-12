@@ -1,0 +1,21 @@
+# OS Metadata
+.DS_Store
+Thumbs.db
+
+# Local Environment / Secrets
+.env
+.env.local
+*.log
+
+# Editor / IDE Config
+.vscode/
+.idea/
+*.swp
+
+# Build / Dependency Folders (if you add them later)
+node_modules/
+dist/
+build/
+
+# Local-only Claude Code guidance (canonical copy lives in halfmarble.closed/)
+CLAUDE.md

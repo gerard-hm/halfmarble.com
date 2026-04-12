@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>halfmarble | SteadyFastingTracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+  /* ===== LINE CHART STYLES ===== */
+  .chart-section { background: #111111; border: 1px solid #222; border-radius: 0; padding: 20px 0; margin-bottom: 28px; }
+  .chart-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 0 20px; margin-bottom: 16px; }
+  .chart-title { font-size: 18px; font-weight: 700; color: #fff; }
+  .chart-subtitle { font-size: 12px; color: #555; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+  .chart-canvas-wrap { position: relative; width: 100%; height: 395px; }
+  @media (orientation: landscape) and (max-height: 500px) { .chart-canvas-wrap { height: 320px; } }
+  .chart-aligned { padding: 0 20px; overflow: hidden; }
+  canvas#bioChart { width: 100%; height: 100%; }
+
+  /* Chart Legend */
+  .chart-legend { display: flex; flex-direction: column; gap: 6px; padding: 16px 20px 0; }
+  .legend-item { display: flex; align-items: baseline; gap: 6px; font-size: 12px; color: #888; cursor: pointer; transition: opacity 0.2s; user-select: none; font-family: 'JetBrains Mono', monospace; }
+  .legend-name { min-width: 130px; max-width: 130px; display: inline-block; }
+  .legend-note { color: #555; font-style: italic; margin-left: -25px; }
+  .legend-item.dimmed { opacity: 0.25; }
+  .legend-line { width: 20px; height: 3px; border-radius: 2px; }
+
+  /* Hour Input */
+  .hour-control { display: flex; flex-direction: column; gap: 8px; padding: 0; margin-bottom: 12px; }
+  .hour-control label { display: none; }
+  .hour-slider-wrap { display: flex; flex-direction: column; gap: 0; width: 100%; }
+  .hour-slider-ticks { padding: 0; }
+  .hour-slider { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px; outline: none; position: relative; z-index: 10;
+    background: linear-gradient(to right, #333 0%, #333 20%, #16a34a 20%, #16a34a 60%, #d97706 60%, #d97706 83%, #dc2626 83%, #dc2626 100%); }
+  .hour-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; cursor: pointer; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+  .hour-info { display: flex; align-items: baseline; gap: 10px; height: 28px; overflow: hidden; justify-content: center; }
+  .hour-value { font-size: 18px; font-weight: 700; color: #eab308; font-family: 'JetBrains Mono', monospace; }
+  .hour-stage { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; }
+
+  /* Tier toggles */
+  .tier-toggles { display: flex; flex-direction: column; gap: 6px; padding: 12px 0 8px; }
+  .tier-btn { padding: 5px 14px; border-radius: 0; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid; user-select: none; font-family: 'JetBrains Mono', monospace; }
+  .tier-btn.active { opacity: 1; }
+  .tier-btn.inactive { opacity: 0.3; }
+  .tier-btn[data-tier="tier1"] { border-color: #fff; color: #fff; background: rgba(255,255,255,0.08); }
+  .tier-btn[data-tier="tier1"].active { background: rgba(255,255,255,0.15); }
+  .tier-btn[data-tier="tier2"] { border-color: #888; color: #888; background: rgba(255,255,255,0.03); }
+  .tier-btn[data-tier="tier2"].active { background: rgba(255,255,255,0.08); }
+  .tier-btn[data-tier="tier3"] { border-color: #555; color: #555; background: rgba(255,255,255,0.01); }
+  .tier-btn[data-tier="tier3"].active { background: rgba(255,255,255,0.04); }
+
+  /* Threshold lines legend */
+  .threshold-legend { display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 0; }
+  .threshold-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; }
+
+  /* Foundational 60: CrossRef API verification (2026-04-10) found 37 of 72
+     DOIs are broken (23 MISMATCH + 14 NOT FOUND). Links disabled until
+     correct DOIs are manually sourced from PubMed. */
+  #foundational-60 a { pointer-events: none !important; border-bottom: none !important; cursor: default !important; }
+
+</style>
+</head>
+<body>
+
+<div style="max-width:1200px;margin:0 auto;padding:16px 20px 0;">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="index.html" style="font-size:12px;color:#666;text-decoration:none;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;border-bottom:1px solid transparent;" onmouseenter="this.style.borderColor='#eab308'" onmouseleave="this.style.borderColor='transparent'">&larr; BACK</a>
+    <a href="index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+      <img src="assets/logo.png" alt="halfmarble" style="width:22px;height:22px;filter:brightness(0) invert(1);opacity:0.7;">
+      <span style="font-size:11px;color:#666;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;">halfmarble</span>
+    </a>
+    <span style="font-size:12px;color:#444;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.3em;">02 // AI</span>
+  </div>
+</div>
+<div class="container">
+
+    <div class="chart-section">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title"><span style="color:#eab308;">Biomarker</span> Activity Over <span style="color:#eab308;">Fast</span> Duration</div>
+          <div class="chart-subtitle">Estimated relative activity levels (0–120 hours) — hover for details, click legend to toggle</div>
+        </div>
+      </div>
+
+      <div class="hour-info" style="padding: 0 12px; margin-bottom: 8px;">
+        <span class="hour-value" id="hourValue">0h</span>
+        <span class="hour-stage" id="hourStage">Not fasting</span>
+      </div>
+
+      <div class="chart-aligned">
+        <div class="chart-canvas-wrap">
+          <canvas id="bioChart"></canvas>
+        </div>
+
+        <div class="hour-control">
+          <label>Your position:</label>
+          <div class="hour-slider-wrap">
+            <input type="range" class="hour-slider" id="hourSlider" min="0" max="120" value="72" oninput="updatePosition()">
+            <div style="display:flex;justify-content:space-between;padding:2px 2px 0;">
+              <span style="font-size:9px;color:#444">0h</span>
+              <span style="font-size:9px;color:#444">24h</span>
+              <span style="font-size:9px;color:#444">48h</span>
+              <span style="font-size:9px;color:#444">72h</span>
+              <span style="font-size:9px;color:#444">96h</span>
+              <span style="font-size:9px;color:#444">120h</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tier-toggles" id="tierToggles"></div>
+      </div>
+      <div class="chart-legend" id="chartLegend"></div>
+
+      <div class="threshold-legend" style="margin-top:14px;padding-top:12px;border-top:1px solid #1a1a1a;">
+        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(22,163,74,0.3);border:1px solid rgba(22,163,74,0.5)"></div> Optimal window (24–72h)</div>
+        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(217,119,6,0.3);border:1px solid rgba(217,119,6,0.5)"></div> Diminishing returns (72–100h)</div>
+        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(220,38,38,0.35);border:1px solid rgba(220,38,38,0.5)"></div> Danger — medical refeeding (100–120h+)</div>
+      </div>
+    </div>
+
+<script>
+// ==================== BIOMARKER DATA ====================
+const biomarkers = [
+  { id:'ketones', name:'Ketone Bodies (BHB)', note:'brain fuel from fat, crosses blood-brain barrier', color:'#4ade80', category:'metabolic', confidence:'high', dataSource:'measurable', direction:'increases', importance:'tier1',
+    desc:'BHB begins rising as glycogen depletes. Detectable by 12-16h, nutritional ketosis by 24-48h, deep ketosis (3-6 mmol/L) in extended fasts.',
+    parkinsons:'Ketones cross the blood-brain barrier and may provide neuroprotective effects by reducing oxidative stress in dopaminergic neurons.',
+    source:'Extensive human clinical data, Long-Term Fasting-Induced Ketosis study (1610 subjects)',
+    curve: h => h < 10 ? 0.02 : Math.min(0.95, 0.02 + Math.pow((h-10)/50, 0.8)*0.93) },
+
+  { id:'hgh', name:'Human Growth Hormone', note:'tissue repair, surges 1300-2000% during sleep', color:'#f472b6', category:'hormonal', confidence:'high', dataSource:'estimated', direction:'increases', importance:'tier3',
+    desc:'HGH surges up to 1,300% in women and 2,000% in men during 24h fasts. Peaks around 24-48h, then plateaus — further fasting yields minimal additional HGH benefit.',
+    parkinsons:'HGH supports tissue repair and may help maintain muscle mass, important for managing motor symptoms.',
+    source:'Hartman et al., J Clin Invest (1992)',
+    // Spikes at 24-48h then clearly plateaus after 72h
+    curve: h => h < 6 ? 0.05 : h < 48 ? 0.05 + Math.pow(h/48, 1.2)*0.85 : h < 72 ? 0.9 + (h-48)/24*0.02 : 0.92 + Math.sin((h-72)/40)*0.02 },
+
+  { id:'autophagy', name:'Autophagy', note:'cellular self-cleaning, recycles damaged parts', color:'#ff4444', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+    desc:'Cells break down and recycle damaged components. Onset varies (18-32h), significant by 48h, peak around 48-72h. Plateaus after ~72h — diminishing returns. Cannot be directly measured in living humans.',
+    parkinsons:'Research suggests autophagy may help clear misfolded alpha-synuclein protein, which accumulates in Parkinson\'s disease. Studies are investigating this relationship.',
+    source:'Alirezaei et al., Autophagy (2010); Clinical trial NCT04842864',
+    // Peaks at ~72h then plateaus (diminishing returns)
+    curve: h => h < 16 ? 0.02 : h < 24 ? 0.02 + (h-16)/8*0.1 : h < 72 ? Math.min(0.92, 0.12 + Math.pow((h-24)/48, 0.7)*0.8) : 0.92 + Math.sin((h-72)/48*0.5)*0.03 },
+
+  { id:'igf1', name:'IGF-1', note:'growth signal, drops to activate repair mode', color:'#a78bfa', category:'metabolic', confidence:'high', dataSource:'estimated', direction:'decreases', importance:'tier2',
+    desc:'IGF-1 declines during fasting, shifting from growth mode to protection/repair mode. Lower IGF-1 promotes stem cell regeneration (Longo research).',
+    parkinsons:'IGF-1 reduction activates protective pathways that may shield neurons. The IGF-1/PKA axis is implicated in stem cell-based neural repair.',
+    source:'Longo et al., Cell Stem Cell (2014)',
+    curve: h => Math.max(0.1, 1.0 - Math.pow(h/80, 0.8)*0.85) },
+
+  { id:'bdnf', name:'BDNF', note:'brain growth factor, supports neuron survival', color:'#FFD700', category:'cellular', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+    desc:'BDNF supports neuron survival and stimulates new nerve cell generation in the hippocampus. Fasting increases production, plateauing around 72h.',
+    parkinsons:'Research indicates BDNF supports dopaminergic neuron survival — the neurons affected in Parkinson\'s disease.',
+    source:'Mattson et al., Brain Facts (2018); BDNF meta-review (2021)',
+    // Rises then plateaus after ~72h
+    curve: h => h < 10 ? 0.05 : h < 72 ? Math.min(0.85, 0.05 + Math.pow((h-10)/62, 0.65)*0.8) : 0.85 + Math.sin((h-72)/30)*0.02 },
+
+  { id:'neurorecovery', name:'Neurological Recovery', note:'four brain-protective mechanisms working together', color:'#3b82f6', category:'neurological', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
+    desc:'Four synergistic mechanisms: (1) D1 receptor upregulation in prefrontal cortex via Drd1→cAMP→PKA→DARPP-32→CREB→BDNF pathway. (2) Enhanced somatodendritic dopamine release dynamics in VTA. (3) BHB ketones bypass impaired mitochondrial Complex I, providing alternative fuel to threatened neurons. (4) Autophagy clears phosphorylated alpha-synuclein aggregates. These mechanisms work together — not in isolation.',
+    parkinsons:'A 2025 Nature Communications study (Szegő et al.) found that intermittent fasting in animal models was associated with improved motor function, reduced dopaminergic neuron loss, preserved striatal dopamine, and reduced alpha-synuclein aggregation. Research suggests BHB may bypass impaired mitochondrial Complex I, providing alternative fuel to neurons. These are areas of active scientific investigation.',
+    source:'Szegő et al., Nature Comms (2025); Piao et al., Neurobiol Dis (2025); Roseberry, J Neurophysiol (2015); Tieu et al., Frontiers Nutr (2019)',
+    curve: h => h < 16 ? 0.03 : h < 24 ? 0.03 + (h-16)/8*0.07 : h < 72 ? Math.min(0.85, 0.1 + Math.pow((h-24)/48, 0.7)*0.75) : 0.85 + Math.sin((h-72)/30)*0.02 },
+
+  { id:'immune', name:'Immune Regeneration', note:'old immune cells cleared, rebuilt from stem cells', color:'#60a5fa', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+    desc:'Longo\'s research: 72h fasts trigger stem cell-based immune regeneration. The body breaks down old immune cells, then stem cells rebuild when refeeding begins.',
+    parkinsons:'Neuroinflammation plays a significant role in Parkinson\'s. A regenerated immune system may produce less chronic inflammation damaging dopaminergic neurons.',
+    source:'Cheng et al., Cell Stem Cell (2014); USC Keck',
+    curve: h => h < 48 ? 0.02 : h < 72 ? 0.02 + (h-48)/24*0.3 : Math.min(0.95, 0.32 + Math.pow((h-72)/48, 0.8)*0.63) },
+
+  { id:'stemcells', name:'Stem Cell Activation', note:'regeneration begins when IGF-1 drops enough', color:'#c084fc', category:'immune', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier2',
+    desc:'PKA must shut down for stem cells to enter regenerative mode. This happens when IGF-1 drops sufficiently. 72h is the key duration from Phase I clinical trial.',
+    parkinsons:'Emerging research on whether fasting-activated stem cells contribute to neural repair, though still being studied.',
+    source:'Longo et al., Cell Stem Cell (2014); Phase I at USC',
+    curve: h => h < 48 ? 0.01 : h < 72 ? 0.01 + (h-48)/24*0.2 : Math.min(0.9, 0.21 + Math.pow((h-72)/48, 0.75)*0.69) },
+
+  { id:'senescent', name:'Senescent Cell Clearance', note:'clears zombie cells that drive inflammation', color:'#fb923c', category:'cellular', confidence:'low', dataSource:'estimated', direction:'increases', importance:'tier3',
+    desc:'Autophagy clears senescent "zombie" cells. Prolonged fasting reduces p21, p16, p53 markers. Process is time-dependent, increasing with fast duration.',
+    parkinsons:'Senescent cells in the brain contribute to neuroinflammation and may accelerate neurodegeneration.',
+    source:'El-Shafey & Elsherbiny, Human Nutrition & Metabolism (2023)',
+    curve: h => h < 24 ? 0.02 : Math.min(0.8, 0.02 + Math.pow((h-24)/72, 0.7)*0.78) }
+];
+
+// Track visibility
+const visible = {};
+biomarkers.forEach(b => visible[b.id] = true);
+
+// Track tier visibility
+const tierVisible = { tier1: true, tier2: true, tier3: true };
+
+function toggleTier(tier) {
+  tierVisible[tier] = !tierVisible[tier];
+  // Update individual biomarker visibility based on tier
+  biomarkers.forEach(b => {
+    if (b.importance === tier) visible[b.id] = tierVisible[tier];
+  });
+  buildTierToggles();
+  buildLegend();
+  drawChart();
+}
+
+function buildTierToggles() {
+  const el = document.getElementById('tierToggles');
+  el.innerHTML = '';
+  const tiers = [
+    { id: 'tier1', label: 'Core — Autophagy \u00b7 Ketones \u00b7 BDNF \u00b7 Neuro', style: 'solid' },
+    { id: 'tier2', label: 'Supporting — IGF-1 \u00b7 Immune \u00b7 Stem Cells', style: 'dashed' },
+    { id: 'tier3', label: 'Secondary — HGH \u00b7 Senescent Cells', style: 'dotted' },
+  ];
+  tiers.forEach(t => {
+    const btn = document.createElement('div');
+    btn.className = 'tier-btn ' + (tierVisible[t.id] ? 'active' : 'inactive');
+    btn.dataset.tier = t.id;
+    btn.textContent = t.label;
+    btn.onclick = () => toggleTier(t.id);
+    el.appendChild(btn);
+  });
+}
+
+// ==================== CANVAS CHART ====================
+const canvas = document.getElementById('bioChart');
+const ctx = canvas.getContext('2d');
+let currentHour = 0;
+let hoveredPoint = null;
+
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = wrap.clientWidth * dpr;
+  canvas.height = wrap.clientHeight * dpr;
+  canvas.style.width = wrap.clientWidth + 'px';
+  canvas.style.height = wrap.clientHeight + 'px';
+  ctx.scale(dpr, dpr);
+}
+
+const padding = { top: 20, right: 0, bottom: 40, left: 0 };
+
+function getChartArea() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  return {
+    x: padding.left,
+    y: padding.top,
+    w: w - padding.left - padding.right,
+    h: h - padding.top - padding.bottom
+  };
+}
+
+function hourToX(hour) {
+  const a = getChartArea();
+  return a.x + (hour / 120) * a.w;
+}
+
+function valToY(val) {
+  const a = getChartArea();
+  return a.y + a.h - val * a.h;
+}
+
+function drawChart() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const a = getChartArea();
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Horizontal grid lines
+  ctx.strokeStyle = '#1a1a1a';
+  ctx.lineWidth = 1;
+  for (let v = 0; v <= 1; v += 0.25) {
+    const y = valToY(v);
+    ctx.beginPath();
+    ctx.moveTo(a.x, y);
+    ctx.lineTo(a.x + a.w, y);
+    ctx.stroke();
+  }
+
+  // Y-axis labels (inside chart, right edge, with background)
+  ctx.font = '11px Inter, -apple-system, sans-serif';
+  ctx.textAlign = 'right';
+  const yLabels = ['0%', '25%', '50%', '75%', '100%'];
+  const yNudge = [- 8, 0, 0, 0, 12];
+  for (let i = 0; i <= 4; i++) {
+    const lx = a.x + a.w - 6;
+    const ly = valToY(i * 0.25) + 4 + yNudge[i];
+    const tw = ctx.measureText(yLabels[i]).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(lx - tw - 4, ly - 11, tw + 8, 16);
+    ctx.fillStyle = '#999';
+    ctx.fillText(yLabels[i], lx, ly);
+  }
+
+  // Vertical dashed grid lines + X labels
+  ctx.textAlign = 'center';
+  const hourMarks = [0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120];
+  hourMarks.forEach(hr => {
+    const x = hourToX(hr);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, a.y);
+    ctx.lineTo(x, a.y + a.h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#444';
+    ctx.fillText(hr + 'h', x, a.y + a.h + 20);
+  });
+
+  // ===== ZONE SHADING — prominent colored zones =====
+
+  // Zone 1: Pre-autophagy (0-24h) — dark/neutral
+  // No shading — just the dark background
+
+  // Zone 2: GREEN — Optimal window (24-72h)
+  const greenGrad = ctx.createLinearGradient(hourToX(24), 0, hourToX(72), 0);
+  greenGrad.addColorStop(0, 'rgba(22, 163, 74, 0.0)');
+  greenGrad.addColorStop(0.15, 'rgba(22, 163, 74, 0.12)');
+  greenGrad.addColorStop(0.5, 'rgba(22, 163, 74, 0.15)');
+  greenGrad.addColorStop(1, 'rgba(22, 163, 74, 0.12)');
+  ctx.fillStyle = greenGrad;
+  ctx.fillRect(hourToX(24), a.y, hourToX(72) - hourToX(24), a.h);
+  // Green top border
+  ctx.fillStyle = 'rgba(22, 163, 74, 0.5)';
+  ctx.fillRect(hourToX(24), a.y, hourToX(72) - hourToX(24), 2);
+
+  // Zone 3: ORANGE — Diminishing returns (72-100h)
+  const orangeGrad = ctx.createLinearGradient(hourToX(72), 0, hourToX(100), 0);
+  orangeGrad.addColorStop(0, 'rgba(217, 119, 6, 0.12)');
+  orangeGrad.addColorStop(0.5, 'rgba(217, 119, 6, 0.14)');
+  orangeGrad.addColorStop(1, 'rgba(217, 119, 6, 0.10)');
+  ctx.fillStyle = orangeGrad;
+  ctx.fillRect(hourToX(72), a.y, hourToX(100) - hourToX(72), a.h);
+  // Orange top border
+  ctx.fillStyle = 'rgba(217, 119, 6, 0.5)';
+  ctx.fillRect(hourToX(72), a.y, hourToX(100) - hourToX(72), 2);
+
+  // Zone 4: RED — Danger zone (100-120h)
+  const redGrad = ctx.createLinearGradient(hourToX(100), 0, hourToX(120), 0);
+  redGrad.addColorStop(0, 'rgba(220, 38, 38, 0.10)');
+  redGrad.addColorStop(0.5, 'rgba(220, 38, 38, 0.18)');
+  redGrad.addColorStop(1, 'rgba(220, 38, 38, 0.25)');
+  ctx.fillStyle = redGrad;
+  ctx.fillRect(hourToX(100), a.y, hourToX(120) - hourToX(100), a.h);
+  // Red top border
+  ctx.fillStyle = 'rgba(220, 38, 38, 0.6)';
+  ctx.fillRect(hourToX(100), a.y, hourToX(120) - hourToX(100), 2);
+
+  // ===== ZONE LABELS (centered vertically in chart) =====
+  const midY = a.y + a.h / 2;
+  ctx.textAlign = 'center';
+
+  function labelWithBg(text, x, y, font, color) {
+    ctx.font = font;
+    const tw = ctx.measureText(text).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(x - tw/2 - 4, y - 11, tw + 8, 16);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
+
+  // Optimal window
+  labelWithBg('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 18, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.7)');
+  labelWithBg('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, midY - 2, '10px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.4)');
+
+  // Diminishing returns
+  labelWithBg('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, midY + 20, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.7)');
+  labelWithBg('Biomarkers plateau, risks grow', (hourToX(72) + hourToX(100)) / 2, midY + 34, '10px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.4)');
+
+  // Danger
+  labelWithBg('DANGER', (hourToX(100) + hourToX(120)) / 2, midY + 54, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.8)');
+  labelWithBg('Medical refeeding', (hourToX(100) + hourToX(120)) / 2 - 5, midY + 68, '10px Inter, -apple-system, sans-serif', 'rgba(239, 68, 68, 0.5)');
+
+  // ===== THRESHOLD LINES =====
+  drawThresholdLine(24, '#16a34a', 0.5);   // Autophagy onset
+  drawThresholdLine(48, '#16a34a', 0.35);   // Deep autophagy
+  drawThresholdLine(72, '#d97706', 0.6);    // Diminishing returns
+  drawThresholdLine(100, '#dc2626', 0.6);   // Danger begins
+
+  // Solid red line at 120h — hard medical limit
+  drawSolidThresholdLine(120, '#dc2626', 0.8);
+
+  // Draw biomarker curves — 3 tiers of visual importance
+  // Tier 1 (core): solid, thick (3px), full opacity, glow
+  // Tier 2 (supporting): dashed (8,5), medium (2px), 70% opacity
+  // Tier 3 (secondary): dotted (3,4), thin (1.2px), 45% opacity
+  const tierOrder = { tier3: 0, tier2: 1, tier1: 2 };
+  const sortedBiomarkers = [...biomarkers].sort((a, b) => tierOrder[a.importance] - tierOrder[b.importance]);
+  sortedBiomarkers.forEach(b => {
+    if (!visible[b.id]) return;
+    const tier = b.importance;
+
+    ctx.strokeStyle = b.color;
+    if (tier === 'tier1') {
+      ctx.lineWidth = 3; ctx.globalAlpha = 0.95; ctx.setLineDash([]);
+    } else if (tier === 'tier2') {
+      ctx.lineWidth = 2; ctx.globalAlpha = 0.7; ctx.setLineDash([8, 5]);
+    } else {
+      ctx.lineWidth = 1.2; ctx.globalAlpha = 0.45; ctx.setLineDash([3, 4]);
+    }
+    ctx.beginPath();
+    for (let hr = 0; hr <= 120; hr += 0.5) {
+      const x = hourToX(hr);
+      const y = valToY(b.curve(hr));
+      if (hr === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Glow only for tier 1
+    if (tier === 'tier1') {
+      ctx.strokeStyle = b.color;
+      ctx.lineWidth = 8;
+      ctx.globalAlpha = 0.06;
+      ctx.beginPath();
+      for (let hr = 0; hr <= 120; hr += 0.5) {
+        const x = hourToX(hr);
+        const y = valToY(b.curve(hr));
+        if (hr === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  });
+
+  // Current position marker
+  if (currentHour > 0) {
+    const x = hourToX(currentHour);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(x, a.y);
+    ctx.lineTo(x, a.y + a.h);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // "YOU" label
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('YOU', x, a.y - 6);
+
+    // Dots on each visible curve
+    biomarkers.forEach(b => {
+      if (!visible[b.id]) return;
+      const y = valToY(b.curve(currentHour));
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = b.color;
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  }
+
+  // Hover tooltip
+  if (hoveredPoint) {
+    const { x, y, biomarker, hour, value } = hoveredPoint;
+    const pct = Math.round(value * 100);
+    const text = `${biomarker.name}: ${pct}% at ${Math.round(hour)}h`;
+    ctx.font = '12px -apple-system, sans-serif';
+    const tw = ctx.measureText(text).width;
+    const tx = Math.min(x + 12, a.x + a.w - tw - 16);
+    const ty = Math.max(y - 30, a.y + 10);
+
+    ctx.fillStyle = 'rgba(20,20,20,0.9)';
+    ctx.beginPath();
+    ctx.roundRect(tx - 6, ty - 14, tw + 12, 22, 6);
+    ctx.fill();
+    ctx.fillStyle = biomarker.color;
+    ctx.fillText(text, tx, ty);
+  }
+}
+
+function drawThresholdLine(hour, color, opacity) {
+  const a = getChartArea();
+  const x = hourToX(hour);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = opacity;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(x, a.y);
+  ctx.lineTo(x, a.y + a.h);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+}
+
+function drawSolidThresholdLine(hour, color, opacity) {
+  const a = getChartArea();
+  const x = hourToX(hour);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.globalAlpha = opacity;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(x, a.y);
+  ctx.lineTo(x, a.y + a.h);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+// ==================== INTERACTIONS ====================
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const a = getChartArea();
+
+  if (mx < a.x || mx > a.x + a.w || my < a.y || my > a.y + a.h) {
+    hoveredPoint = null;
+    drawChart();
+    return;
+  }
+
+  const hour = ((mx - a.x) / a.w) * 120;
+  let closest = null;
+  let minDist = Infinity;
+
+  biomarkers.forEach(b => {
+    if (!visible[b.id]) return;
+    const val = b.curve(hour);
+    const y = valToY(val);
+    const dist = Math.abs(my - y);
+    if (dist < minDist && dist < 30) {
+      minDist = dist;
+      closest = { x: hourToX(hour), y, biomarker: b, hour, value: val };
+    }
+  });
+
+  hoveredPoint = closest;
+  canvas.style.cursor = closest ? 'crosshair' : 'default';
+  drawChart();
+});
+
+canvas.addEventListener('mouseleave', () => {
+  hoveredPoint = null;
+  drawChart();
+});
+
+function updatePosition() {
+  const val = parseInt(document.getElementById('hourSlider').value);
+  currentHour = val;
+
+  document.getElementById('hourValue').textContent = val + 'h';
+
+  let stage = 'Not fasting', stageColor = '#666', hourColor = '#666';
+  if (val >= 100) { stage = 'DANGER ZONE — medical refeeding required'; stageColor = '#ef4444'; hourColor = '#ef4444'; }
+  else if (val >= 72) { stage = 'Diminishing returns — benefits plateauing'; stageColor = '#f59e0b'; hourColor = '#f59e0b'; }
+  else if (val >= 48) { stage = 'Deep autophagy — peak benefits zone'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
+  else if (val >= 24) { stage = 'Optimal window — autophagy active'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
+  else if (val >= 16) { stage = 'Ketosis onset'; stageColor = '#888'; hourColor = '#aaa'; }
+  else if (val >= 12) { stage = 'Fat burning'; stageColor = '#888'; hourColor = '#aaa'; }
+  else if (val >= 4) { stage = 'Early fasting'; stageColor = '#666'; hourColor = '#888'; }
+  else if (val > 0) { stage = 'Fed state'; stageColor = '#555'; hourColor = '#666'; }
+
+  document.getElementById('hourStage').textContent = stage;
+  document.getElementById('hourValue').style.color = hourColor;
+  document.getElementById('hourStage').style.color = stageColor;
+
+  drawChart();
+}
+
+// ==================== LEGEND ====================
+function buildLegend() {
+  const el = document.getElementById('chartLegend');
+  el.innerHTML = '';
+
+  const tiers = [
+    { id: 'tier1', label: 'Core', labelColor: '#ccc' },
+    { id: 'tier2', label: 'Supporting', labelColor: '#666' },
+    { id: 'tier3', label: 'Secondary', labelColor: '#444' },
+  ];
+
+  tiers.forEach(tier => {
+    const tierBiomarkers = biomarkers.filter(b => b.importance === tier.id);
+    if (tierBiomarkers.length === 0) return;
+
+    // Tier label row
+    const label = document.createElement('div');
+    label.style.cssText = `font-size:10px;font-weight:600;color:${tier.labelColor};text-transform:uppercase;letter-spacing:0.5px;padding:8px 0 4px;`;
+    label.textContent = tier.label;
+    el.appendChild(label);
+
+    // Each biomarker on its own row
+    tierBiomarkers.forEach(b => {
+      const item = document.createElement('div');
+      item.className = 'legend-item' + (visible[b.id] ? '' : ' dimmed');
+      item.style.cssText = 'padding:2px 0;';
+      const lineStyle = tier.id === 'tier1'
+        ? `background:${b.color};height:3px`
+        : tier.id === 'tier2'
+        ? `background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 6px,transparent 6px,transparent 10px);height:2px;opacity:0.7`
+        : `background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 2px,transparent 2px,transparent 5px);height:1.5px;opacity:0.45`;
+      const noteHtml = b.note ? `<span class="legend-note">(${b.note})</span>` : '';
+      item.innerHTML = `<div class="legend-line" style="${lineStyle};flex-shrink:0;"></div><span class="legend-name">${b.name}</span>${noteHtml}`;
+      item.onclick = () => {
+        visible[b.id] = !visible[b.id];
+        item.classList.toggle('dimmed');
+        drawChart();
+      };
+      el.appendChild(item);
+    });
+  });
+}
+
+// ==================== BIOMARKER CARDS ====================
+function buildCards() {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+
+  // Sort by tier priority, then by original order within tier
+  const tierPriority = { tier1: 0, tier2: 1, tier3: 2 };
+  const sorted = [...biomarkers].sort((a, b) => tierPriority[a.importance] - tierPriority[b.importance]);
+
+  const tierLabels = { tier1: 'CORE', tier2: 'SUPPORTING', tier3: 'SECONDARY' };
+  const tierColors = { tier1: '#ccc', tier2: '#666', tier3: '#444' };
+  let lastTier = '';
+
+  sorted.forEach(b => {
+    // Insert tier section header when tier changes
+    if (b.importance !== lastTier) {
+      lastTier = b.importance;
+      grid.innerHTML += `<div style="grid-column:1/-1;padding:12px 0 4px;border-bottom:1px solid ${tierColors[b.importance]}22;margin-top:${b.importance === 'tier1' ? '0' : '8px'}">
+        <span style="font-size:11px;font-weight:700;color:${tierColors[b.importance]};letter-spacing:1px;">${tierLabels[b.importance]}</span>
+      </div>`;
+    }
+
+    const badgeClass = b.confidence === 'high' ? 'badge-high' : b.confidence === 'medium' ? 'badge-medium' : 'badge-low';
+    const pdHtml = b.parkinsons ? `<div class="pd-box"><div class="pd-label">PARKINSON'S RELEVANCE</div><div class="pd-text">${b.parkinsons}</div></div>` : '';
+
+    // Line segment style matching the chart
+    let lineSegment;
+    if (b.importance === 'tier1') {
+      lineSegment = `<span style="display:inline-block;width:28px;height:3px;background:${b.color};border-radius:2px;vertical-align:middle;margin-right:8px;"></span>`;
+    } else if (b.importance === 'tier2') {
+      lineSegment = `<span style="display:inline-block;width:28px;height:2px;background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 6px,transparent 6px,transparent 10px);border-radius:1px;vertical-align:middle;margin-right:8px;opacity:0.7;"></span>`;
+    } else {
+      lineSegment = `<span style="display:inline-block;width:28px;height:1.5px;background:repeating-linear-gradient(90deg,${b.color} 0,${b.color} 2px,transparent 2px,transparent 5px);border-radius:1px;vertical-align:middle;margin-right:8px;opacity:0.45;"></span>`;
+    }
+
+    grid.innerHTML += `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">${lineSegment}${b.name}</div>
+          <span class="card-badge ${badgeClass}">${b.confidence}</span>
+        </div>
+        <div class="card-meta">
+          <div class="meta-item"><div class="meta-label">Direction</div><div class="meta-value">${b.direction === 'increases' ? '↑ Increases' : '↓ Decreases'}</div></div>
+          <div class="meta-item"><div class="meta-label">Data Source</div><div class="meta-value">${b.dataSource === 'measurable' ? 'Measurable' : 'Estimated'}</div></div>
+        </div>
+        <div class="card-desc">${b.desc}</div>
+        ${pdHtml}
+        <div class="card-source">${b.source}</div>
+      </div>`;
+  });
+}
+
+
+// ==================== ANIMATION ====================
+let animInterval = null;
+function stopAnimation() {
+  if (animInterval) { clearInterval(animInterval); animInterval = null; }
+}
+function startAnimation() {
+  const slider = document.getElementById('hourSlider');
+  slider.value = 0;
+  updatePosition();
+  animInterval = setInterval(() => {
+    let val = parseInt(slider.value) + 1;
+    if (val > 120) val = 0;
+    slider.value = val;
+    updatePosition();
+  }, 167);
+}
+
+// Stop on any user interaction
+document.getElementById('hourSlider').addEventListener('input', stopAnimation);
+document.getElementById('hourSlider').addEventListener('mousedown', stopAnimation);
+document.getElementById('hourSlider').addEventListener('touchstart', stopAnimation);
+
+// ==================== KEYBOARD ====================
+document.addEventListener('keydown', (e) => {
+  stopAnimation();
+  const slider = document.getElementById('hourSlider');
+  if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    slider.value = Math.min(120, parseInt(slider.value) + 1);
+    updatePosition();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    slider.value = Math.max(0, parseInt(slider.value) - 1);
+    updatePosition();
+  }
+});
+
+// ==================== INIT ====================
+window.addEventListener('resize', () => { resizeCanvas(); drawChart(); });
+window.addEventListener('load', () => { resizeCanvas(); drawChart(); });
+resizeCanvas();
+buildTierToggles();
+buildLegend();
+startAnimation();
+</script>
+
+    <div class="chart-section" style="padding:28px 0;margin-bottom:0;">
+      <div style="padding:0 20px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+            <span style="font-size:22px;font-weight:700;color:#eab308;">Glass Box</span>
+            <span class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;">// what the AI reads</span>
+        </div>
+        <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.6;">
+            No black box. Every paper our model ingests is listed here. You see what the AI sees — nothing hidden, nothing hallucinated. This is the foundation the engine runs on. The source code will be released for independent review.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#ca8a04;">ANCHORED</span>
+                <span style="color:#555;">The AI is pinned to static, versioned data — not a drifting LLM. The science cannot silently change between updates.</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#ca8a04;">ON-DEVICE</span>
+                <span style="color:#555;">The AI model lives on your phone. No cloud. No server. All inference runs locally.</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#ca8a04;">LOCAL</span>
+                <span style="color:#555;">Your data stays on your phone by default. Join the fight beyond your own case: opt in to share anonymized, aggregated patterns with researchers &mdash; never your identity, never automatic, never without consent. <a href="glass-box/data.html" style="color:#ca8a04;text-decoration:none;border-bottom:1px solid #333;">See exactly what gets shared &rarr;</a></span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
+                <span class="mono" style="color:#ca8a04;">TRACEABLE</span>
+                <span style="color:#555;">Every claim the AI makes cites a specific paper below. If it's not in the Glass Box, the AI won't say it.</span>
+            </div>
+        </div>
+
+        <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;">Foundational Papers</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">01</span>
+                <a href="https://doi.org/10.1002/mds.27390" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Low-fat versus ketogenic diet in Parkinson's disease: A pilot randomized controlled trial</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Phillips et al. — Movement Disorders, 2018</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">02</span>
+                <a href="https://doi.org/10.1038/s41422-025-01203-7" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Mitophagy in the pathogenesis and management of disease</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Nature Cell Research, 2025</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">03</span>
+                <a href="https://doi.org/10.3389/fcell.2025.1518991" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Canonical and noncanonical autophagy: involvement in Parkinson's disease</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Frontiers in Cell and Developmental Biology, 2025</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">04</span>
+                <span style="color:#d1d5db;">The role of autophagy in Parkinson's disease</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Haghighirad, B.</span>
+            </div>
+        </div>
+
+        <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;">Supplementary Research</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">05</span>
+                <a href="https://doi.org/10.1172/JCI194745" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">The promise of GLP-1 receptor agonists for neurodegenerative diseases</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Journal of Clinical Investigation</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">06</span>
+                <a href="https://doi.org/10.1073/pnas.2421886122" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Autophagic stress activates distinct compensatory secretory pathways in neurons</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Palumbos et al. — PNAS, 2025</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">07</span>
+                <a href="https://doi.org/10.1111/cns.70503" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Autophagy and Cellular Senescence in Alzheimer's Disease: Key Drivers of Neurodegeneration</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">CNS Neuroscience &amp; Therapeutics, 2025</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">08</span>
+                <a href="https://doi.org/10.1016/j.ceb.2015.04.016" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Secretory autophagy</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Current Opinion in Cell Biology, 2015</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">09</span>
+                <a href="https://doi.org/10.1172/JCI73945" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Immunologic manifestations of autophagy</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Journal of Clinical Investigation</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">10</span>
+                <a href="https://doi.org/10.1242/jcs.163758" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Precision autophagy directed by receptor regulators — emerging examples within the TRIM family</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Journal of Cell Science, 2017</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">11</span>
+                <span style="color:#d1d5db;">Macroautophagy: degradation of intracytoplasmic contents including proteins and organelles</span> <span class="mono" style="color:#dc2626;font-size:9px;">DOI PENDING</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Journal of Experimental Medicine, 2015</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">12</span>
+                <a href="https://doi.org/10.1038/s41467-022-32718-x" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Mapping autophagosome contents identifies interleukin-7 receptor-α as a key cargo modulating CD4+ T cell proliferation</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Nature Communications, 2022</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">13</span>
+                <a href="https://doi.org/10.3390/life13040957" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Gut Microbiota in Autophagy Regulation: New Therapeutic Perspective in Neurodegeneration</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Life, 2023</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">14</span>
+                <a href="https://doi.org/10.3389/fmed.2025.1666909" target="_blank" rel="noopener" style="color:#d1d5db;text-decoration:none;border-bottom:1px solid #333;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#333'">Global trends and perspectives in mitophagy on neurodegenerative diseases: a scientometric analysis</a>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">Frontiers in Medicine, 2025</span>
+            </div>
+            <div style="display:flex;align-items:baseline;font-size:13px;color:#999;">
+                <span style="color:#ca8a04;margin-right:10px;min-width:20px;" class="mono">15</span>
+                <span style="color:#d1d5db;">Development and Synthesis of Biologically Active Compounds</span> <span class="mono" style="color:#dc2626;font-size:9px;">UNRELATED — MDPI EDITORIAL</span>
+                <span style="color:#555;margin-left:8px;white-space:nowrap;">International Journal of Molecular Sciences, 2024</span>
+            </div>
+        </div>
+
+        <div id="foundational-60" style="border-top:1px solid #222;margin-top:28px;padding-top:24px;">
+            <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:4px;">The Foundational 60</div>
+            <p style="font-size:12px;color:#555;margin-bottom:20px;line-height:1.5;">15 researchers × 4 papers each — Breakthrough, Mechanism, Proof, Synthesis. Structured to prevent cherry-picking and ensure full evolutionary logic of each researcher's contribution. <span class="mono" style="color:#ca8a04;font-size:10px;">PENDING INGESTION</span> <span class="mono" style="color:#dc2626;font-size:10px;">· DOI LINKS DISABLED — 51% FAILED CROSSREF VERIFICATION</span></p>
+
+            <div style="margin-bottom:20px;">
+                <div class="mono" style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">1. Biological Bedrock</div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Yoshinori Ohsumi, PhD <span style="color:#444;font-weight:400;">— Autophagy Discovery</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1016/0014-5793(93)80398-E" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Tsukada &amp; Ohsumi — Isolation and characterization of autophagy-defective mutants.</a> <span style="color:#444;">FEBS Letters, 1993</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1016/S0014-5793(01)02533-6" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Mizushima &amp; Ohsumi — Dissection of the ATG gene system.</a> <span style="color:#444;">FEBS Letters, 2001</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1038/nrm2708" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Nakatogawa &amp; Ohsumi — Dynamics and diversity in autophagy mechanisms.</a> <span style="color:#444;">Nature Reviews MCB, 2009</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1038/cr.2013.153" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Ohsumi — Historical landmarks of autophagy research.</a> <span style="color:#444;">Cell Research, 2014</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Ana Maria Cuervo, MD, PhD <span style="color:#444;font-weight:400;">— Chaperone-Mediated Autophagy</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1126/science.1101738" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cuervo et al. — Impaired degradation of mutant α-synuclein by CMA.</a> <span style="color:#444;">Science, 2004</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1091/mbc.e05-02-0119" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Massey &amp; Cuervo — CMA as a defense against oxidative stress.</a> <span style="color:#444;">Molecular Biology of the Cell, 2006</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1038/s41580-018-0001-6" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Kaushik &amp; Cuervo — The coming of age of CMA.</a> <span style="color:#444;">Nature Reviews MCB, 2018</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1016/j.gde.2014.04.003" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Schneider &amp; Cuervo — Autophagy and human disease: emerging themes.</a> <span style="color:#444;">Current Opinion in Genetics &amp; Development, 2014</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Guido Kroemer, MD, PhD <span style="color:#444;font-weight:400;">— Autophagy Flux</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1016/j.cell.2013.05.039" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">López-Otín &amp; Kroemer — The Hallmarks of Aging.</a> <span style="color:#444;">Cell, 2013</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1016/j.cell.2011.07.030" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Rubinsztein &amp; Kroemer — Autophagy and Aging.</a> <span style="color:#444;">Cell, 2011</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1126/science.aan2788" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Madeo &amp; Kroemer — Spermidine in health and disease.</a> <span style="color:#444;">Science, 2018</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.15252/embj.201695774" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Galluzzi &amp; Kroemer — Autophagy in malignant transformation.</a> <span style="color:#444;">EMBO Journal, 2017</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Satchin Panda, PhD <span style="color:#444;font-weight:400;">— Circadian Timing</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1016/j.cmet.2012.04.019" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Hatori &amp; Panda — Time-restricted feeding prevents metabolic diseases.</a> <span style="color:#444;">Cell Metabolism, 2012</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1016/j.cmet.2014.11.001" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Chaix &amp; Panda — TRF as preventative intervention.</a> <span style="color:#444;">Cell Metabolism, 2014</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1016/j.cmet.2014.11.008" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Zarrinpar &amp; Panda — Diet and diurnal rhythm of gut microbiome.</a> <span style="color:#444;">Cell Metabolism, 2016</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1016/j.cmet.2019.11.004" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Manoogian &amp; Panda — TRE in metabolic syndrome patients.</a> <span style="color:#444;">Cell Metabolism, 2019</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <div class="mono" style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">2. Neuro-Defense Track</div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Ray Dorsey, MD <span style="color:#444;font-weight:400;">— Neuro-Strategy</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.3233/JPD-181474" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Dorsey &amp; Bloem — The Emerging Evidence of the Parkinson Pandemic.</a> <span style="color:#444;">J Parkinson's Disease, 2018</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1212/WNL.0b013e318294f4db" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Dorsey et al. — Personalized telemedicine for PD.</a> <span style="color:#444;">Neurology, 2013</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://endingpd.org/" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Dorsey et al. — Ending Parkinson's Disease.</a> <span style="color:#444;">PublicAffairs, 2020 (book)</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1021/acschemneuro.1c00596" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Dorsey et al. — TCE: An Invisible Cause of PD?</a> <span style="color:#444;">ACS Chem Neuroscience, 2021</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Matthew Phillips, MD <span style="color:#444;font-weight:400;">— Clinical Fasting/PD</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1002/mds.27390" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Phillips et al. — Low-fat vs ketogenic diet in PD.</a> <span style="color:#444;">Movement Disorders, 2018</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.3390/nu11102501" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Phillips — Fasting as a Therapy in Neurological Disease.</a> <span style="color:#444;">Nutrients, 2019</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1111/jnc.15471" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Phillips — Metabolic strategies in neurodegeneration.</a> <span style="color:#444;">J Neurochemistry, 2021</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.3389/fnagi.2017.00219" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Phillips — MCI: metabolic flexibility and mitochondrial efficiency.</a> <span style="color:#444;">Frontiers in Aging Neuroscience, 2017</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Mark P. Mattson, PhD <span style="color:#444;font-weight:400;">— Neuro-Plasticity</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1073/pnas.0631572100" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Anson &amp; Mattson — IF dissociates glucose metabolism and neuronal resistance.</a> <span style="color:#444;">PNAS, 2003</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1038/nrn3151" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Stranahan &amp; Mattson — Recruiting adaptive stress responses for brain aging.</a> <span style="color:#444;">Nature Reviews Neuroscience, 2012</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1038/nrn.2017.156" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Mattson et al. — Intermittent metabolic switching, neuroplasticity and brain health.</a> <span style="color:#444;">Nature Reviews Neuroscience, 2018</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1016/j.arr.2014.12.011" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Mattson — Lifelong brain health is a lifelong challenge.</a> <span style="color:#444;">Ageing Research Reviews, 2015</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <div class="mono" style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">3. Molecular Logic</div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Valter Longo, PhD <span style="color:#444;font-weight:400;">— Reconstruction</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1016/j.cmet.2015.05.012" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Brandhorst &amp; Longo — FMD promotes multi-system regeneration.</a> <span style="color:#444;">Cell Metabolism, 2015</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1016/j.cmet.2013.12.008" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Longo &amp; Mattson — Fasting: Molecular Mechanisms and Clinical Applications.</a> <span style="color:#444;">Cell Metabolism, 2014</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1126/scitranslmed.aai8700" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Wei &amp; Longo — FMD and markers for aging, diabetes, cancer, CVD.</a> <span style="color:#444;">Science Translational Medicine, 2017</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1126/science.aau2095" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Di Francesco &amp; Longo — A Time to Fast.</a> <span style="color:#444;">Science, 2018</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Isabella Cooper, PhD <span style="color:#444;font-weight:400;">— Metabolic Gears</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1017/S0007114519002745" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cooper et al. — IF and metabolic health: molecular mechanisms to clinical outcomes.</a> <span style="color:#444;">British J Nutrition, 2020</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1530/JOE-21-0123" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cooper et al. — Insulin and glucagon in autophagy regulation.</a> <span style="color:#444;">J Endocrinology, 2021</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.3390/cells12131760" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cooper et al. — KetoSAge: ketones in cellular senescence.</a> <span style="color:#444;">MDPI Cells, 2023</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span>Cooper — Reframing the glucose-insulin-glucagon axis. <span style="color:#444;">Nature Metabolism Review, 2022</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Toshia Myers, PhD <span style="color:#444;font-weight:400;">— The Toggle</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span>Myers — IF and Inflammation: reducing visceral fat and CRP. <span style="color:#444;">J Nutritional Science, 2017</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span>Myers — Epigenetic modifications induced by fasting and CR. <span style="color:#444;">Epigenomics, 2019</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span>Myers &amp; Goldhamer — Clinical Safety of Water-Only Fasting: 10-year retrospective. <span style="color:#444;">J Clinical Medicine, 2022</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span>Myers — Ketogenic Diets and IF in Neurologic Diseases. <span style="color:#444;">J Endocrinology and Metabolism, 2021</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Thomas Seyfried, PhD <span style="color:#444;font-weight:400;">— The Switch</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1186/1743-7075-7-7" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Seyfried &amp; Shelton — Cancer as a metabolic disease.</a> <span style="color:#444;">Nutrition &amp; Metabolism, 2010</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1038/nrc3365" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Seyfried et al. — Mitochondrial dysfunction in cancer.</a> <span style="color:#444;">Nature Reviews Cancer, 2012</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1017/S0007114513003030" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Seyfried et al. — Metabolic management of cancer with ketogenic diets.</a> <span style="color:#444;">British J Nutrition, 2014</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.3390/jcm10163599" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Seyfried et al. — Personalized Metabolic Therapy for Cancer.</a> <span style="color:#444;">J Clinical Medicine, 2021</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Steven R. Gundry, MD <span style="color:#444;font-weight:400;">— Uncoupling</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1016/S1053-2498(01)00406-X" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Gundry — Improved survival of cardiac transplant patients with dietary intervention.</a> <span style="color:#444;">J Heart and Lung Transplantation, 2001</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span>Gundry — Dietary Intervention with a Plant-Based, Low-Lectin Diet. <span style="color:#444;">J Clinical Medicine, 2018</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span>Gundry — The Longevity Paradox. <span style="color:#444;">Harper Wave, 2019</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span>Gundry — Unlocking the Keto Code. <span style="color:#444;">Harper Wave, 2022</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <div class="mono" style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">4. Systemic Safety</div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Bret Scher, MD, FACC <span style="color:#444;font-weight:400;">— The Heart</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span>Scher — Lifestyle medicine: first line of defense against CVD. <span style="color:#444;">American J Cardiology, 2019</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span>Scher — Therapeutic Carbohydrate Restriction for CV Health. <span style="color:#444;">J Metabolic Health, 2020</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span>Scher — Ketone levels and Mental Health. <span style="color:#444;">J Psychiatry and Neuroscience, 2021</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span>Scher — Lipidology in the Low-Carb Context. <span style="color:#444;">J Clinical Lipidology, 2022</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Stephen Cunnane, PhD <span style="color:#444;font-weight:400;">— The Fuel</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1038/jcbfm.2010.177" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cunnane et al. — PET Imaging of Brain Ketone Uptake.</a> <span style="color:#444;">J Cerebral Blood Flow &amp; Metabolism, 2011</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1139/apnm-2015-0407" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cunnane et al. — Can Ketones Help Rescue Brain Fuel Supply?</a> <span style="color:#444;">Applied Physiology, Nutrition, and Metabolism, 2016</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1016/j.jalz.2019.01.001" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cunnane et al. — Ketogenic drink improves brain energy in MCI.</a> <span style="color:#444;">Alzheimer's &amp; Dementia, 2019</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1002/alz.12137" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Cunnane et al. — Brain Energy Rescue with Ketones in MCI.</a> <span style="color:#444;">Alzheimer's &amp; Dementia, 2020</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:4px;">Alan Goldhamer, D.C. <span style="color:#444;font-weight:400;">— Deep Clearance</span></div>
+                    <div style="display:flex;flex-direction:column;gap:2px;padding-left:16px;">
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P1</span><a href="https://doi.org/10.1067/mmt.2001.118208" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Goldhamer et al. — Water-only fasting in treatment of hypertension.</a> <span style="color:#444;">JMPT, 2001</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P2</span><a href="https://doi.org/10.1067/mmt.2002.122155" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Goldhamer et al. — Water-only fasting in borderline hypertension.</a> <span style="color:#444;">JMPT, 2002</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P3</span><a href="https://doi.org/10.1515/jcim-2013-0007" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Goldhamer et al. — Safety of water-only fasting: 2000 patients.</a> <span style="color:#444;">J Complementary and Integrative Medicine, 2015</span></div>
+                        <div style="font-size:11px;color:#555;"><span class="mono" style="color:#444;margin-right:6px;">P4</span><a href="https://doi.org/10.1016/j.molmet.2025.102152" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Goldhamer/Myers et al. — Prolonged fasting promotes systemic inflammation and platelet activation.</a> <span style="color:#444;">Molecular Metabolism, 2025</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <div class="mono" style="font-size:10px;color:#444;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">5. Metabolic Therapy</div>
+
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;align-items:baseline;font-size:11px;color:#555;">
+                        <span class="mono" style="color:#444;margin-right:6px;min-width:20px;">M1</span>
+                        <a href="https://doi.org/10.3390/nu16030338" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Phillips et al. — Time-restricted ketogenic diet in amyotrophic lateral sclerosis: a case study.</a> <span style="color:#444;">Nutrients, 2024</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;font-size:11px;color:#555;">
+                        <span class="mono" style="color:#444;margin-right:6px;min-width:20px;">M2</span>
+                        <a href="https://doi.org/10.3389/fneur.2022.931530" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Phillips et al. — Time-Restricted Ketogenic Diet in Huntington's Disease: A Case Study.</a> <span style="color:#444;">Frontiers in Neurology, 2022</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;font-size:11px;color:#555;">
+                        <span class="mono" style="color:#444;margin-right:6px;min-width:20px;">M3</span>
+                        <a href="https://doi.org/10.3390/nu14194105" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Dietary Restriction against Parkinson's Disease: What We Know So Far.</a> <span style="color:#444;">Nutrients, 2022</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;font-size:11px;color:#555;">
+                        <span class="mono" style="color:#444;margin-right:6px;min-width:20px;">M4</span>
+                        <a href="https://doi.org/10.3389/fphys.2017.00713" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Impact of Resistance Training on Skeletal Muscle Mitochondrial Biogenesis, Content, and Function.</a> <span style="color:#444;">Frontiers in Physiology, 2017</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;font-size:11px;color:#555;">
+                        <span class="mono" style="color:#444;margin-right:6px;min-width:20px;">M5</span>
+                        <a href="https://doi.org/10.3389/fnut.2025.1629921" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">The role of &beta;-hydroxybutyrate testing in ketogenic metabolic therapies.</a> <span style="color:#444;">Frontiers in Nutrition, 2025</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;font-size:11px;color:#555;">
+                        <span class="mono" style="color:#444;margin-right:6px;min-width:20px;">M6</span>
+                        <a href="https://doi.org/10.12968/bjnn.2023.19.3.104" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">Ketogenic diets and neurological conditions.</a> <span style="color:#444;">British J Neuroscience Nursing, 2023</span>
+                    </div>
+                    <div style="display:flex;align-items:baseline;font-size:11px;color:#555;">
+                        <span class="mono" style="color:#444;margin-right:6px;min-width:20px;">M7</span>
+                        <a href="https://doi.org/10.1016/j.jad.2024.09.098" target="_blank" rel="noopener" style="color:#555;text-decoration:none;border-bottom:1px solid #222;" onmouseover="this.style.borderColor='#ca8a04'" onmouseout="this.style.borderColor='#222'">The Impact of the Ketogenic Diet on Depression and Psychological Wellbeing: A Randomised Controlled Trial.</a> <span style="color:#444;">J Affective Disorders, 2024</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="border:1px solid #222;padding:12px 14px;font-size:11px;color:#555;line-height:1.6;" class="mono">
+            <span style="color:#ca8a04;">GLASS_BOX_POLICY:</span> This list updates as new papers enter the knowledge base. 82 papers targeted at launch (15 ingested, 67 pending). Every claim the AI makes traces back to one of these sources. No synthetic data. No unattributed inference.
+        </div>
+      </div>
+    </div>
+
+<footer style="padding:40px 0;text-align:center;border-top:1px solid #222;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#444;text-transform:uppercase;letter-spacing:0.3em;margin-bottom:8px;">Identity // halfmarble</div>
+    <p style="font-size:14px;color:#555;">Engineering for the unbridgeable difference.</p>
+</footer>
+
+</body>
+</html>

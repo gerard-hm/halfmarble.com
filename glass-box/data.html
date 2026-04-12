@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>halfmarble | Glass Box — Data Sharing</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  /* Top nav */
+  .top-nav { max-width: 1200px; margin: 0 auto; padding: 16px 20px 0; }
+  .top-nav-row { display: flex; justify-content: space-between; align-items: center; position: relative; }
+  .nav-link { font-size: 12px; color: #666; text-decoration: none; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+  .nav-link:hover { border-color: #D12C3B; }
+  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+  .nav-logo img { width: 22px; height: 22px; filter: brightness(0) invert(1); opacity: 0.7; }
+  .nav-logo span { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; }
+  .nav-logo:hover { border-color: #D12C3B; }
+  .nav-right { font-size: 12px; color: #444; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; }
+
+  /* Header */
+  .page-header { padding: 60px 0 40px; text-align: center; border-bottom: 1px solid #1a1a1a; margin-bottom: 40px; }
+  .page-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
+  .page-label .accent { color: #D12C3B; font-weight: 700; letter-spacing: 3px; }
+  .page-title { font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.2; }
+  .page-subtitle { font-size: 15px; color: #888; margin-top: 16px; max-width: 640px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+
+  /* Sections */
+  section.block { margin: 48px 0; }
+  h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; letter-spacing: -0.01em; }
+  h2 .num { font-family: 'JetBrains Mono', monospace; color: #D12C3B; font-size: 14px; margin-right: 10px; font-weight: 700; }
+  .h2-sub { font-size: 13px; color: #666; margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  p { font-size: 15px; color: #999; margin-bottom: 16px; }
+  p strong { color: #d1d5db; font-weight: 700; }
+  a { color: #D12C3B; text-decoration: none; border-bottom: 1px solid #333; transition: border-color 0.2s; }
+  a:hover { border-color: #D12C3B; }
+
+  /* Data table — fixed layout so every table on the page renders with identical
+     column widths. Template is the CONVERSATION DATA table; all others line up
+     to the same geometry. Field names and descriptions wrap within their
+     columns instead of pushing columns wider. */
+  .data-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; table-layout: fixed; }
+  .data-table col.col-field   { width: 28%; }
+  .data-table col.col-device  { width: 12%; }
+  .data-table col.col-shared  { width: 18%; }
+  .data-table col.col-how     { width: 42%; }
+  /* Fallback selectors if the colgroup is missing on any table */
+  .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 28%; }
+  .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 12%; }
+  .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 18%; }
+  .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 42%; }
+  .data-table th:nth-child(3) { white-space: nowrap; }
+  .data-table th { text-align: left; padding: 12px 16px; background: #111; color: #d1d5db; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #333; }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid #1a1a1a; color: #888; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+  .data-table tr:hover td { background: #0f0f0f; }
+  .data-table .field { color: #d1d5db; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .data-table .yes { color: #4ade80; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+  .data-table .no { color: #dc2626; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+  .data-table .maybe { color: #eab308; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; }
+
+  /* Mobile: auto-size columns, reduce padding, smaller text.
+     Columns 2-3 get min-width so headers stay readable across all tables
+     regardless of how wide the Field column's content is. */
+  @media (max-width: 768px) {
+    .data-table { table-layout: auto; }
+    .data-table th:nth-child(1), .data-table td:nth-child(1) { width: auto; }
+    .data-table th:nth-child(2), .data-table td:nth-child(2) { width: auto; min-width: 50px; }
+    .data-table th:nth-child(3), .data-table td:nth-child(3) { width: auto; min-width: 62px; white-space: normal; }
+    .data-table th:nth-child(4), .data-table td:nth-child(4) { width: auto; }
+    .data-table th, .data-table td { padding: 6px 8px; font-size: 11px; }
+    .data-table th { font-size: 9px; letter-spacing: 0.05em; }
+    .data-table .field { font-size: 10px; }
+    .data-table .yes, .data-table .no, .data-table .maybe { font-size: 9px; }
+  }
+
+  /* Pipeline diagram */
+  .pipeline { background: #0f0f0f; border: 1px solid #222; padding: 24px; margin: 24px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .pipeline-step { margin-bottom: 20px; }
+  .pipeline-step:last-child { margin-bottom: 0; }
+  .pipeline-num { display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; background: #D12C3B; color: #fff; font-weight: 800; margin-right: 12px; font-size: 11px; }
+  .pipeline-label { color: #d1d5db; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+  .pipeline-content { margin-top: 8px; padding-left: 36px; color: #666; }
+  .pipeline-arrow { padding-left: 48px; color: #444; font-size: 16px; line-height: 1; }
+
+  /* Never list */
+  .never-list { background: #0f0f0f; border-left: 3px solid #dc2626; padding: 20px 24px; margin: 24px 0; }
+  .never-item { display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline; font-size: 14px; color: #d1d5db; padding: 8px 0; }
+  .never-item .mark { color: #dc2626; font-family: 'JetBrains Mono', monospace; font-weight: 700; flex-shrink: 0; }
+  .never-item .prefix, .never-item strong { flex-shrink: 0; white-space: nowrap; }
+  .never-item .text { flex: 1 1 300px; min-width: 0; }
+
+  /* Back to demos */
+  .demo-links { display: flex; flex-wrap: wrap; gap: 12px; margin: 40px 0; padding: 24px; background: #0f0f0f; border: 1px solid #222; }
+  .demo-link { flex: 1; min-width: 200px; padding: 16px 20px; border: 1px solid #222; text-decoration: none; transition: border-color 0.2s; }
+  .demo-link:hover { border-color: #444; }
+  .demo-link.purple { color: #a855f7; }
+  .demo-link.purple:hover { border-color: #a855f7; }
+  .demo-link.yellow { color: #eab308; }
+  .demo-link.yellow:hover { border-color: #eab308; }
+  .demo-link-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: #666; margin-bottom: 6px; }
+  .demo-link-title { font-weight: 700; font-size: 15px; }
+
+  footer { padding: 60px 0 40px; text-align: center; border-top: 1px solid #1a1a1a; margin-top: 80px; }
+  .footer-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 8px; }
+  .footer-text { font-size: 13px; color: #555; }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="top-nav-row">
+    <a href="../index.html" class="nav-link">&larr; BACK</a>
+    <a href="../index.html" class="nav-logo" style="position:absolute;left:50%;transform:translateX(-50%);">
+      <img src="../assets/logo.png" alt="halfmarble">
+      <span>halfmarble</span>
+    </a>
+  </div>
+</div>
+
+<div class="container">
+
+  <header class="page-header">
+    <div class="page-label">WHAT <span class="accent">"GLASS BOX"</span> MEANS FOR YOUR DATA</div>
+    <h1 class="page-title">Your data, transparent.</h1>
+    <p class="page-subtitle">
+      Most health apps bury their data practices in privacy policies nobody reads. We do the opposite. Every piece of data you can share, every transformation we apply, every promise we make &mdash; all of it is documented here, in plain language.
+    </p>
+  </header>
+
+  <section class="block">
+    <h2><span class="num">01</span>The Default Is Local</h2>
+    <div class="h2-sub">your data stays on your phone</div>
+    <p>
+      halfmarble works completely, fully, and powerfully <strong>without sharing any data beyond your own device</strong>. You get every feature, every dose calculation, every AI answer, without contributing a single byte to our backend. That's the default, and it is never changed without your explicit action.
+    </p>
+    <p>
+      If you <em>choose</em> to join the fight beyond your own case, you can opt in to share anonymized, aggregated patterns with researchers. Everything below explains exactly what that means.
+    </p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">02</span>What Gets Captured</h2>
+    <div class="h2-sub">SteadyDoseTracker &mdash; dose &amp; eating window data</div>
+    <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+      SteadyDoseTracker knows both when you dose and when you eat. That combination is genuinely novel research material &mdash; the medical literature on levodopa absorption under real-world fasting and eating patterns is surprisingly thin. No existing study captures this at the scale we can.
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Dose time</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>2-hour bins (e.g., "7-9 AM"), not exact timestamps</td>
+        </tr>
+        <tr>
+          <td class="field">Dose amount</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>As % of full dose (e.g., "half dose"), never mg</td>
+        </tr>
+        <tr>
+          <td class="field">Drug class</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>"levodopa IR" &mdash; never brand name (e.g., "Sinemet")</td>
+        </tr>
+        <tr>
+          <td class="field">Fasting state at dose</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>boolean (fasted vs fed when dose was taken)</td>
+        </tr>
+        <tr>
+          <td class="field">Fasting duration at dose</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Hours fasted when dose was taken, binned (0-4h, 4-8h, 8-12h, 12-16h, 16-20h, 20h+)</td>
+        </tr>
+        <tr>
+          <td class="field">Dose-to-meal interval</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Time between dose and nearest meal, binned (under 30min, 30-60min, 1-2h, 2-4h, over 4h)</td>
+        </tr>
+        <tr>
+          <td class="field">Eating window compression</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Fasting:feeding ratio (e.g., "23:1", "16:8") &mdash; first-ever real-world PD distribution</td>
+        </tr>
+        <tr>
+          <td class="field">Protein-near-dose flag</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Boolean only &mdash; whether protein was logged within 30 min of the dose</td>
+        </tr>
+        <tr>
+          <td class="field">Subjective ON/OFF rating</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale, linked to fasting state for correlation</td>
+        </tr>
+        <tr>
+          <td class="field">Time in therapeutic range</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>% for the day</td>
+        </tr>
+        <tr>
+          <td class="field">Exact meal times</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Only binned/relative intervals leave the device</td>
+        </tr>
+        <tr>
+          <td class="field">Specific foods or meal contents</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Caloric intake</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Your name</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Your location</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Medication brand</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Drug class only; brand stays on device</td>
+        </tr>
+        <tr>
+          <td class="field">Concurrent conditions</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="h2-sub" style="margin-top: 40px;">SteadyFastingTracker &mdash; autophagy session data</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Fasting duration</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Grouped into bands (e.g., "16-18h"), not exact hours</td>
+        </tr>
+        <tr>
+          <td class="field">Fasting stage reached</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Stage ID only (e.g., "ketosis", "deep autophagy")</td>
+        </tr>
+        <tr>
+          <td class="field">Subjective hunger/energy markers</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale values</td>
+        </tr>
+        <tr>
+          <td class="field">Ketone / glucose readings</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Aggregated with time band</td>
+        </tr>
+        <tr>
+          <td class="field">Exact start/end timestamps</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Only relative durations leave the device</td>
+        </tr>
+        <tr>
+          <td class="field">Session notes</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Your name, location, age</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Concurrent medications</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="h2-sub" style="margin-top: 40px;">conversation data &mdash; applies to both apps</div>
+    <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+      When you ask a question to the AI in either SteadyDoseTracker or SteadyFastingTracker, the same rules apply. Your conversation text stays on your device. What leaves (if you opt in) is only the topic cluster and your feedback on how useful the answer was.
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Query topic</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">CLUSTERED</span></td>
+          <td>Semantic cluster ID only, never raw text</td>
+        </tr>
+        <tr>
+          <td class="field">Response helpfulness</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-5 rating</td>
+        </tr>
+        <tr>
+          <td class="field">Citation click-through</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>DOI only</td>
+        </tr>
+        <tr>
+          <td class="field">Full conversation text</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Personal health details mentioned</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Specific medications mentioned</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Period.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="h2-sub" style="margin-top: 40px;">mental state data &mdash; applies to both apps</div>
+    <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+      For Parkinson's patients, cognitive fluctuations matter as much as motor fluctuations. Brain fog, mood, apathy, and mental fatigue track closely with medication cycles and metabolic state &mdash; but nobody has this data at scale because clinical scales are administered in clinics once or twice a year. Halfmarble captures it continuously at home so you can see your own patterns and (optionally) contribute to research. Mental state data is subject to <strong style="color:#d1d5db;">stricter safeguards</strong> than other categories.
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Cognitive clarity</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale, aggregated with k&ge;100</td>
+        </tr>
+        <tr>
+          <td class="field">Brain fog</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale, aggregated with k&ge;100</td>
+        </tr>
+        <tr>
+          <td class="field">Mood</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale (sad &harr; content), aggregated with k&ge;100</td>
+        </tr>
+        <tr>
+          <td class="field">Anxiety level</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale, aggregated with k&ge;100</td>
+        </tr>
+        <tr>
+          <td class="field">Apathy / motivation</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale, aggregated with k&ge;100</td>
+        </tr>
+        <tr>
+          <td class="field">Mental fatigue</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale (distinct from physical fatigue)</td>
+        </tr>
+        <tr>
+          <td class="field">Overall feeling</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 composite self-rating</td>
+        </tr>
+        <tr>
+          <td class="field">Sleep quality</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale for last night's sleep</td>
+        </tr>
+        <tr>
+          <td class="field">Sleep duration</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Grouped into bands (e.g., "6-8h")</td>
+        </tr>
+        <tr>
+          <td class="field">REM behavior events</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Boolean (acting out dreams &mdash; a PD prodrome marker)</td>
+        </tr>
+        <tr>
+          <td class="field">Pain level</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale (PD pain is underreported)</td>
+        </tr>
+        <tr>
+          <td class="field">Bowel movement event</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Boolean with timestamp &mdash; constipation is a major PD complaint and prodrome marker</td>
+        </tr>
+        <tr>
+          <td class="field">Bowel movement consistency</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td><a href="https://en.wikipedia.org/wiki/Bristol_stool_scale" target="_blank" rel="noopener">Bristol Stool Scale</a> (1-7)</td>
+        </tr>
+        <tr>
+          <td class="field">Days since last bowel movement</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Auto-computed integer (constipation severity indicator)</td>
+        </tr>
+        <tr>
+          <td class="field">GI symptoms (composite)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale covering bloating, nausea, discomfort</td>
+        </tr>
+        <tr>
+          <td class="field">Free-form mental state notes</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Always.</td>
+        </tr>
+        <tr>
+          <td class="field">Contextual journal notes</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Always.</td>
+        </tr>
+        <tr>
+          <td class="field">Diagnosed mental health conditions</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Always.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:#0f0f0f;border-left:3px solid #D12C3B;padding:20px 24px;margin:24px 0;">
+      <div class="mono" style="font-size:10px;color:#D12C3B;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:12px;font-weight:700;">Extra Safeguards for Mental State Data</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#888;">
+        <div><strong style="color:#d1d5db;">Stricter k-anonymity (k&ge;100).</strong> Mental health data is held to twice the anonymity threshold of other categories. Your pattern only contributes to research after it can be combined with at least 99 others.</div>
+        <div><strong style="color:#d1d5db;">Separate opt-in.</strong> If you opt in to share PK data, that does not automatically share mental state data. Mental state sharing is its own toggle with its own consent.</div>
+        <div><strong style="color:#d1d5db;">Tracking is optional.</strong> You can disable mental state tracking entirely &mdash; not just sharing. The app works without it.</div>
+        <div><strong style="color:#d1d5db;">Comfort threshold.</strong> If your mood or clarity scores decline for 7+ days, the trend graph is hidden by default. You can opt to see it, but the app doesn't amplify negative cycles automatically.</div>
+        <div><strong style="color:#d1d5db;">No diagnoses inferred.</strong> The app never tells you "you may be depressed" or "you may have cognitive decline." It shows patterns, not verdicts. Interpretation is between you and your clinician.</div>
+      </div>
+    </div>
+
+    <div class="h2-sub" style="margin-top: 40px;">motor symptoms &amp; objective tests &mdash; SteadyDoseTracker</div>
+    <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+      Parkinson's is traditionally assessed in a clinic every 3-6 months using the MDS-UPDRS scale. Continuous home-based motor tracking is missing from the literature. SteadyDoseTracker captures it two ways: <strong style="color:#d1d5db;">focal symptom logging</strong> (track body-specific symptoms like foot dystonia, hand cramping, by location) and <strong style="color:#d1d5db;">objective tapping tests</strong> that use the phone's touchscreen to measure motor function — validated against clinical UPDRS Part III finger tapping.
+    </p>
+    <p style="font-size: 13px; color: #888; margin-bottom: 24px;">
+      The phone test takes 10-20 seconds. Results correlate with dose timing automatically. Over time, you see objectively whether your predicted PK peaks match your actual motor peaks. No existing dataset combines PK prediction + objective motor measurement + dose timing + fasting state at scale.
+    </p>
+
+    <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;">Focal Symptom Tracking</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Body location</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Left foot, right foot, left hand, right hand, jaw, neck, etc.</td>
+        </tr>
+        <tr>
+          <td class="field">Sensation type</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Curling, cramping, cotton-wad, twisting, tingling, pain, tremor, stiffness</td>
+        </tr>
+        <tr>
+          <td class="field">Severity</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>1-10 scale</td>
+        </tr>
+        <tr>
+          <td class="field">Duration</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Bands: &lt;5min, 5-30min, 30-60min, 1-3h, 3h+</td>
+        </tr>
+        <tr>
+          <td class="field">Time since last dose (when symptom occurred)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Auto-computed from dose log, shared as bins</td>
+        </tr>
+        <tr>
+          <td class="field">Fasting state at onset</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Boolean (fasted vs fed)</td>
+        </tr>
+        <tr>
+          <td class="field">Free-text symptom notes</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Always.</td>
+        </tr>
+        <tr>
+          <td class="field">User-identified triggers</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on your device. Always.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin:30px 0 10px;">Objective Tapping Test</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Total tap count</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Number of taps in test window (speed proxy)</td>
+        </tr>
+        <tr>
+          <td class="field">Mean inter-tap interval</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Milliseconds between taps</td>
+        </tr>
+        <tr>
+          <td class="field">Rhythm variance</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Std dev of inter-tap intervals (rhythm regularity)</td>
+        </tr>
+        <tr>
+          <td class="field">Decrement ratio</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Slowing from first 5s to last 5s (bradykinesia proxy)</td>
+        </tr>
+        <tr>
+          <td class="field">Hesitation count</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Number of pauses longer than 2x mean interval</td>
+        </tr>
+        <tr>
+          <td class="field">Normalized motor score (0-100)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Composite computed on device from the above</td>
+        </tr>
+        <tr>
+          <td class="field">Side tested (left/right)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Per-hand results tracked separately</td>
+        </tr>
+        <tr>
+          <td class="field">Time since last dose</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Bins: &lt;30min, 30-60min, 1-2h, 2-4h, 4h+</td>
+        </tr>
+        <tr>
+          <td class="field">Raw tap coordinates</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Per-tap x/y positions stay on device</td>
+        </tr>
+        <tr>
+          <td class="field">Raw timing series</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Individual timestamps stay on device</td>
+        </tr>
+        <tr>
+          <td class="field">Tap pressure data</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Raw pressure values stay on device</td>
+        </tr>
+        <tr>
+          <td class="field">Device model</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Potentially identifying; stays on device</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:#0f0f0f;border-left:3px solid #D12C3B;padding:20px 24px;margin:24px 0;">
+      <div class="mono" style="font-size:10px;color:#D12C3B;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:12px;font-weight:700;">Safeguards for Motor Data</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#888;">
+        <div><strong style="color:#d1d5db;">No diagnostic claims.</strong> The tapping test is a research tool, not a diagnostic instrument. The app never tells you "your tapping score indicates PD progression." It shows trends. Interpretation is between you and your clinician.</div>
+        <div><strong style="color:#d1d5db;">Test frequency is user-controlled.</strong> The app may suggest a daily test, but you can do it as often or as rarely as you like. No obligation.</div>
+        <div><strong style="color:#d1d5db;">Measurement, not treatment.</strong> Motor test results feed your personal trend display and the research aggregate &mdash; they do not alter dose suggestions or safety thresholds. This keeps the tool out of FDA-regulated Clinical Decision Support territory.</div>
+        <div><strong style="color:#d1d5db;">Raw motion data never leaves your phone.</strong> Only the computed summary scores and binned timing are shared. Per-tap coordinates, pressure, and timing stay on device.</div>
+      </div>
+    </div>
+
+    <div class="h2-sub" style="margin-top: 40px;">gki &amp; metabolic measurements &mdash; applies to both apps</div>
+    <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+      <strong style="color:#d1d5db;">Glucose Ketone Index (GKI)</strong> was developed by Thomas Seyfried (one of the researchers in our Glass Box) as a measure of the depth of therapeutic ketosis. Three of halfmarble's Foundational 60 researchers &mdash; Seyfried, Phillips, and Cooper &mdash; use GKI in clinical practice. No large-scale real-world GKI dataset for Parkinson's patients exists. SteadyFastingTracker users who opt in contribute to the first one.
+    </p>
+    <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+      Halfmarble supports both <strong style="color:#d1d5db;">blood finger-prick dual meters</strong> (Keto-Mojo GK+, Precision Xtra) and <strong style="color:#d1d5db;">electrochemical breath ketone devices</strong> (<a href="https://www.amazon.com/KETOSCAN-Fitness-Metabolism-Ketogenic-Nutrition/dp/B0C26JJ68X" target="_blank" rel="noopener">KETOSCAN Smart</a>) paired with glucose meters or CGMs. Electrochemical breath acetone sensors are measurement-grade &mdash; validated against laboratory reference at R² &gt;0.97 &mdash; not trend indicators.
+    </p>
+
+    <div style="background:#0f0f0f;border-left:3px solid #D12C3B;padding:16px 20px;margin:16px 0 24px;">
+      <div class="mono" style="font-size:10px;color:#D12C3B;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;font-weight:700;">Important: Avoid Cheap SMO-Based Breath Sensors</div>
+      <div style="font-size:13px;color:#888;line-height:1.7;">
+        <p style="margin-bottom:10px;">
+          Not all breath ketone devices are equal. The cheap breathalyzer-class meters (typically $10&ndash;50) use <strong style="color:#d1d5db;">Semiconductor Metal Oxide (SMO)</strong> sensors that rely on changes in electrical resistance of a metal oxide film. They suffer from cross-sensitivity to other VOCs, temperature drift, non-linear response curves, and poor repeatability. At best they are trend indicators. At worst they are misleading.
+        </p>
+        <p style="margin-bottom:10px;">
+          The device halfmarble recommends (<a href="https://www.amazon.com/KETOSCAN-Fitness-Metabolism-Ketogenic-Nutrition/dp/B0C26JJ68X" target="_blank" rel="noopener">KETOSCAN Smart</a>) uses <strong style="color:#d1d5db;">electrochemical sensors</strong> &mdash; the same sensor class used in evidentiary breath alcohol testing. They produce an electrical current directly and linearly proportional to VOC concentration.
+        </p>
+        <div style="background:#0a0a0a;border-left:2px solid #444;padding:12px 16px;margin:12px 0;font-style:italic;color:#999;">
+          "The electrochemical sensors housed within the KETOSCAN units possessed a highly linear, proportional electrical response to varying concentrations of acetone gas. Specific instruments subjected to the rigorous testing protocols demonstrated exceptional linearity, with Coefficients of Determination (R²) routinely exceeding 0.97. Notably, specific units achieved an extraordinary R² of 0.9952 coupled with a Variation Coefficient of a mere 5.9%, indicating supreme analytical precision that rivals laboratory-grade stationary equipment."
+          <div style="font-style:normal;color:#666;font-size:11px;margin-top:8px;" class="mono">
+            &mdash; TU Wien Analytical Study, Vienna University of Technology, Institute of Chemical Technologies and Analytics (Prof. Dr. Erwin Rosenberg). Study of the Accuracy of the KETOSCAN, published February 2022. <a href="http://alcoline.be/wp-content/uploads/2023/08/Ketoscan_study_report_220228.pdf" target="_blank" rel="noopener" style="color:#D12C3B;text-decoration:none;border-bottom:1px solid #333;">[PDF]</a>
+          </div>
+        </div>
+        <p>
+          <strong style="color:#d1d5db;">If you are considering a breath ketone device, verify it uses an electrochemical sensor before purchasing.</strong> Your GKI calculations depend on it. Saving $100 on the sensor costs you the accuracy that makes the entire dataset meaningful.
+        </p>
+      </div>
+    </div>
+
+    <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:10px;">Blood-Based GKI (finger-prick)</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Blood glucose</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Bands: &lt;70, 70-99, 100-125, 126-180, 180+ mg/dL</td>
+        </tr>
+        <tr>
+          <td class="field">Blood BHB (&beta;-hydroxybutyrate)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Bands: &lt;0.3, 0.3-0.5, 0.5-1.5, 1.5-3.0, 3.0+ mmol/L</td>
+        </tr>
+        <tr>
+          <td class="field">Computed GKI</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Bands: &lt;1, 1-3, 3-6, 6-9, 9+</td>
+        </tr>
+        <tr>
+          <td class="field">Meter device class</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Generic category only (keto_mojo, precision_xtra, etc.)</td>
+        </tr>
+        <tr>
+          <td class="field">Device serial number</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Potentially identifying; stays on device</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin:30px 0 10px;">Breath-Based GKI (electrochemical + glucose)</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Breath acetone (ppm)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Bands: &lt;2, 2-8, 8-20, 20-40, 40+ ppm</td>
+        </tr>
+        <tr>
+          <td class="field">Estimated BHB (from acetone)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Converted via published calibration curve</td>
+        </tr>
+        <tr>
+          <td class="field">Glucose (from any source)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Same bands as blood-based GKI</td>
+        </tr>
+        <tr>
+          <td class="field">Computed GKI (breath-estimated)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Same bands, labeled as breath-estimated</td>
+        </tr>
+        <tr>
+          <td class="field">In-transition flag</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Boolean &mdash; breath lag possible during metabolic transitions</td>
+        </tr>
+        <tr>
+          <td class="field">Breath device class</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>ketoscan_smart, etc. (class only, never serial)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;margin:30px 0 10px;">CGM Continuous Glucose</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Raw glucose stream</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Continuous time series stays on device</td>
+        </tr>
+        <tr>
+          <td class="field">Daily mean glucose</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Bands of daily averages</td>
+        </tr>
+        <tr>
+          <td class="field">Time in range (TIR)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>% of day with glucose in 70-140 mg/dL</td>
+        </tr>
+        <tr>
+          <td class="field">Hypoglycemic events</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Count of glucose &lt;70 mg/dL events</td>
+        </tr>
+        <tr>
+          <td class="field">CGM device class</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>dexcom_g7, libre_3, stelo, lingo (class only)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:#0f0f0f;border-left:3px solid #D12C3B;padding:20px 24px;margin:24px 0;">
+      <div class="mono" style="font-size:10px;color:#D12C3B;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:12px;font-weight:700;">Safeguards for GKI &amp; Metabolic Data</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#888;">
+        <div><strong style="color:#d1d5db;">Hypoglycemia alert is not configurable.</strong> Glucose readings below 60 mg/dL always trigger a warning, regardless of user settings. Safety overrides aesthetics.</div>
+        <div><strong style="color:#d1d5db;">DKA screen.</strong> Combined BHB &gt;5.0 mmol/L + glucose &gt;250 mg/dL + fed state triggers an immediate medical evaluation warning. Rare but catastrophic if missed.</div>
+        <div><strong style="color:#d1d5db;">Medication interaction warnings.</strong> Users on insulin or sulfonylureas see an additional onboarding warning about fasting + keto risks. The app does not block tracking but strongly recommends clinician supervision.</div>
+        <div><strong style="color:#d1d5db;">No dose recommendations based on GKI.</strong> SteadyDoseTracker never tells you to skip, delay, or take a dose based on your current GKI. Interpretation is clinician territory.</div>
+        <div><strong style="color:#d1d5db;">No diagnostic claims.</strong> The app does not diagnose diabetes, prediabetes, or metabolic syndrome. It shows patterns.</div>
+        <div><strong style="color:#d1d5db;">In-transition flagging.</strong> Breath-based readings taken within 60 minutes of a meal, dose, or exercise are flagged as potentially lagged &mdash; both in your display and in any shared data.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">03</span>How It's Anonymized</h2>
+    <div class="h2-sub">four-stage transformation on your device</div>
+    <p>
+      Before any byte leaves your phone, your data goes through four stages of transformation. The raw data never leaves. Here's a concrete example for a single dose log:
+    </p>
+
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <span class="pipeline-num">1</span><span class="pipeline-label">Raw</span>
+        <div class="pipeline-content">"8:00 AM, 100mg Sinemet IR, me @ home, 6.5/10 tremor, fasted 16h"</div>
+      </div>
+      <div class="pipeline-arrow">&darr;</div>
+      <div class="pipeline-step">
+        <span class="pipeline-num">2</span><span class="pipeline-label">Identifiers stripped</span>
+        <div class="pipeline-content">"morning dose, levodopa IR, fasting state, tremor 6.5/10, 16h fast"</div>
+      </div>
+      <div class="pipeline-arrow">&darr;</div>
+      <div class="pipeline-step">
+        <span class="pipeline-num">3</span><span class="pipeline-label">Binned</span>
+        <div class="pipeline-content">"bin: 7-9 AM, levodopa IR, fasting, tremor band 6-7, fast band 15-18h"</div>
+      </div>
+      <div class="pipeline-arrow">&darr;</div>
+      <div class="pipeline-step">
+        <span class="pipeline-num">4</span><span class="pipeline-label">Aggregated with others</span>
+        <div class="pipeline-content">"7-9 AM bin, levodopa IR, fasting, n=1,247 users, tremor median 5.8"</div>
+      </div>
+    </div>
+
+    <p>
+      <strong>k-anonymity with k&ge;50.</strong> A user's pattern only leaves the device after it can be combined with at least 49 others. If your pattern is too unique to be anonymized, it is held in a local queue and discarded after 30 days &mdash; never shared.
+    </p>
+    <p>
+      <strong>Differential privacy noise (&epsilon;=1.0)</strong> is added to all counts before transmission, so that even aggregated statistics cannot be reverse-engineered to individual users.
+    </p>
+    <p>
+      <strong>No IP addresses logged.</strong> Requests route through a relay that strips origin information server-side.
+    </p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">04</span>We Will Never</h2>
+    <div class="h2-sub">the negative list</div>
+    <p>
+      A list of things we will not do is often more useful than a list of things we will. These are binding commitments &mdash; part of halfmarble's formal business model and corporate governance. We are legally obligated to uphold them, not just morally committed. A violation would invalidate the entire trust model this project is built on.
+    </p>
+    <div class="never-list">
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">sell your data to insurance companies.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">share data with employers or advertisers.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">link shared patterns back to your identity.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">share data without your explicit per-category consent.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">make opt-in a requirement for using halfmarble.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">share data with pharmaceutical companies except under IRB-approved research agreements with published findings.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">sell raw, unaggregated data. Period.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">use shared data to deny, throttle, or modify your experience in the app.</span></div>
+    </div>
+    <p style="font-size: 12px; color: #666; margin-top: 16px; font-style: italic;">
+      <strong style="color: #888;">IRB</strong> = independent ethics board that reviews human research studies. <strong style="color: #888;">Published findings</strong> = the research becomes public knowledge, not a pharma asset.
+    </p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">05</span>You Can Always Leave</h2>
+    <div class="h2-sub">revocation and deletion</div>
+    <p>
+      Changing your mind is a one-tap operation. Settings &rarr; My Contributions &rarr; "Delete my shared data." Your records are marked for deletion immediately, and removed on the next aggregation cycle (at most 7 days).
+    </p>
+    <p>
+      You can opt out of individual categories (e.g., keep sharing PK data but stop sharing AI feedback) without losing access to any app features. Opt-in is never required.
+    </p>
+    <p>
+      You can also request a full export of everything you have ever shared. Because we never link patterns back to your identity, this is computed using your device's local contribution log &mdash; another reason the raw data never leaves.
+    </p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">06</span>Why This Matters</h2>
+    <div class="h2-sub">the data moat is the users, not the company</div>
+    <p>
+      There is a version of this app that could quietly collect raw data, sell it to the highest bidder, and burn trust later. We are not building that version. Halfmarble's commercial engine is Real-World Evidence (RWE) &mdash; anonymized Home Usage Data that helps researchers understand how chronic disease patients actually live and treat themselves at home. That only works if it is transparent, opt-in, and defensible to both patients and regulators.
+    </p>
+    <p>
+      The people fighting the same fight as us are the ones who make this work. Without their explicit, informed contribution, there is no model, no data, no research. Which is why every decision here starts from the same place: <strong>the default is local, contribution is a choice, and the choice is fully informed.</strong>
+    </p>
+  </section>
+
+  <div class="demo-links">
+    <a href="../steady_dose_tracker_demo.html" class="demo-link purple">
+      <div class="demo-link-label">Try the demo</div>
+      <div class="demo-link-title">SteadyDoseTracker &rarr;</div>
+    </a>
+    <a href="../steady_fasting_tracker_demo.html" class="demo-link yellow">
+      <div class="demo-link-label">Try the demo</div>
+      <div class="demo-link-title">SteadyFastingTracker &rarr;</div>
+    </a>
+  </div>
+
+</div>
+
+<div style="max-width:600px;margin:40px auto;padding:0 20px;">
+  <div style="border:1px solid #222;padding:24px;background:#111111;text-align:center;">
+    <div class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.3em;margin-bottom:12px;">Join the fight</div>
+    <form action="https://formspree.io/f/mlgoreag" method="POST" style="display:flex;gap:8px;max-width:440px;margin:0 auto;">
+      <input type="hidden" name="_next" value="https://halfmarble.com/success.html">
+      <input type="email" name="email" placeholder="your@email.com" required
+        style="flex:1;background:#0a0a0a;border:1px solid #333;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#d1d5db;outline:none;">
+      <button type="submit"
+        style="background:#333;border:1px solid #555;color:#d1d5db;padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">REQUEST BETA ACCESS</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-label">Identity // halfmarble</div>
+  <p class="footer-text">Engineering for the unbridgeable difference.</p>
+</footer>
+
+</body>
+</html>
