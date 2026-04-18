@@ -528,6 +528,9 @@
         function openBio(id) {
             document.getElementById(id).classList.add('active');
             document.body.style.overflow = 'hidden';
+            if (window.plausible) {
+                plausible('Bio Open', { props: { person: id.replace('bio-', '') } });
+            }
         }
         function closeBio(id) {
             document.getElementById(id).classList.remove('active');
