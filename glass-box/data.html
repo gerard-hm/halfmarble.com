@@ -347,6 +347,118 @@
       </tbody>
     </table>
 
+    <div class="h2-sub" style="margin-top: 40px;">UnSteadyRing &mdash; biometric &amp; kinematic data (hardware sensor)</div>
+    <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
+      UnSteadyRing is halfmarble's first sensor product. Two wrist-worn hubs excite ten passive chipless rings on the fingers with WiFi radio and fuse the returned signals with single-lead ECG (when both electrodes are skin-contacted), PPG, and skin temperature. The rings have no batteries and no chips &mdash; they only resonate when the hub's radio reaches them. Raw waveforms (RF backscatter, ECG, PPG) <strong>never leave the device.</strong> Only computed metrics do, and only with your explicit per-category consent.
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field</th>
+          <th>On Device</th>
+          <th>Shared (opt-in)</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="field">Tremor frequency (per finger)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Dominant frequency band in Hz (typical PD rest tremor: 4&ndash;6 Hz); bandpass-derived, not raw</td>
+        </tr>
+        <tr>
+          <td class="field">Tremor amplitude (per finger)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Grouped into bands (low / moderate / high), never raw displacement</td>
+        </tr>
+        <tr>
+          <td class="field">Bradykinesia score</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Composite computed from tap-rate decay, k&ge;50</td>
+        </tr>
+        <tr>
+          <td class="field">Per-finger motion vectors (raw)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on device. Only binned summaries leave.</td>
+        </tr>
+        <tr>
+          <td class="field">Heart rate (HR)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>10-minute moving averages, no second-by-second stream</td>
+        </tr>
+        <tr>
+          <td class="field">Heart rate variability (HRV)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>RMSSD bands (low / normal / high); never raw R&ndash;R intervals</td>
+        </tr>
+        <tr>
+          <td class="field">Single-lead ECG waveform</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Raw trace stays on device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">SpO&#8322; estimate (PPG-derived)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Whole-percent, 1-minute averages</td>
+        </tr>
+        <tr>
+          <td class="field">Pulse-transit-time (PTT)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>Autonomic-state proxy; binned, not raw</td>
+        </tr>
+        <tr>
+          <td class="field">PPG raw waveform</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Stays on device. Period.</td>
+        </tr>
+        <tr>
+          <td class="field">Skin temperature</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="maybe">BINNED</span></td>
+          <td>0.5&deg;C bins, no continuous trace</td>
+        </tr>
+        <tr>
+          <td class="field">Session start/end timestamps</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Only relative durations leave the device</td>
+        </tr>
+        <tr>
+          <td class="field">Hub serial / hardware ID</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="no">NEVER</span></td>
+          <td>Device class only (e.g., "unsteadyring_v1"), never serial</td>
+        </tr>
+        <tr>
+          <td class="field">Ring loadout (which fingers worn)</td>
+          <td><span class="yes">YES</span></td>
+          <td><span class="yes">YES</span></td>
+          <td>Configuration only (e.g., "all 10", "dominant hand")</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="background:#0f0f0f;border-left:3px solid #D12C3B;padding:20px 24px;margin:24px 0;">
+      <div class="mono" style="font-size:10px;color:#D12C3B;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:12px;font-weight:700;">Safeguards for UnSteadyRing Biometric Data</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#888;">
+        <div><strong style="color:#d1d5db;">Raw waveforms never leave the device.</strong> RF backscatter returns, ECG traces, and PPG waveforms stay local. Only computed metrics (frequency bands, scores, binned amplitudes, beat-derived rates) can be opted in.</div>
+        <div><strong style="color:#d1d5db;">ECG requires deliberate contact.</strong> Single-lead ECG only records when both hub electrodes are skin-contacted &mdash; one against the dorsal wrist, the other touched by a digit of the contralateral hand. Never always-on, never background-recording.</div>
+        <div><strong style="color:#d1d5db;">Separate per-category opt-ins.</strong> Motor-kinematic sharing, cardiac sharing, and thermal sharing are three independent consent toggles. Opting in to one does not opt you in to others.</div>
+        <div><strong style="color:#d1d5db;">No diagnostic claims.</strong> UnSteadyRing measures tremor, autonomic, and thermoregulatory state. It does not diagnose Parkinson's disease or any other condition. Interpretation is between you and your clinician.</div>
+        <div><strong style="color:#d1d5db;">No medication recommendations from biometrics.</strong> SteadyDoseTracker never tells you to take, skip, or modify a dose based on UnSteadyRing readings. Patterns are surfaced; decisions are clinician territory.</div>
+      </div>
+    </div>
+
     <div class="h2-sub" style="margin-top: 40px;">conversation data &mdash; applies to both apps</div>
     <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
       When you ask a question to the AI in either SteadyDoseTracker or SteadyFastingTracker, the same rules apply. Your conversation text stays on your device. What leaves (if you opt in) is only the topic cluster and your feedback on how useful the answer was.
@@ -937,6 +1049,7 @@
       <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">share data with pharmaceutical companies except under IRB-approved research agreements with published findings.</span></div>
       <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">sell raw, unaggregated data. Period.</span></div>
       <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">use shared data to deny, throttle, or modify your experience in the app.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">transmit raw RF backscatter waveforms, raw ECG traces, or raw PPG waveforms from UnSteadyRing &mdash; only computed metrics leave the device.</span></div>
     </div>
     <p style="font-size: 12px; color: #666; margin-top: 16px; font-style: italic;">
       <strong style="color: #888;">IRB</strong> = independent ethics board that reviews human research studies. <strong style="color: #888;">Published findings</strong> = the research becomes public knowledge, not a pharma asset.

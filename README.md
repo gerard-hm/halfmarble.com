@@ -7,10 +7,14 @@ As a neurodegenerative data architecture, Halfmarble is engineered to track dete
 ### The Core Architecture
 In an era of dangerous algorithmic hallucinations in healthcare, Halfmarble rejects the "black box." Every parameter, absorption curve, and metric traces directly to published, verifiable clinical science. 
 
-The platform currently consists of functional web prototypes:
+The software platform currently consists of functional web prototypes:
 *   **SteadyDoseTracker:** Deterministic Bateman absorption modeling for levodopa pharmacokinetics.
 *   **SteadyFastingTracker:** Metabolic window tracking aligned with neuro-compromised needs.
-*   **SteadyFuelTracker:** Engineered explicitly around Therapeutic Carbohydrate Restriction (TCR) protocols to track therapeutic nutritional ketosis. 
+*   **SteadyFuelTracker:** Engineered explicitly around Therapeutic Carbohydrate Restriction (TCR) protocols to track therapeutic nutritional ketosis.
+
+Halfmarble also builds dedicated hardware:
+*   **SteadyHandTool:** Open-source (CERN-OHL-S-2.0) high-mass tremor-dampening fixture for fine-motor work.
+*   **UnSteadyRing:** Wearable kinematic and biometric sensor system &mdash; ten passive chipless fractal-resonant rings excited by WiFi radio from two wrist-worn hubs that also capture single-lead ECG, PPG, and skin temperature. Provisional patent filed.
 
 ### Data Privacy & Glass Box Math
 Patient data is not a commodity. Our privacy framework utilizes explicit, verifiable mathematical models:
