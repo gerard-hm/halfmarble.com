@@ -39,10 +39,130 @@
                 Ten chipless passive rings. Two wrist-worn hubs. WiFi-band radio that excites the rings and reads them back, fused with single-lead ECG, PPG, and skin temperature. The Steady tools intervene. UnSteadyRing observes.
             </p>
 
-            <div class="border border-zinc-800 p-8 max-w-xl mx-auto mb-10" style="background:#111111;">
-                <div class="mono text-xs text-blue-500 uppercase tracking-[0.3em] mb-4">Post in progress</div>
-                <p class="text-zinc-400 text-sm leading-relaxed">
-                    The full write-up &mdash; how the rings work, why "passive chipless" matters, what the wrist hub fuses, and what UnSteadyRing means for the rest of the halfmarble platform &mdash; is being written. Check back, or grab beta access and we'll send it directly when it lands.
+            <div class="border border-zinc-800 p-8 md:p-12 max-w-3xl mx-auto mb-10 text-left" style="background:#111111;">
+                <div class="mono text-xs text-blue-500 uppercase tracking-[0.3em] mb-3">UnSteadyRing: The Glass Box</div>
+                <p class="mono text-xs text-zinc-500 uppercase tracking-[0.2em] mb-8">By Gerard &amp; Anya Ziemski // Halfmarble</p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    At Halfmarble, our focus has always been on intervention. When Young-Onset Parkinson's Disease (YOPD) makes my hands shake, we engineer tools like the <em>SteadyHandTool</em> to mechanically push back against the biology so I can keep soldering and building.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    But intervention is only half the equation. To truly understand this disease, to evaluate if our Levodopa is actually working, and to reclaim our autonomy, we need continuous, objective measurement.
+                </p>
+
+                <p class="text-lg md:text-xl font-bold text-white py-2 my-8 border-l-4 border-blue-500 pl-5 leading-snug">
+                    The Steady tools intervene. UnSteadyRing observes.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    The consumer tech industry is currently trying to track Parkinson's with smartwatches. But the wrist acts as a mechanical shock absorber. It completely dampens the fine, independent "pill-rolling" digit kinematics that define our tremor.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    The medical industry's alternative? Put a battery, a Bluetooth chip, and silicon inside a "smart ring." If you live with PD, you immediately spot the fatal flaws:
+                </p>
+
+                <ol class="list-decimal pl-7 space-y-2 mb-5 text-zinc-300 leading-relaxed marker:text-blue-500 marker:font-bold">
+                    <li>They alter natural kinematics.</li>
+                    <li>They are expensive, locking patients out of their own data.</li>
+                    <li>They induce "charging fatigue." Asking a patient with severe rigidity or dyskinesia to plug multiple rings into tiny chargers every night is a profound usability failure.</li>
+                </ol>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    We threw out that playbook entirely.
+                </p>
+
+                <h3 class="text-xl md:text-2xl font-bold text-white mt-10 mb-4">The Reversed Topology Architecture</h3>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    UnSteadyRing shifts 100% of the active power, processing, and cost away from the fingers and onto two wrist-worn hubs.
+                </p>
+
+                <h4 class="text-base font-bold text-white mt-6 mb-2">Ten Rings. Zero Batteries.</h4>
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    The rings are completely passive and chipless. There is no silicon. There is nothing to charge. You put them on and forget them. Because they are passive, they cost pennies to manufacture, making true 10-digit tracking economically viable for anyone.
+                </p>
+
+                <h4 class="text-base font-bold text-white mt-6 mb-2">Two Hubs. WiFi-Band Excitation.</h4>
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    The two wrist hubs do the heavy lifting. They act as miniature radar stations, emitting a low-power WiFi-band radio signal down the hand. The passive rings act as antennas, reflecting that signal back. By measuring the micro-changes in the RF backscatter, the hubs continuously track the 3D position of all ten fingers with sub-millimeter precision.
+                </p>
+
+                <h3 class="text-xl md:text-2xl font-bold text-white mt-10 mb-4">Sensor Fusion: Beyond the Tremor</h3>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    Parkinson's is not just a movement disorder; it is a systemic failure that heavily impacts the autonomic nervous system. Tracking a tremor without physiological context is like looking through a keyhole.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    That is why the UnSteadyRing wrist hubs do more than just read RF backscatter. They are fused with:
+                </p>
+
+                <ul class="list-disc pl-7 space-y-2 mb-5 text-zinc-300 leading-relaxed marker:text-blue-500">
+                    <li><strong class="text-white">Single-Lead ECG:</strong> To monitor cardiac electrical activity.</li>
+                    <li><strong class="text-white">PPG (Photoplethysmography):</strong> For continuous heart rate variability and blood volume changes.</li>
+                    <li><strong class="text-white">Skin Temperature:</strong> To monitor the autonomic dysregulation and sweating that frequently accompany "Off" periods when medication fades.</li>
+                </ul>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    By fusing ground-truth finger kinematics with autonomic vitals, we map the entire biological footprint of a medication cycle in real-time.
+                </p>
+
+                <h3 class="text-xl md:text-2xl font-bold text-white mt-10 mb-4">The Glass Box Philosophy</h3>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    Today's medical device market runs on the "Black Box" model. Corporations hoard your raw data, run it through hidden algorithms, and charge you a subscription to view a dumbed-down "health score."
+                </p>
+
+                <p class="text-lg md:text-xl font-bold text-white py-2 my-8 border-l-4 border-blue-500 pl-5 leading-snug">
+                    UnSteadyRing is a Glass Box.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    This is your biology. You own the data. We are building this to give patients, open-source developers, and clinical researchers direct access to the raw, unadulterated kinematic vectors and physiological waveforms.
+                </p>
+
+                <h3 class="text-xl md:text-2xl font-bold text-white mt-10 mb-4">Defensively Patented for the Community</h3>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    If you know Halfmarble, you know we believe in open hardware. So why did we just file four patents with the USPTO for this battery-free architecture?
+                </p>
+
+                <p class="text-lg md:text-xl font-bold text-white py-2 my-8 border-l-4 border-blue-500 pl-5 leading-snug">
+                    Defensive patenting.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    If we simply published this architecture online, a massive corporation could legally take it, patent a slightly modified version, and send us a Cease &amp; Desist letter. They would lock this technology behind a $2,000 paywall.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    We filed those patents to establish an impenetrable legal shield&mdash;our Freedom to Operate. We hold the keys, ensuring no one can ever lock the door on the PD community.
+                </p>
+
+                <h3 class="text-xl md:text-2xl font-bold text-white mt-10 mb-4">Join the Build</h3>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    We have the physics modeled and the architecture legally secured. Now, we build the chassis.
+                </p>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    We aren't looking for Venture Capital. We are looking for:
+                </p>
+
+                <ul class="list-disc pl-7 space-y-2 mb-5 text-zinc-300 leading-relaxed marker:text-blue-500">
+                    <li><strong class="text-white">Hardware Hackers &amp; RF/SDR Engineers</strong> to help refine the backscatter algorithms.</li>
+                    <li><strong class="text-white">Clinical Researchers</strong> who need access to a 10-digit Glass Box tracker.</li>
+                    <li><strong class="text-white">Non-dilutive Grant Partners</strong> (like the Michael J. Fox Foundation).</li>
+                </ul>
+
+                <p class="text-zinc-300 text-base leading-relaxed mb-5">
+                    If you want to help us engineer the future of accessible movement disorder tracking, grab beta access below, or reach out to collaborate.
+                </p>
+
+                <p class="text-zinc-200 text-base italic font-bold mt-8">
+                    Halfmarble &mdash; The science is the engine.
                 </p>
             </div>
 
