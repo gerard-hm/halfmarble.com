@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>halfmarble | SteadyHeartBeat — your heart rate, read aloud</title>
+<meta name="description" content="SteadyHeartBeat is a free iOS app that speaks your live heart rate from AirPods Pro 3 — no watch, no chest strap, no screen. Everything runs on-device; halfmarble never receives your data.">
+<script async src="https://plausible.io/js/pa--8bqhTOPcLxoqRoedTv8x.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  img { display: block; max-width: 100%; }
+
+  /* rose = SteadyHeartBeat product accent (#E84855). pure red stays company-level. */
+  :root { --rose: #E84855; --rose-dim: rgba(232,72,85,0.4); --rose-faint: rgba(232,72,85,0.08); }
+
+  .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+  .top-nav { max-width: 1200px; margin: 0 auto; padding: 16px 20px 0; }
+  .top-nav-row { display: flex; justify-content: space-between; align-items: center; position: relative; }
+  .nav-link { font-size: 12px; color: #666; text-decoration: none; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+  .nav-link:hover { border-color: var(--rose); }
+  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+  .nav-logo img { width: 22px; height: 22px; filter: brightness(0) invert(1); opacity: 0.7; }
+  .nav-logo span { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; }
+  .nav-logo:hover { border-color: var(--rose); }
+
+  /* hero */
+  .hero { text-align: center; padding: 72px 0 48px; border-bottom: 1px solid #1a1a1a; }
+  .hero .label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; }
+  .hero .label .accent { color: var(--rose); font-weight: 700; }
+  .hero h1 { font-size: 44px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px; }
+  .hero p.sub { font-size: 17px; color: #999; max-width: 640px; margin: 0 auto 16px; }
+  .hero p.req { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 20px; }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 32px; }
+  .btn { display: inline-block; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 28px; border: 1px solid var(--rose); background: var(--rose); color: #fff; transition: background 0.2s, border-color 0.2s; }
+  .btn:hover { background: #d13d49; border-color: #d13d49; }
+  .btn.ghost { background: transparent; border-color: #333; color: #888; }
+  .btn.ghost:hover { background: #111; border-color: #555; color: #d1d5db; }
+
+  /* sections */
+  section.block { margin: 64px 0; }
+  .section-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 28px; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  .section-label .accent { color: var(--rose); }
+
+  /* feature grid */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .feature { background: #111; border: 1px solid #222; padding: 24px; transition: border-color 0.2s; }
+  .feature:hover { border-color: #444; }
+  .feature h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .feature h3 .dot { color: var(--rose); margin-right: 8px; }
+  .feature p { font-size: 14px; color: #888; }
+
+  /* screenshots */
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .shot { background: #0f0f0f; border: 1px solid #1a1a1a; padding: 14px; }
+  .shot.wide { grid-column: 1 / -1; }
+  .shot img { width: 100%; border: 1px solid #222; }
+  .shot .cap { font-size: 12px; color: #777; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 12px; text-align: center; }
+
+  /* callout box */
+  .callout { background: #0f0f0f; border: 1px solid #222; padding: 28px; }
+  .callout.rose { border-left: 3px solid var(--rose); }
+  .callout h2 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+  .callout p { font-size: 15px; color: #999; margin-bottom: 12px; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout a { color: var(--rose); text-decoration: none; border-bottom: 1px solid var(--rose-dim); transition: border-color 0.2s; }
+  .callout a:hover { border-color: var(--rose); }
+
+  footer { padding: 64px 0; text-align: center; border-top: 1px solid #1a1a1a; margin-top: 64px; }
+  .footer-label { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 10px; }
+  .footer-text { font-size: 14px; color: #777; }
+  .footer-links { margin-top: 18px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+  .footer-links a { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.15em; text-decoration: none; border-bottom: 1px solid #333; transition: border-color 0.2s; }
+  .footer-links a:hover { border-color: #d1d5db; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="top-nav-row">
+    <a href="../index.html" class="nav-link">&larr; halfmarble.com</a>
+    <a href="../index.html" class="nav-logo" style="position:absolute;left:50%;transform:translateX(-50%);">
+      <img src="../assets/logo.png" alt="halfmarble">
+      <span>halfmarble</span>
+    </a>
+  </div>
+</div>
+
+<div class="container">
+
+  <header class="hero">
+    <div class="label"><span class="accent">STEADYHEARTBEAT</span> · iOS APP</div>
+    <h1>Your heart rate, read aloud.</h1>
+    <p class="sub">SteadyHeartBeat speaks your live heart rate from AirPods Pro 3 — no watch, no chest strap, no glancing at a screen. The earbuds are both the sensor and the feedback.</p>
+    <p class="sub">Everything runs on your iPhone. Your heart-rate data never leaves the device, and halfmarble never receives it.</p>
+    <div class="cta-row">
+      <span class="btn" style="background:#1a1a1a;border-color:#333;color:#999;cursor:default;">Coming soon · App Store</span>
+    </div>
+    <p class="req">Requires AirPods with heart-rate monitoring (AirPods Pro 3 or later) · iOS 26+</p>
+  </header>
+
+  <section class="block">
+    <div class="section-label">What <span class="accent">//</span> it does</div>
+    <div class="features">
+      <div class="feature">
+        <h3><span class="dot">●</span>On-device &amp; private</h3>
+        <p>Heart-rate and health data never leave your iPhone. halfmarble never receives it — local-first by architecture, not by policy.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Just your earbuds</h3>
+        <p>AirPods Pro 3 are both the optical sensor and the feedback channel. No smartwatch, no chest strap, hands and eyes free.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Spoken announcements</h3>
+        <p>Your BPM, read aloud at the interval you choose — and the instant it drifts past your threshold.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Zone coaching</h3>
+        <p>Hear your training zone, and with a target set, a spoken "push" or "ease off" — five color-coded zones from recovery to maximum effort.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Boxing round timer</h3>
+        <p>Amateur and pro presets, configurable rounds and rest, with rounds, rest, and a "ten seconds" warning called aloud.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Free &amp; open by design</h3>
+        <p>Launching free, with the earbud-as-closed-loop-sensor pipeline to be published as public-domain prior art so anyone can build on it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="section-label">A <span class="accent">//</span> look inside</div>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/01-home-connected.png" alt="SteadyHeartBeat home screen with readiness snapshot and workout selector"><div class="cap">Readiness &amp; workout select</div></div>
+      <div class="shot"><img src="screenshots/02-live-heartrate.png" alt="Live heart rate with zone color"><div class="cap">Live BPM, zone-colored</div></div>
+      <div class="shot"><img src="screenshots/07-cycling-zones.png" alt="Cycling with a target heart-rate zone selected"><div class="cap">Cycling — set a target zone</div></div>
+      <div class="shot"><img src="screenshots/08-boxing-timer.png" alt="Boxing round timer with presets, rounds, rest, and ten-second warning"><div class="cap">Boxing round timer</div></div>
+      <div class="shot wide"><img src="screenshots/03-live-landscape.png" alt="Full-session heart-rate chart in landscape"><div class="cap">Full-session chart, colored by training zone</div></div>
+      <div class="shot"><img src="screenshots/04-workout-summary.png" alt="Post-workout summary"><div class="cap">Post-workout summary</div></div>
+      <div class="shot"><img src="screenshots/05-sessions.png" alt="Session history"><div class="cap">Session history</div></div>
+      <div class="shot"><img src="screenshots/06-voices.png" alt="Voice picker"><div class="cap">Choose your voice</div></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="callout rose">
+      <h2>Your data stays on your device</h2>
+      <p>SteadyHeartBeat processes everything on your iPhone. Session files are kept in the app's private storage and excluded from iCloud/iTunes backup. The one exception is Apple Health, which you control and can turn off.</p>
+      <p>Read the full breakdown in the <a href="privacy.html">privacy policy</a>, or halfmarble's <a href="../glass-box/data.html">Glass Box</a> data philosophy.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="callout">
+      <h2>Why we're publishing the idea</h2>
+      <p>SteadyHeartBeat is a proof of concept for ambient, on-device biometric feedback through everyday earbuds — one building block in halfmarble's wearable-sensing work. Rather than patent the pipeline, we're placing it into the public domain as dated defensive publications, so the techniques stay freely practicable by anyone.</p>
+      <p>The prior art and source will be public at launch.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="footer-label">halfmarble LLC</div>
+  <p class="footer-text">Engineering for the unbridgeable difference.</p>
+  <div class="footer-links">
+    <a href="../index.html">halfmarble.com</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="mailto:privacy@halfmarble.com">privacy@halfmarble.com</a>
+  </div>
+</footer>
+
+</body>
+</html>
