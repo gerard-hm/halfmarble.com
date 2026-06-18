@@ -71,6 +71,19 @@
   .glassbox-body li { margin: 6px 0; }
   .formula { background: #000; border: 1px solid #222; padding: 12px 16px; margin: 12px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #d1d5db; }
 
+  /* privacy panel */
+  .privacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #222; }
+  @media (max-width: 680px) { .privacy-grid { grid-template-columns: 1fr; } }
+  .pcard { background: #0d0d0d; padding: 16px 20px; }
+  .pcard-h { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .pcard-h.sense { color: #2dd4bf; }
+  .pcard-h.use { color: #34d399; }
+  .pcard ul { margin: 0; padding-left: 18px; }
+  .pcard li { font-size: 12.5px; color: #9ca3af; margin: 7px 0; line-height: 1.5; }
+  .pcard li b { color: #d1d5db; }
+  .privacy-foot { padding: 12px 20px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6b7280; border-top: 1px solid #1a1a1a; }
+  .privacy-foot a { color: #6b8cae; }
+
   footer { margin-top: 26px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; line-height: 1.8; border-top: 1px solid #1a1a1a; padding-top: 16px; }
   .disclaim { color: #f59e0b; }
 </style>
@@ -162,6 +175,37 @@
       <p style="color:#6b7280">Deterministic, seeded synthetic signal — identical every run. Illustrates the measurement pipeline, not any individual.</p>
     </div>
   </details>
+
+  <!-- privacy / data handling -->
+  <div class="chart-section" style="padding:0">
+    <div class="chart-header" style="padding:18px 20px 0">
+      <div>
+        <div class="chart-title">Your data — what's sensed, and what happens to it</div>
+        <div class="chart-subtitle">halfmarble is the steward of your data, not its owner</div>
+      </div>
+    </div>
+    <div class="privacy-grid">
+      <div class="pcard">
+        <div class="pcard-h sense">What the ankle hub senses</div>
+        <ul>
+          <li><b>Raw motion</b> — tri-axial acceleration at the ankle (and ring/wrist), ~50 Hz.</li>
+          <li><b>Derived on-device</b> — stepping cadence, postural sway, the 3–8 Hz freeze band, the Freeze Index, and freeze episodes.</li>
+          <li>This is <b>movement / motor data</b>. Over time a gait pattern can be identifying, so we treat it as sensitive health data — not analytics exhaust.</li>
+        </ul>
+      </div>
+      <div class="pcard">
+        <div class="pcard-h use">What happens to it</div>
+        <ul>
+          <li><b>Local-first.</b> By default it stays on your device and is computed there. Raw motion never leaves the device unless you choose to share it.</li>
+          <li><b>You own it.</b> halfmarble is the steward, not the owner. We minimize what is collected and how long it is kept.</li>
+          <li><b>If you opt in to research</b> — only <b>aggregates</b> leave, never raw traces and never individual-level records, protected by <b>differential privacy</b> under a single <b>budgeted total ε</b> accounted across every release (not a fresh budget per query), computed on-device or via federated analytics where possible.</li>
+          <li><b>No standalone anonymity claims.</b> Grouping similar patterns is only a step inside that mechanism — never a promise on its own.</li>
+          <li><b>Never sold.</b> Raw, individual data is never sold. If halfmarble is ever acquired by an entity that won't uphold these standards, user data is purged.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="privacy-foot">Default state: nothing leaves your device. Measurement under the FDA 2019 General Wellness policy — not a medical device, not for diagnosis. &nbsp;·&nbsp; Full data policy: <a href="https://halfmarble.com/glass-box/data.html">halfmarble.com/glass-box/data.html</a></div>
+  </div>
 
   <footer>
     <div class="disclaim">⚠ SIMULATED / SYNTHETIC DATA — for illustration only. Not patient data. Not a medical device; not for diagnosis. UnSteadyRing sensing hardware is in early R&amp;D (design stage).</div>
