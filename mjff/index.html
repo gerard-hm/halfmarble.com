@@ -71,18 +71,38 @@
   .glassbox-body li { margin: 6px 0; }
   .formula { background: #000; border: 1px solid #222; padding: 12px 16px; margin: 12px 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #d1d5db; }
 
-  /* privacy panel */
-  .privacy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #222; }
-  @media (max-width: 680px) { .privacy-grid { grid-template-columns: 1fr; } }
-  .pcard { background: #0d0d0d; padding: 16px 20px; }
-  .pcard-h { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
-  .pcard-h.sense { color: #2dd4bf; }
-  .pcard-h.use { color: #34d399; }
-  .pcard ul { margin: 0; padding-left: 18px; }
-  .pcard li { font-size: 12.5px; color: #9ca3af; margin: 7px 0; line-height: 1.5; }
-  .pcard li b { color: #d1d5db; }
-  .privacy-foot { padding: 12px 20px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #6b7280; border-top: 1px solid #1a1a1a; }
-  .privacy-foot a { color: #6b8cae; }
+  /* data-policy section — matches halfmarble.com/glass-box/data.html format */
+  .policy { margin-top: 22px; }
+  .policy h2 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .policy h2 .num { font-family: 'JetBrains Mono', monospace; color: #D12C3B; font-size: 13px; margin-right: 10px; font-weight: 700; }
+  .policy .h2-sub { font-size: 12px; color: #666; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; }
+  .policy p { font-size: 14px; color: #999; margin: 0 0 14px; line-height: 1.7; }
+  .policy p strong { color: #d1d5db; font-weight: 700; }
+  .policy a { color: #D12C3B; text-decoration: none; border-bottom: 1px solid #333; }
+  .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; table-layout: fixed; }
+  .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 30%; }
+  .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 13%; }
+  .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 17%; }
+  .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 40%; }
+  .data-table th { text-align: left; padding: 11px 14px; background: #111; color: #d1d5db; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #333; }
+  .data-table td { padding: 11px 14px; border-bottom: 1px solid #1a1a1a; color: #888; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+  .data-table tr:hover td { background: #0f0f0f; }
+  .data-table .field { color: #d1d5db; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+  .data-table .yes { color: #4ade80; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+  .data-table .no { color: #dc2626; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+  .data-table .maybe { color: #eab308; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; }
+  @media (max-width: 680px) { .data-table { table-layout: auto; } .data-table th, .data-table td { padding: 6px 8px; font-size: 11px; } .data-table th { font-size: 9px; } }
+  .pipeline { background: #0f0f0f; border: 1px solid #222; padding: 22px; margin: 20px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .pipeline-step { margin-bottom: 16px; }
+  .pipeline-num { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; background: #D12C3B; color: #fff; font-weight: 800; margin-right: 12px; font-size: 11px; }
+  .pipeline-label { color: #d1d5db; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px; }
+  .pipeline-content { margin-top: 8px; padding-left: 34px; color: #666; }
+  .pipeline-arrow { padding-left: 45px; color: #444; font-size: 15px; line-height: 1; }
+  .never-list { background: #0f0f0f; border-left: 3px solid #dc2626; padding: 18px 22px; margin: 20px 0; }
+  .never-item { display: flex; gap: 12px; flex-wrap: wrap; align-items: baseline; font-size: 13.5px; color: #d1d5db; padding: 7px 0; }
+  .never-item .mark { color: #dc2626; font-family: 'JetBrains Mono', monospace; font-weight: 700; flex-shrink: 0; }
+  .never-item .prefix, .never-item strong { flex-shrink: 0; white-space: nowrap; }
+  .never-item .text { flex: 1 1 300px; min-width: 0; }
 
   footer { margin-top: 26px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #444; line-height: 1.8; border-top: 1px solid #1a1a1a; padding-top: 16px; }
   .disclaim { color: #f59e0b; }
@@ -176,36 +196,55 @@
     </div>
   </details>
 
-  <!-- privacy / data handling -->
-  <div class="chart-section" style="padding:0">
-    <div class="chart-header" style="padding:18px 20px 0">
-      <div>
-        <div class="chart-title">Your data — what's sensed, and what happens to it</div>
-        <div class="chart-subtitle">halfmarble is the steward of your data, not its owner</div>
-      </div>
+  <!-- data policy — same format as halfmarble.com/glass-box/data.html -->
+  <section class="policy">
+    <h2><span class="num">&#9670;</span>Your data</h2>
+    <div class="h2-sub">what the ankle hub senses · what happens to it</div>
+    <p>halfmarble is the <strong>steward</strong> of your data, not its owner. The ankle hub senses movement; over time a gait pattern can be identifying, so we treat it as <strong>sensitive health data</strong> — not analytics exhaust. By default it stays on your device.</p>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>Signal</th><th>On Device</th><th>Shared (opt-in)</th><th>How</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="field">Raw acceleration (50 Hz)</td><td><span class="yes">YES</span></td><td><span class="no">NEVER</span></td><td>Raw motion never leaves the device; the Freeze Index is computed on-device</td></tr>
+        <tr><td class="field">Cadence</td><td><span class="yes">YES</span></td><td><span class="maybe">BINNED</span></td><td>Step-rate bands (e.g., 110–120/min), never an exact trace</td></tr>
+        <tr><td class="field">Postural sway</td><td><span class="yes">YES</span></td><td><span class="maybe">BINNED</span></td><td>Low-frequency band power, aggregated</td></tr>
+        <tr><td class="field">Freeze Index</td><td><span class="yes">YES</span></td><td><span class="maybe">AGGREGATE</span></td><td>Contributes only to a DP-protected aggregate</td></tr>
+        <tr><td class="field">Freeze episodes</td><td><span class="yes">YES</span></td><td><span class="maybe">BINNED</span></td><td>Binned count / duration, DP-protected aggregate</td></tr>
+        <tr><td class="field">Time of day</td><td><span class="yes">YES</span></td><td><span class="maybe">BINNED</span></td><td>2-hour bins (e.g., "2–4 PM"), never exact timestamps</td></tr>
+        <tr><td class="field">Identity / device ID</td><td><span class="no">NO</span></td><td><span class="no">NEVER</span></td><td>Not collected; shared patterns are never linked back to you</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>How a shared pattern is anonymized</strong> — the same pipeline as halfmarble's full data policy, applied to motion:</p>
+    <div class="pipeline">
+      <div class="pipeline-step"><span class="pipeline-num">1</span><span class="pipeline-label">Raw</span>
+        <div class="pipeline-content">"14:32, ankle 50 Hz, 6.2 Hz tremor, 7.4 s freeze, me @ home"</div></div>
+      <div class="pipeline-arrow">&darr;</div>
+      <div class="pipeline-step"><span class="pipeline-num">2</span><span class="pipeline-label">Identifiers stripped</span>
+        <div class="pipeline-content">"afternoon, freeze episode, tremor band, freeze ~7 s"</div></div>
+      <div class="pipeline-arrow">&darr;</div>
+      <div class="pipeline-step"><span class="pipeline-num">3</span><span class="pipeline-label">Binned</span>
+        <div class="pipeline-content">"bin 2–4 PM, FI band 8–12, freeze 5–10 s, cadence 110–120"</div></div>
+      <div class="pipeline-arrow">&darr;</div>
+      <div class="pipeline-step"><span class="pipeline-num">4</span><span class="pipeline-label">Aggregated with others</span>
+        <div class="pipeline-content">"2–4 PM bin, n=1,247 users, median FI 0.4, freeze rate 0.08/min"</div></div>
     </div>
-    <div class="privacy-grid">
-      <div class="pcard">
-        <div class="pcard-h sense">What the ankle hub senses</div>
-        <ul>
-          <li><b>Raw motion</b> — tri-axial acceleration at the ankle (and ring/wrist), ~50 Hz.</li>
-          <li><b>Derived on-device</b> — stepping cadence, postural sway, the 3–8 Hz freeze band, the Freeze Index, and freeze episodes.</li>
-          <li>This is <b>movement / motor data</b>. Over time a gait pattern can be identifying, so we treat it as sensitive health data — not analytics exhaust.</li>
-        </ul>
-      </div>
-      <div class="pcard">
-        <div class="pcard-h use">What happens to it</div>
-        <ul>
-          <li><b>Local-first.</b> By default it stays on your device and is computed there. Raw motion never leaves the device unless you choose to share it.</li>
-          <li><b>You own it.</b> halfmarble is the steward, not the owner. We minimize what is collected and how long it is kept.</li>
-          <li><b>If you opt in to research</b> — only <b>aggregates</b> leave, never raw traces and never individual-level records, protected by <b>differential privacy</b> under a single <b>budgeted total ε</b> accounted across every release (not a fresh budget per query), computed on-device or via federated analytics where possible.</li>
-          <li><b>No standalone anonymity claims.</b> Grouping similar patterns is only a step inside that mechanism — never a promise on its own.</li>
-          <li><b>Never sold.</b> Raw, individual data is never sold. If halfmarble is ever acquired by an entity that won't uphold these standards, user data is purged.</li>
-        </ul>
-      </div>
+
+    <p><strong>By default, nothing leaves your device.</strong> Computation runs on-device, and your raw motion is never required to leave it. Sharing is strictly opt-in, per category, and is never a condition of using halfmarble. If an individual pattern is too unique to be protected, it is never shared.</p>
+    <p><strong>Differential privacy, under one budgeted total budget.</strong> Anything you do choose to share contributes only to aggregates protected by differential privacy &mdash; the method with a formal, provable guarantee against re-identification &mdash; computed on-device or via federated analytics wherever possible. We hold to a single, fixed total privacy budget (&epsilon;) accounted across every release we ever make &mdash; not a fresh budget per query. Grouping similar patterns together is one step inside that mechanism, never a standalone promise on its own.</p>
+
+    <div class="never-list">
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">sell your data, or share it with insurers, employers, or advertisers.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">let a raw motion trace leave your device.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">link a shared pattern back to your identity.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">share data without your explicit per-category consent.</span></div>
+      <div class="never-item"><span class="mark">&times;</span><span class="prefix">We will</span><strong>never</strong><span class="text">make opt-in a requirement for using halfmarble.</span></div>
     </div>
-    <div class="privacy-foot">Default state: nothing leaves your device. Measurement under the FDA 2019 General Wellness policy — not a medical device, not for diagnosis. &nbsp;·&nbsp; Full data policy: <a href="https://halfmarble.com/glass-box/data.html">halfmarble.com/glass-box/data.html</a></div>
-  </div>
+
+    <p style="font-size:12px;color:#666;">Measurement under the FDA 2019 General Wellness policy — not a medical device, not for diagnosis. &nbsp;·&nbsp; Full data policy: <a href="https://halfmarble.com/glass-box/data.html">halfmarble.com/glass-box/data.html</a></p>
+  </section>
 
   <footer>
     <div class="disclaim">⚠ SIMULATED / SYNTHETIC DATA — for illustration only. Not patient data. Not a medical device; not for diagnosis. UnSteadyRing sensing hardware is in early R&amp;D (design stage).</div>
