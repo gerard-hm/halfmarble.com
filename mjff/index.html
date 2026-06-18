@@ -244,19 +244,19 @@
       </tbody>
     </table>
 
-    <p><strong>How a shared pattern is anonymized</strong> — the same pipeline as halfmarble's full data policy, applied to the exact signals this demo captures (values from the freeze episode above):</p>
+    <p><strong>How a shared pattern is anonymized</strong> — the same pipeline as halfmarble's full data policy, applied to this session's actual summary (the numbers shown in the Session panel above):</p>
     <div class="pipeline">
       <div class="pipeline-step"><span class="pipeline-num">1</span><span class="pipeline-label">Raw (on device)</span>
-        <div class="pipeline-content">"ankle accel @ 50 Hz · freeze: FI 8.3, peak 6.0 Hz, 7.4 s · cadence 114/min · + device id + timestamp"</div></div>
+        <div class="pipeline-content">"ankle accel @ 50 Hz · 2 freeze episodes · peak FI 11.0 · 9.8 s frozen (16%) · cadence 114/min · + device id + timestamp"</div></div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step"><span class="pipeline-num">2</span><span class="pipeline-label">Identifiers stripped</span>
-        <div class="pipeline-content">"freeze episode · FI 8.3 · 6.0 Hz · 7.4 s · cadence 114/min · time-of-day only"</div></div>
+        <div class="pipeline-content">"2 freeze episodes · peak FI 11.0 · 9.8 s frozen · cadence 114/min · time-of-day only"</div></div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step"><span class="pipeline-num">3</span><span class="pipeline-label">Binned</span>
-        <div class="pipeline-content">"afternoon bin · FI band 8–12 · freeze band 5–7 Hz · duration 5–10 s · cadence 110–120/min"</div></div>
+        <div class="pipeline-content">"afternoon bin · 1–3 episodes · peak-FI band 8–12 · frozen 5–15 s · cadence 110–120/min"</div></div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step"><span class="pipeline-num">4</span><span class="pipeline-label">Aggregated with others (DP)</span>
-        <div class="pipeline-content">"afternoon bin · n=1,247 users · median FI 0.4 · freeze rate 0.08/min · ε-budgeted"</div></div>
+        <div class="pipeline-content">"afternoon bin · n=1,247 users · median peak FI 4.1 · median 0.14 of session frozen · ε-budgeted"</div></div>
     </div>
 
     <p><strong>By default, nothing leaves your device.</strong> Computation runs on-device, and your raw motion is never required to leave it. Sharing is strictly opt-in, per category, and is never a condition of using halfmarble. If an individual pattern is too unique to be protected, it is never shared.</p>
