@@ -29,11 +29,11 @@
   button.ctl.primary { border-color: #2dd4bf; color: #2dd4bf; background: rgba(45,212,191,0.08); }
   button.ctl.primary:hover { background: rgba(45,212,191,0.2); color: #fff; }
   .ctl-divider { width: 1px; height: 26px; background: #2a2a2a; margin: 0 4px; }
-  .slider-wrap { display: flex; align-items: center; gap: 10px; margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; }
-  .slider-wrap b { color: #fbbf24; }
-  input[type=range] { -webkit-appearance: none; appearance: none; height: 3px; background: #333; width: 150px; outline: none; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: #fbbf24; cursor: pointer; border-radius: 0; }
-  input[type=range]::-moz-range-thumb { width: 14px; height: 14px; background: #fbbf24; cursor: pointer; border: 0; border-radius: 0; }
+  .slider-wrap { display: flex; align-items: center; gap: 10px; margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #cbd5e1; }
+  .slider-wrap b { color: #fbbf24; font-size: 14px; }
+  input[type=range] { -webkit-appearance: none; appearance: none; height: 5px; background: #444; width: 190px; outline: none; border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px; background: #fbbf24; cursor: pointer; border-radius: 50%; box-shadow: 0 0 0 4px rgba(251,191,36,0.25); }
+  input[type=range]::-moz-range-thumb { width: 22px; height: 22px; background: #fbbf24; cursor: pointer; border: 0; border-radius: 50%; box-shadow: 0 0 0 4px rgba(251,191,36,0.25); }
 
   /* live status row */
   .status-row { display: flex; align-items: stretch; gap: 0; border: 1px solid #222; border-top: 0; }
@@ -215,7 +215,7 @@
         <div class="pipeline-content" id="pipeBinned">"afternoon bin · 1–3 episodes · peak-FI band 8–12 · frozen 5–15 s · cadence 110–120/min"</div></div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step"><span class="pipeline-num">4</span><span class="pipeline-label">Aggregated with others (DP)</span>
-        <div class="pipeline-content">"afternoon bin · n=1,247 users · median peak FI 4.1 · median 0.14 of session frozen · ε-budgeted"</div></div>
+        <div class="pipeline-content">"afternoon bin · illustrative cohort (n&asymp;1,200) · median peak FI 4.1 · median 0.14 of session frozen · &epsilon;-budgeted"</div></div>
     </div>
 
     <p>halfmarble is the <strong>steward</strong> of your data, not its owner. The ankle hub senses movement; over time a gait pattern can be identifying, so we treat it as <strong>sensitive health data</strong> — not analytics exhaust. By default it stays on your device.</p>
