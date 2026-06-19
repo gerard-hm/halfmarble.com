@@ -249,13 +249,13 @@
     <p><strong>How a shared pattern is anonymized</strong> — the same pipeline as halfmarble's full data policy, applied to this session's actual summary (the numbers shown in the Session panel above):</p>
     <div class="pipeline">
       <div class="pipeline-step"><span class="pipeline-num">1</span><span class="pipeline-label">Raw (on device)</span>
-        <div class="pipeline-content">"ankle accel @ 50 Hz · 2 freeze episodes · peak FI 11.0 · 9.8 s frozen (16%) · cadence 114/min · + device id + timestamp"</div></div>
+        <div class="pipeline-content" id="pipeRaw">"ankle accel @ 50 Hz · 2 freeze episodes · peak FI 11.0 · 9.8 s frozen (16%) · cadence 114/min · + device id + timestamp"</div></div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step"><span class="pipeline-num">2</span><span class="pipeline-label">Identifiers stripped</span>
-        <div class="pipeline-content">"2 freeze episodes · peak FI 11.0 · 9.8 s frozen · cadence 114/min · time-of-day only"</div></div>
+        <div class="pipeline-content" id="pipeStripped">"2 freeze episodes · peak FI 11.0 · 9.8 s frozen · cadence 114/min · time-of-day only"</div></div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step"><span class="pipeline-num">3</span><span class="pipeline-label">Binned</span>
-        <div class="pipeline-content">"afternoon bin · 1–3 episodes · peak-FI band 8–12 · frozen 5–15 s · cadence 110–120/min"</div></div>
+        <div class="pipeline-content" id="pipeBinned">"afternoon bin · 1–3 episodes · peak-FI band 8–12 · frozen 5–15 s · cadence 110–120/min"</div></div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step"><span class="pipeline-num">4</span><span class="pipeline-label">Aggregated with others (DP)</span>
         <div class="pipeline-content">"afternoon bin · n=1,247 users · median peak FI 4.1 · median 0.14 of session frozen · ε-budgeted"</div></div>
@@ -405,10 +405,19 @@ function updateLive(){
   let episodes=0, frozenSamples=0, peak=0, inF=false; const upto=winIndexAt(tNow);
   for(let k=0;k<=upto;k++){ if(fiV[k]>peak) peak=fiV[k]; const fr=fiV[k]>threshold&&powV[k]>POW_GATE; if(fr){frozenSamples++; if(!inF){episodes++;inF=true;}} else inF=false; }
   const frozenSec=frozenSamples*(STEP/fs);
+  const pct=Math.round(100*frozenSec/Math.max(0.1,tNow));
   document.getElementById('stEpisodes').textContent=episodes;
   document.getElementById('stFrozen').textContent=frozenSec.toFixed(1)+' s';
-  document.getElementById('stPct').textContent=Math.round(100*frozenSec/Math.max(0.1,tNow))+'%';
+  document.getElementById('stPct').textContent=pct+'%';
   document.getElementById('stPeak').textContent=peak.toFixed(1);
+  // keep the anonymization pipeline in lockstep with the live session stats
+  const ep=episodes+' freeze episode'+(episodes===1?'':'s');
+  const fiLo=Math.floor(peak/4)*4, fiBand=peak>0?fiLo+'–'+(fiLo+4):'0';
+  const fzLo=Math.floor(frozenSec/5)*5, fzBand=frozenSec>0?fzLo+'–'+(fzLo+5)+' s':'0 s';
+  const epBand=episodes===0?'0':(episodes<=3?'1–3':(episodes-1)+'–'+(episodes+1));
+  document.getElementById('pipeRaw').textContent='"ankle accel @ 50 Hz · '+ep+' · peak FI '+peak.toFixed(1)+' · '+frozenSec.toFixed(1)+' s frozen ('+pct+'%) · cadence 114/min · + device id + timestamp"';
+  document.getElementById('pipeStripped').textContent='"'+ep+' · peak FI '+peak.toFixed(1)+' · '+frozenSec.toFixed(1)+' s frozen · cadence 114/min · time-of-day only"';
+  document.getElementById('pipeBinned').textContent='"afternoon bin · '+epBand+' episodes · peak-FI band '+fiBand+' · frozen '+fzBand+' · cadence 110–120/min"';
 }
 
 // ---- render loop ----
