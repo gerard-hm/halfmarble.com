@@ -1,6 +1,6 @@
-# halfmarble: Open-Source Bio Platform
+# halfmarble: Glass Box Bio Platform
 
-**halfmarble** is an open-source, strict "Glass Box" bioinformatics platform designed for the Parkinson's Disease (PD) community. 
+**halfmarble** is a strict "Glass Box" bioinformatics platform designed for the Parkinson's Disease (PD) community. 
 
 As a neurodegenerative data architecture, halfmarble is engineered to track deterministic Pharmacokinetic (PK) modeling against objective motor testing and continuous metabolic state. 
 
@@ -17,9 +17,9 @@ halfmarble also builds dedicated hardware:
 *   **UnSteadyRing:** Wearable kinematic and biometric sensor system &mdash; ten passive chipless fractal-resonant rings excited by WiFi radio from two wrist-worn hubs that also capture single-lead ECG, PPG, and skin temperature. Provisional patent filed.
 
 ### Data Privacy & Glass Box Math
-Patient data is not a commodity. Our privacy framework utilizes explicit, verifiable mathematical models:
-*   `k ≥ 50` Anonymity
-*   `ε = 1.0` Differential Privacy
+Patient data is not a commodity. By default it never leaves your device; any future sharing is opt-in, IRB-approved, and aggregate-only (never individual-level records):
+*   **On-device first** — computation runs on your device; raw data is never required to leave it.
+*   **Differential privacy** under a single budgeted *total* privacy budget (ε), accounted across all releases — not a fresh budget per query — computed on-device or via federated analytics where possible. (Generalization/grouping is a step inside this mechanism, not a standalone guarantee.)
 
 ### The Mission & Pledges
 halfmarble is not a startup; it is a patient-led R&D fight. The science is the engine—we just built the dashboard. 

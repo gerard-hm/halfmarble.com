@@ -377,7 +377,7 @@
           <td class="field">Bradykinesia score</td>
           <td><span class="yes">YES</span></td>
           <td><span class="yes">YES</span></td>
-          <td>Composite computed from tap-rate decay, k&ge;50</td>
+          <td>Composite computed from tap-rate decay, DP-protected aggregate</td>
         </tr>
         <tr>
           <td class="field">Per-finger motion vectors (raw)</td>
@@ -530,31 +530,31 @@
           <td class="field">Cognitive clarity</td>
           <td><span class="yes">YES</span></td>
           <td><span class="yes">YES</span></td>
-          <td>1-10 scale, aggregated with k&ge;100</td>
+          <td>1-10 scale, strict-DP-protected aggregate</td>
         </tr>
         <tr>
           <td class="field">Brain fog</td>
           <td><span class="yes">YES</span></td>
           <td><span class="yes">YES</span></td>
-          <td>1-10 scale, aggregated with k&ge;100</td>
+          <td>1-10 scale, strict-DP-protected aggregate</td>
         </tr>
         <tr>
           <td class="field">Mood</td>
           <td><span class="yes">YES</span></td>
           <td><span class="yes">YES</span></td>
-          <td>1-10 scale (sad &harr; content), aggregated with k&ge;100</td>
+          <td>1-10 scale (sad &harr; content), strict-DP-protected aggregate</td>
         </tr>
         <tr>
           <td class="field">Anxiety level</td>
           <td><span class="yes">YES</span></td>
           <td><span class="yes">YES</span></td>
-          <td>1-10 scale, aggregated with k&ge;100</td>
+          <td>1-10 scale, strict-DP-protected aggregate</td>
         </tr>
         <tr>
           <td class="field">Apathy / motivation</td>
           <td><span class="yes">YES</span></td>
           <td><span class="yes">YES</span></td>
-          <td>1-10 scale, aggregated with k&ge;100</td>
+          <td>1-10 scale, strict-DP-protected aggregate</td>
         </tr>
         <tr>
           <td class="field">Mental fatigue</td>
@@ -640,7 +640,7 @@
     <div style="background:#0f0f0f;border-left:3px solid #D12C3B;padding:20px 24px;margin:24px 0;">
       <div class="mono" style="font-size:10px;color:#D12C3B;text-transform:uppercase;letter-spacing:0.2em;margin-bottom:12px;font-weight:700;">Extra Safeguards for Mental State Data</div>
       <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#888;">
-        <div><strong style="color:#d1d5db;">Stricter k-anonymity (k&ge;100).</strong> Mental health data is held to twice the anonymity threshold of other categories. Your pattern only contributes to research after it can be combined with at least 99 others.</div>
+        <div><strong style="color:#d1d5db;">Strictest protection.</strong> Mental-state data carries the tightest standard of any category: by default it stays on your device and is never shared. If you ever choose to share it, it is held to a stricter differential-privacy budget than any other data &mdash; protection comes from a formal privacy guarantee, not from grouping alone.</div>
         <div><strong style="color:#d1d5db;">Separate opt-in.</strong> If you opt in to share PK data, that does not automatically share mental state data. Mental state sharing is its own toggle with its own consent.</div>
         <div><strong style="color:#d1d5db;">Tracking is optional.</strong> You can disable mental state tracking entirely &mdash; not just sharing. The app works without it.</div>
         <div><strong style="color:#d1d5db;">Comfort threshold.</strong> If your mood or clarity scores decline for 7+ days, the trend graph is hidden by default. You can opt to see it, but the app does not amplify negative cycles automatically.</div>
@@ -1024,10 +1024,10 @@
     </div>
 
     <p>
-      <strong>k-anonymity with k&ge;50.</strong> A user's pattern only leaves the device after it can be combined with at least 49 others. If your pattern is too unique to be anonymized, it is held in a local queue and discarded after 30 days &mdash; never shared.
+      <strong>By default, nothing leaves your device.</strong> Computation runs on-device, and your raw data is never required to leave it. Sharing is strictly opt-in, per category, and is never a condition of using halfmarble. If an individual pattern is too unique to be protected, it is never shared &mdash; it stays in a local queue and is discarded after 30 days.
     </p>
     <p>
-      <strong>Differential privacy noise (&epsilon;=1.0)</strong> is added to all counts before transmission, so that even aggregated statistics cannot be reverse-engineered to individual users.
+      <strong>Differential privacy, under one budgeted total budget.</strong> Anything you do choose to share contributes only to aggregates protected by differential privacy &mdash; the method with a formal, provable guarantee against re-identification &mdash; computed on-device or via federated analytics wherever possible. We hold to a single, fixed total privacy budget (&epsilon;) accounted across every release we ever make &mdash; not a fresh budget per query &mdash; so the guarantee cannot be eroded by repeated requests. Grouping similar patterns together is one step inside that mechanism, never a standalone promise on its own.
     </p>
     <p>
       <strong>No IP addresses logged.</strong> Requests route through a relay that strips origin information server-side.
