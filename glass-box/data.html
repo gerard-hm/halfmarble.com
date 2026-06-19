@@ -347,9 +347,9 @@
       </tbody>
     </table>
 
-    <div class="h2-sub" style="margin-top: 40px;">UnSteadyRing &mdash; biometric &amp; kinematic data (hardware sensor)</div>
+    <div class="h2-sub" style="margin-top: 40px;">UnSteadyRing &mdash; biometric &amp; kinematic data (planned hardware sensor · early R&amp;D)</div>
     <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
-      UnSteadyRing is halfmarble's first sensor product, utilizing our proprietary Reversed Topology architecture. Wrist-worn hubs track passive finger nodes, fusing kinematic signals with single-lead ECG, PPG, and skin temperature. True to our 'Glass Box' privacy standard, raw waveforms <strong>never leave local silicon.</strong> Only computed metrics do, and only with your explicit per-category consent.
+      UnSteadyRing is halfmarble's first sensor concept &mdash; in early R&amp;D (design stage); no device is built yet &mdash; using our Reversed Topology architecture (defensively filed, intended to stay open). As designed, wrist-worn hubs and an ankle hub would track passive finger nodes, fusing kinematic signals with single-lead ECG, PPG, and skin temperature. True to the 'Glass Box' standard, raw waveforms would <strong>never leave local silicon</strong>; only computed metrics would, and only with your explicit per-category consent. The table below lists the metrics the device is designed to compute.
     </p>
     <table class="data-table">
       <thead>
@@ -1027,7 +1027,7 @@
       <strong>By default, nothing leaves your device.</strong> Computation runs on-device, and your raw data is never required to leave it. Sharing is strictly opt-in, per category, and is never a condition of using halfmarble. If an individual pattern is too unique to be protected, it is never shared &mdash; it stays in a local queue and is discarded after 30 days.
     </p>
     <p>
-      <strong>Differential privacy, under one budgeted total budget.</strong> Anything you do choose to share contributes only to aggregates protected by differential privacy &mdash; the method with a formal, provable guarantee against re-identification &mdash; computed on-device or via federated analytics wherever possible. We hold to a single, fixed total privacy budget (&epsilon;) accounted across every release we ever make &mdash; not a fresh budget per query &mdash; so the guarantee cannot be eroded by repeated requests. Grouping similar patterns together is one step inside that mechanism, never a standalone promise on its own.
+      <strong>Differential privacy, under one budgeted total budget.</strong> Anything you do choose to share contributes only to aggregates protected by differential privacy &mdash; a formal, mathematically provable bound on how much any single person's data can affect a shared result &mdash; computed on-device or via federated analytics wherever possible. We hold to a single budgeted total privacy budget (&epsilon;) accounted across every release we ever make &mdash; not a fresh budget per query &mdash; so the protection cannot be eroded by repeated requests. Grouping similar patterns together is one step inside that mechanism, never a standalone promise on its own.
     </p>
     <p>
       <strong>No IP addresses logged.</strong> Requests route through a relay that strips origin information server-side.
