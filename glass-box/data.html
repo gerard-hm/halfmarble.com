@@ -650,7 +650,7 @@
 
     <div class="h2-sub" style="margin-top: 40px;">motor symptoms &amp; objective tests &mdash; SteadyDoseTracker</div>
     <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
-      Parkinson's is traditionally assessed in a clinic every 3-6 months using the MDS-UPDRS scale. Continuous home-based motor tracking is missing from the literature. SteadyDoseTracker captures it two ways: <strong style="color:#d1d5db;">focal symptom logging</strong> (track body-specific symptoms like foot dystonia, hand cramping, by location) and <strong style="color:#d1d5db;">objective tapping tests</strong> that use the phone's touchscreen to measure motor function — validated against clinical UPDRS Part III finger tapping.
+      Parkinson's is traditionally assessed in a clinic every 3-6 months using the MDS-UPDRS scale. Continuous home-based motor tracking is still under-utilized in routine care. SteadyDoseTracker captures it two ways: <strong style="color:#d1d5db;">focal symptom logging</strong> (track body-specific symptoms like foot dystonia, hand cramping, by location) and <strong style="color:#d1d5db;">objective tapping tests</strong> that use the phone's touchscreen to measure motor function — modeled on the MDS-UPDRS Part III finger-tapping task.
     </p>
     <p style="font-size: 13px; color: #888; margin-bottom: 24px;">
       The phone test takes 10-20 seconds. Results correlate with dose timing automatically. Over time, you see objectively whether your predicted PK peaks match your actual motor peaks. No existing dataset combines PK prediction + objective motor measurement + dose timing + fasting state at scale.
@@ -819,7 +819,7 @@
       <strong style="color:#d1d5db;">Glucose Ketone Index (GKI)</strong> was developed by Thomas Seyfried (one of the researchers in our Glass Box) as a measure of the depth of therapeutic ketosis. Three of halfmarble's Foundational 60 researchers &mdash; Seyfried, Phillips, and Cooper &mdash; use GKI in clinical practice. No large-scale real-world GKI dataset for Parkinson's patients exists. SteadyFastingTracker users who opt in contribute to the first one.
     </p>
     <p style="font-size: 13px; color: #888; margin-bottom: 16px;">
-      halfmarble supports both <strong style="color:#d1d5db;">blood finger-prick dual meters</strong> (Keto-Mojo GK+, Precision Xtra) and <strong style="color:#d1d5db;">electrochemical breath ketone devices</strong> (<a href="https://www.amazon.com/KETOSCAN-Fitness-Metabolism-Ketogenic-Nutrition/dp/B0C26JJ68X" target="_blank" rel="noopener">KETOSCAN Smart</a>) paired with glucose meters or CGMs. Electrochemical breath acetone sensors are measurement-grade &mdash; validated against laboratory reference at R² &gt;0.97 &mdash; not trend indicators.
+      halfmarble supports both <strong style="color:#d1d5db;">blood finger-prick dual meters</strong> (Keto-Mojo GK+, Precision Xtra) and <strong style="color:#d1d5db;">electrochemical breath ketone devices</strong> (<a href="https://www.amazon.com/KETOSCAN-Fitness-Metabolism-Ketogenic-Nutrition/dp/B0C26JJ68X" target="_blank" rel="noopener">KETOSCAN Smart</a>) paired with glucose meters or CGMs. Electrochemical breath acetone sensors are measurement-grade &mdash; reported to correlate with laboratory reference (R² &gt;0.97) in validation studies &mdash; not just trend indicators.
     </p>
 
     <div style="background:#0f0f0f;border-left:3px solid #D12C3B;padding:16px 20px;margin:16px 0 24px;">
@@ -1004,7 +1004,7 @@
     <div class="pipeline">
       <div class="pipeline-step">
         <span class="pipeline-num">1</span><span class="pipeline-label">Raw</span>
-        <div class="pipeline-content">"8:00 AM, 100mg Sinemet IR, me @ home, 6.5/10 tremor, fasted 16h"</div>
+        <div class="pipeline-content">"8:00 AM, 100mg levodopa IR, me @ home, 6.5/10 tremor, fasted 16h"</div>
       </div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step">
@@ -1018,8 +1018,8 @@
       </div>
       <div class="pipeline-arrow">&darr;</div>
       <div class="pipeline-step">
-        <span class="pipeline-num">4</span><span class="pipeline-label">Aggregated with others</span>
-        <div class="pipeline-content">"7-9 AM bin, levodopa IR, fasting, n=1,247 users, tremor median 5.8"</div>
+        <span class="pipeline-num">4</span><span class="pipeline-label">Aggregated with others (DP)</span>
+        <div class="pipeline-content">"7-9 AM bin, levodopa IR, fasting, ~1,200 users, tremor median 5.8 · &epsilon;-budgeted"</div>
       </div>
     </div>
 
