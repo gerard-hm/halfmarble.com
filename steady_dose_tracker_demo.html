@@ -269,9 +269,9 @@
         <button class="dose-btn vyalev-extra disabled" onclick="addVyalevExtraDose(0.25)" title="Manual EXTRA DOSE on the infusion pump — adds a subcutaneous bolus at the NOW marker. The real pump limits this to once every 2 hours; this simulation does not enforce that limit so you can explore what-if scenarios. Available only when PUMP INFUSION is active.">+ EXTRA DOSE</button>
         <span class="ctrl-divider"></span>
         <select id="profileSelect" class="profile-select" onchange="changeProfile()">
-          <option value="sinemet_ir">Levodopa IR 100 mg (t½ 90 min)</option>
-          <option value="sinemet_cr">Levodopa CR 200 mg (t½ 90 min, F 71%)</option>
-          <option value="rytary">Levodopa ER, dual-phase</option>
+          <option value="levodopa_ir">Levodopa IR 100 mg (t½ 90 min)</option>
+          <option value="levodopa_cr">Levodopa CR 200 mg (t½ 90 min, F 71%)</option>
+          <option value="levodopa_er">Levodopa ER, dual-phase</option>
           <option value="generic">Generic (adjustable)</option>
         </select>
         <button class="dose-btn" onclick="addDose(1.0)">+ FULL DOSE</button>
@@ -386,7 +386,7 @@
 <script>
 // ==================== MEDICATION PROFILES ====================
 const profiles = {
-  sinemet_ir: {
+  levodopa_ir: {
     name: 'Levodopa IR 100 mg',
     halfLifeMin: 90,
     tmaxFastingMin: 45,
@@ -397,7 +397,7 @@ const profiles = {
     isDualPhase: false,
     variability: 0.50,
   },
-  sinemet_cr: {
+  levodopa_cr: {
     name: 'Levodopa CR 200 mg',
     halfLifeMin: 90,
     tmaxFastingMin: 120,
@@ -408,7 +408,7 @@ const profiles = {
     isDualPhase: false,
     variability: 0.55,
   },
-  rytary: {
+  levodopa_er: {
     name: 'Levodopa ER',
     halfLifeMin: 90,
     tmaxFastingMin: 60,
@@ -456,7 +456,7 @@ const profiles = {
 };
 
 // ==================== STATE ====================
-let currentProfileId = 'sinemet_ir';
+let currentProfileId = 'levodopa_ir';
 let doses = []; // { timeMin, amount, fasting } — timeMin is minutes from chart start (5 AM)
 let vyalevPulses = []; // virtual pump pulses generated when vyalevActive is true
 let vyalevActive = false; // VYALEV background SC infusion runs alongside the selected oral profile
@@ -859,7 +859,7 @@ function concentrationAt(queryMin, profile) {
     if (elapsed < 0) continue;
 
     // Each dose can override the chart profile (e.g., the VYALEV optimizer adds
-    // oral Sinemet IR supplementation around protein meals — those doses use
+    // oral levodopa IR supplementation around protein meals — those doses use
     // their own PK parameters instead of the chart's continuous profile).
     const dp = dose.profileId ? profiles[dose.profileId] : profile;
     const ke_d = keFromHalfLife(dp.halfLifeMin);
@@ -1525,7 +1525,7 @@ function addDose(amount) {
 // Vyafuser pump. Adds a 0.10 mL SC bolus at the NOW marker — uses VYALEV's own
 // PK params via per-dose profileId override (SC route, fast tmax, F = 1.0).
 // Sized at amount = 0.25 to match the chart scale of a 0.10 mL bolus
-// (~24 mg levodopa equivalent ≈ ¼ of a Sinemet IR full dose).
+// (~24 mg levodopa equivalent ≈ ¼ of a levodopa IR full dose).
 function addVyalevExtraDose(amount) {
   if (!vyalevActive) return;
   const timeMin = Math.round(nowMarkerMin / 5) * 5;
@@ -1794,8 +1794,8 @@ function changeProfile() {
 }
 
 // VYALEV background infusion is a separate toggle from the oral profile
-// dropdown. The user can have any oral profile selected (Sinemet IR, CR,
-// Rytary, Generic) and turn VYALEV on/off independently. When active, VYALEV
+// dropdown. The user can have any oral profile selected (levodopa IR, CR,
+// levodopa ER, Generic) and turn VYALEV on/off independently. When active, VYALEV
 // runs in the background and the chart sums its pulse baseline on top of the
 // oral profile's PK from any added doses.
 function toggleVyalev() {
