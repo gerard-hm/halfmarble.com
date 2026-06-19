@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>halfmarble | For Researchers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa--8bqhTOPcLxoqRoedTv8x.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  a { color: #D12C3B; text-decoration: none; border-bottom: 1px solid #333; transition: border-color 0.2s; }
+  a:hover { border-color: #D12C3B; }
+
+  .page-header { padding: 60px 0 40px; text-align: center; border-bottom: 1px solid #1a1a1a; margin-bottom: 40px; }
+  .page-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 16px; font-family: 'JetBrains Mono', monospace; }
+  .page-label .accent { color: #D12C3B; font-weight: 700; }
+  .page-title { font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.2; }
+  .page-subtitle { font-size: 15px; color: #888; margin-top: 16px; max-width: 660px; margin-left: auto; margin-right: auto; }
+
+  section.block { margin: 44px 0; }
+  h2 { font-size: 21px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  h2 .num { font-family: 'JetBrains Mono', monospace; color: #D12C3B; font-size: 14px; margin-right: 10px; font-weight: 700; }
+  .h2-sub { font-size: 12px; color: #666; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; }
+  p { font-size: 15px; color: #999; margin-bottom: 14px; }
+  p strong { color: #d1d5db; font-weight: 700; }
+  ul { margin: 0 0 14px 22px; }
+  li { font-size: 15px; color: #999; margin: 6px 0; }
+
+  .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+  .data-table th { text-align: left; padding: 11px 14px; background: #111; color: #d1d5db; font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #333; }
+  .data-table td { padding: 11px 14px; border-bottom: 1px solid #1a1a1a; color: #888; vertical-align: top; }
+  .data-table .field { color: #d1d5db; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .confirm { background: rgba(245,158,11,0.12); border: 1px dashed #854d0e; color: #f59e0b; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 2px 7px; }
+  .note { background: #0f0f0f; border-left: 3px solid #333; padding: 16px 20px; margin: 18px 0; font-size: 14px; color: #9ca3af; }
+  footer { margin: 50px 0 30px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #555; border-top: 1px solid #1a1a1a; padding-top: 20px; line-height: 1.9; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-header">
+    <div class="page-label">halfmarble <span class="accent">·</span> research alliances</div>
+    <div class="page-title">For Researchers</div>
+    <div class="page-subtitle">An open, Glass Box, patient-owned platform for real-world measurement in Parkinson's disease — what we measure, how the data is governed, and how to work with us.</div>
+  </div>
+
+  <section class="block">
+    <h2><span class="num">01</span>What halfmarble is</h2>
+    <div class="h2-sub">the instrument layer, not a therapy</div>
+    <p>halfmarble is a patient-led effort building <strong>deterministic, traceable ("Glass Box")</strong> tools for continuous, real-world measurement of Parkinson's: medication pharmacokinetics, objective motor function, and metabolic / bioenergetic state. We are the <strong>measurement layer</strong> — the instrument that helps tell whether an intervention is working in daily life — not a treatment. Everything is positioned under the FDA 2019 General Wellness Policy; halfmarble does not diagnose, treat, cure, or prevent any disease.</p>
+    <p><strong>Maturity, stated plainly:</strong> the software measurement tools (the SteadyDoseTracker levodopa-PK visualization, SteadyFastingTracker, SteadyHeartBeat) are shipping or in active development. The <strong>UnSteadyRing</strong> sensing hardware — finger rings + wrist hubs + an ankle hub for gait and freezing-of-gait — is in <strong>early R&amp;D (design stage)</strong>; no device is built yet. We will not present it as further along than it is.</p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">02</span>What we measure</h2>
+    <div class="h2-sub">on-device by default · full data dictionary linked below</div>
+    <table class="data-table">
+      <thead><tr><th>Domain</th><th>Examples</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td class="field">Medication / PK</td><td>levodopa dose timing, modeled plasma curves (deterministic, published-model based)</td><td>shipping (SteadyDoseTracker)</td></tr>
+        <tr><td class="field">Objective motor</td><td>touchscreen tapping, focal symptom logging (location-specific)</td><td>shipping</td></tr>
+        <tr><td class="field">Gait / freezing-of-gait</td><td>cadence, sway, Freeze Index (Moore/Bächlin) from the ankle hub</td><td>design stage (hardware in R&amp;D)</td></tr>
+        <tr><td class="field">Metabolic / bioenergetic</td><td>ketones, glucose, fasting/feeding timing</td><td>shipping / in development</td></tr>
+        <tr><td class="field">Mental state</td><td>mood, clarity, anxiety (self-report; strictest protection)</td><td>shipping</td></tr>
+      </tbody>
+    </table>
+    <p>Full, field-by-field data dictionary — what is collected, what stays on device, and what could ever be shared — is published in our <a href="https://halfmarble.com/glass-box/data.html">Glass Box data policy</a>.</p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">03</span>Data governance &amp; privacy</h2>
+    <div class="h2-sub">stewards, not owners</div>
+    <ul>
+      <li><strong>Local-first.</strong> By default, health data stays on the user's device and is computed there; raw data is never required to leave it.</li>
+      <li><strong>Opt-in, per category.</strong> Any sharing is the user's explicit choice, never a condition of using halfmarble.</li>
+      <li><strong>Aggregate-only.</strong> Only aggregates leave — never raw traces, never individual-level records.</li>
+      <li><strong>Differential privacy</strong> under a single <strong>budgeted total ε</strong> accounted across all releases (not a fresh budget per query), computed on-device or via federated analytics where possible. Grouping is a step inside this mechanism, not a standalone guarantee.</li>
+      <li><strong>Never sold; no individual re-identification.</strong> If halfmarble were ever acquired by an entity that would not uphold these standards, user data is purged.</li>
+    </ul>
+    <div class="note">These commitments are being formalized into halfmarble's operating agreement.</div>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">04</span>Research status &amp; IRB</h2>
+    <div class="h2-sub">where we actually are</div>
+    <p>To be candid: <strong>there is no IRB-approved data-sharing program in place today</strong>, and halfmarble has not run formal validation studies of its measures against clinical scales. Any future research data sharing would be <strong>opt-in, IRB-approved, and aggregate-only</strong>. We are actively seeking the right IRB pathway and partners to do this properly.</p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">05</span>How we'd like to work with researchers</h2>
+    <div class="h2-sub">we are early, and we want candid input</div>
+    <ul>
+      <li><strong>Scientific gut-check</strong> — is an open, real-world measurement layer genuinely useful to your work, and where are we missing the mark?</li>
+      <li><strong>Validation collaboration</strong> — concurrent-validity work for the digital measures (e.g., against MDS-UPDRS Part III), done rigorously.</li>
+      <li><strong>Fit with existing cohorts / digital-endpoint efforts</strong> — where a deterministic, patient-owned readout could complement what you already run.</li>
+      <li><strong>Endpoint co-design</strong> — help shape what the platform should capture to be decision-informing.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">06</span>Open science &amp; IP</h2>
+    <div class="h2-sub">defensive, meant to stay free</div>
+    <p><strong>Glass Box.</strong> Algorithmic logic is deterministic and traceable to peer-reviewed science — no opaque models for clinical features. The site and tools are open for independent review on <a href="https://github.com/gerard-hm/halfmarble.com">GitHub</a>.</p>
+    <p><strong>IP.</strong> Seventeen provisional patent applications have been filed across the sensing architecture — <em>defensively</em>, so that no company can lock these tools away from patients. The intent is to keep the architecture open and, in time, steward the IP through a non-profit.</p>
+  </section>
+
+  <section class="block">
+    <h2><span class="num">07</span>Contact</h2>
+    <div class="h2-sub">talk to us</div>
+    <p>halfmarble is built by Gerard and Anya Ziemski. For research collaboration, reach us at <a href="mailto:gerard@halfmarble.com">gerard@halfmarble.com</a>.</p>
+  </section>
+
+  <footer>
+    halfmarble // the science is the engine<br>
+    Measurement under the FDA 2019 General Wellness Policy — not a medical device, not for diagnosis.
+  </footer>
+
+</div>
+</body>
+</html>
