@@ -14,7 +14,7 @@ The software platform currently consists of functional web prototypes:
 
 halfmarble also builds dedicated hardware:
 *   **SteadyHandTool:** Open-source (CERN-OHL-S-2.0) high-mass tremor-dampening fixture for fine-motor work.
-*   **UnSteadyRing:** Wearable kinematic and biometric sensor system &mdash; ten passive chipless fractal-resonant rings excited by low-power passive RF (reflected-wave telemetry) from two wrist-worn hubs that also capture single-lead ECG, PPG, and skin temperature, plus an ankle hub for gait and freezing-of-gait. Seventeen provisional patent applications filed; sensing hardware is in early R&D (design stage).
+*   **UnSteadyRing:** Wearable kinematic and biometric sensor system &mdash; ten passive chipless fractal-resonant rings designed to be excited by low-power passive RF (reflected-wave telemetry) from two wrist-worn hubs that would also capture single-lead ECG, PPG, and skin temperature, plus an ankle hub for gait and freezing-of-gait. Seventeen provisional patent applications filed; sensing hardware is in early R&D (design stage).
 
 ### Data Privacy & Glass Box Math
 Patient data is not a commodity. By default it never leaves your device; any future sharing is opt-in, IRB-approved, and aggregate-only (never individual-level records):
