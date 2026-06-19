@@ -120,7 +120,7 @@
       <div class="chart-legend" id="chartLegend"></div>
 
       <div class="threshold-legend" style="margin-top:14px;padding-top:12px;border-top:1px solid #1a1a1a;">
-        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(22,163,74,0.3);border:1px solid rgba(22,163,74,0.5)"></div> Optimal window (24–72h)</div>
+        <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(22,163,74,0.3);border:1px solid rgba(22,163,74,0.5)"></div> Modeled peak-activity window (24–72h)</div>
         <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(217,119,6,0.3);border:1px solid rgba(217,119,6,0.5)"></div> Diminishing returns (72–100h)</div>
         <div class="threshold-item"><div style="width:20px;height:10px;border-radius:2px;background:rgba(220,38,38,0.35);border:1px solid rgba(220,38,38,0.5)"></div> Danger — medical refeeding (100–120h+)</div>
       </div>
@@ -165,7 +165,7 @@ const biomarkers = [
     curve: h => h < 10 ? 0.05 : h < 72 ? Math.min(0.85, 0.05 + Math.pow((h-10)/62, 0.65)*0.8) : 0.85 + Math.sin((h-72)/30)*0.02 },
 
   { id:'neurorecovery', name:'Neurological Recovery', note:'four brain-protective mechanisms working together', color:'#3b82f6', category:'neurological', confidence:'medium', dataSource:'estimated', direction:'increases', importance:'tier1',
-    desc:'Four synergistic mechanisms: (1) D1 receptor upregulation in prefrontal cortex via Drd1→cAMP→PKA→DARPP-32→CREB→BDNF pathway. (2) Enhanced somatodendritic dopamine release dynamics in VTA. (3) BHB ketones bypass impaired mitochondrial Complex I, providing alternative fuel to threatened neurons. (4) Autophagy clears phosphorylated alpha-synuclein aggregates. These mechanisms work together — not in isolation.',
+    desc:'Four proposed mechanisms, studied largely in preclinical models: (1) D1 receptor upregulation in prefrontal cortex via Drd1→cAMP→PKA→DARPP-32→CREB→BDNF pathway. (2) Enhanced somatodendritic dopamine release dynamics in VTA. (3) BHB ketones may bypass impaired mitochondrial Complex I, providing alternative fuel to neurons. (4) autophagy may help clear phosphorylated alpha-synuclein aggregates. These mechanisms are thought to work together — not in isolation.',
     parkinsons:'A 2025 Nature Communications study (Szegő et al.) found that intermittent fasting in animal models was associated with improved motor function, reduced dopaminergic neuron loss, preserved striatal dopamine, and reduced alpha-synuclein aggregation. Research suggests BHB may bypass impaired mitochondrial Complex I, providing alternative fuel to neurons. These are areas of active scientific investigation.',
     source:'Szegő et al., Nature Comms (2025); Piao et al., Neurobiol Dis (2025); Roseberry, J Neurophysiol (2015); Tieu et al., Frontiers Nutr (2019)',
     curve: h => h < 16 ? 0.03 : h < 24 ? 0.03 + (h-16)/8*0.07 : h < 72 ? Math.min(0.85, 0.1 + Math.pow((h-24)/48, 0.7)*0.75) : 0.85 + Math.sin((h-72)/30)*0.02 },
@@ -367,8 +367,8 @@ function drawChart() {
   }
 
   // Optimal window
-  labelWithBg('OPTIMAL WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 18, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.7)');
-  labelWithBg('Peak autophagy + BDNF + HGH', (hourToX(24) + hourToX(72)) / 2, midY - 2, '10px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.4)');
+  labelWithBg('PEAK-ACTIVITY WINDOW', (hourToX(24) + hourToX(72)) / 2, midY - 18, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.7)');
+  labelWithBg('Modeled peak: autophagy, BDNF, HGH', (hourToX(24) + hourToX(72)) / 2, midY - 2, '10px Inter, -apple-system, sans-serif', 'rgba(74, 222, 128, 0.4)');
 
   // Diminishing returns
   labelWithBg('DIMINISHING RETURNS', (hourToX(72) + hourToX(100)) / 2, midY + 20, 'bold 11px Inter, -apple-system, sans-serif', 'rgba(245, 158, 11, 0.7)');
@@ -560,8 +560,8 @@ function updatePosition() {
   let stage = 'Not fasting', stageColor = '#666', hourColor = '#666';
   if (val >= 100) { stage = 'DANGER ZONE — medical refeeding required'; stageColor = '#ef4444'; hourColor = '#ef4444'; }
   else if (val >= 72) { stage = 'Diminishing returns — benefits plateauing'; stageColor = '#f59e0b'; hourColor = '#f59e0b'; }
-  else if (val >= 48) { stage = 'Deep autophagy — peak benefits zone'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
-  else if (val >= 24) { stage = 'Optimal window — autophagy active'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
+  else if (val >= 48) { stage = 'Deep autophagy — modeled peak zone'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
+  else if (val >= 24) { stage = 'Peak-activity window — autophagy active'; stageColor = '#22c55e'; hourColor = '#22c55e'; }
   else if (val >= 16) { stage = 'Ketosis onset'; stageColor = '#888'; hourColor = '#aaa'; }
   else if (val >= 12) { stage = 'Fat burning'; stageColor = '#888'; hourColor = '#aaa'; }
   else if (val >= 4) { stage = 'Early fasting'; stageColor = '#666'; hourColor = '#888'; }
@@ -720,27 +720,27 @@ startAnimation();
       <div style="padding:0 20px;">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
             <span style="font-size:22px;font-weight:700;color:#eab308;">Glass Box</span>
-            <span class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;">// what the AI reads</span>
+            <span class="mono" style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:0.2em;">// the corpus behind the app's AI</span>
         </div>
         <p style="font-size:13px;color:#666;margin-bottom:16px;line-height:1.6;">
-            No black box. Every paper our model ingests is listed here. You see what the AI sees — nothing hidden, nothing hallucinated. This is the foundation the engine runs on. The source code will be released for independent review.
+            No black box. Every paper the model draws on is listed here — you see exactly what the app's on-device AI will read, nothing hidden. This page is a static visualizer; the on-device AI ships with the SteadyFastingTracker app, pinned to this corpus. The source code will be released for independent review.
         </p>
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px;">
             <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
                 <span class="mono" style="color:#ca8a04;">ANCHORED</span>
-                <span style="color:#555;">The AI is pinned to static, versioned data — not a drifting LLM. The science cannot silently change between updates.</span>
+                <span style="color:#555;">The app's AI is pinned to static, versioned data — not a drifting LLM. The science cannot silently change between updates.</span>
             </div>
             <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
                 <span class="mono" style="color:#ca8a04;">ON-DEVICE</span>
-                <span style="color:#555;">The AI model lives on your phone. No cloud. No server. All inference runs locally.</span>
+                <span style="color:#555;">In the SteadyFastingTracker app, the AI model runs on your phone — no cloud, no server, all inference local.</span>
             </div>
             <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
                 <span class="mono" style="color:#ca8a04;">LOCAL</span>
-                <span style="color:#555;">Your data stays on your phone by default. Join the fight beyond your own case: opt in to share anonymized, aggregated patterns with researchers &mdash; never your identity, never automatic, never without consent. <a href="glass-box/data.html" style="color:#ca8a04;text-decoration:none;border-bottom:1px solid #333;">See exactly what gets shared &rarr;</a></span>
+                <span style="color:#555;">Your data stays on your phone by default. Become part of the solution beyond your own case: opt in to share anonymized, aggregated patterns with researchers &mdash; never your identity, never automatic, never without consent. <a href="glass-box/data.html" style="color:#ca8a04;text-decoration:none;border-bottom:1px solid #333;">See exactly what gets shared &rarr;</a></span>
             </div>
             <div style="display:flex;align-items:baseline;gap:8px;font-size:12px;">
                 <span class="mono" style="color:#ca8a04;">TRACEABLE</span>
-                <span style="color:#555;">Every claim the AI makes cites a specific paper below. If it is not in the Glass Box, the AI will not say it.</span>
+                <span style="color:#555;">Every claim the app's AI makes will cite a specific paper below. If it is not in the Glass Box, the AI will not say it.</span>
             </div>
         </div>
 
