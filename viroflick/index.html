@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>halfmarble | ViroFlick — diagnose the invader, deploy the counter</title>
+<meta name="description" content="ViroFlick is a biology-themed tower-defense game for iPhone and iPad. Read the invading pathogen, arm the cell that counters it, and flick a homing swarm to hold the line. Play the counter-cycle demo right in your browser.">
+<meta property="og:title" content="ViroFlick — diagnose the invader, deploy the counter">
+<meta property="og:description" content="A biology-themed tower-defense game. Read the pathogen, arm its counter, flick the swarm. Play the demo in your browser.">
+<meta property="og:image" content="https://halfmarble.com/viroflick/app-icon.png">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" type="image/png" href="app-icon.png">
+<link rel="apple-touch-icon" href="app-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.7;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; }
+
+  /* ViroFlick palette. Product accent = the game's own swarm-amber (kept clear of the
+     company red and of the four element colors). */
+  :root {
+    --amber: #ffa126; --amber-dim: rgba(255,161,38,0.42); --amber-faint: rgba(255,161,38,0.08);
+    --antibody: #f2f7ff; --toxin: #ffeb1a; --enzyme: #75db5c; --oxygen: #338cfa;
+    --blood: #8f1d27; --ink: #060606;
+  }
+
+  /* atmospheric bloodstream wash behind everything, kept very low so the site stays dark */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(1100px 700px at 78% -8%, rgba(143,29,39,0.30), transparent 60%),
+      radial-gradient(900px 620px at 12% 108%, rgba(51,140,250,0.10), transparent 60%);
+  }
+  .container { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+  /* nav */
+  .top-nav { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 16px 20px 0; }
+  .top-nav-row { display: flex; justify-content: space-between; align-items: center; position: relative; }
+  .nav-link { font-size: 12px; color: #666; text-decoration: none; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; border-bottom: 1px solid transparent; transition: border-color 0.2s, color 0.2s; }
+  .nav-link:hover { border-color: var(--amber); color: #aaa; }
+  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; position: absolute; left: 50%; transform: translateX(-50%); }
+  .nav-logo img { width: 22px; height: 22px; filter: brightness(0) invert(1); opacity: 0.7; }
+  .nav-logo span { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; }
+  .nav-logo:hover { border-color: var(--amber); }
+
+  /* hero */
+  .hero { text-align: center; padding: 48px 0 40px; border-bottom: 1px solid #1a1a1a; }
+  .app-icon { width: 118px; height: 118px; margin: 0 auto 26px; border-radius: 26px; box-shadow: 0 22px 60px -22px rgba(143,29,39,0.8), 0 0 0 1px rgba(255,255,255,0.06); animation: floaticon 6s ease-in-out infinite; }
+  @keyframes floaticon { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  .hero .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.32em; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; }
+  .hero .label .accent { color: var(--amber); font-weight: 700; }
+  .hero h1 { font-size: 46px; font-weight: 900; color: #fff; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 20px; }
+  .hero h1 .flick { color: var(--amber); }
+  .hero p.sub { font-size: 17px; color: #9aa0a6; max-width: 600px; margin: 0 auto 14px; }
+
+  .loop-chip { display: inline-flex; align-items: center; gap: 12px; margin: 24px auto 6px; padding: 10px 20px; border: 1px solid #2a2018; background: rgba(255,161,38,0.05); border-radius: 999px; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.18em; color: #cbb48c; }
+  .loop-chip b { color: var(--amber); font-weight: 700; }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 30px; }
+  .btn { display: inline-block; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 26px; border: 1px solid var(--amber); background: var(--amber); color: #1a0f00; border-radius: 6px; transition: filter 0.2s, transform 0.06s; cursor: pointer; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
+  .btn.ghost { background: transparent; border-color: #333; color: #888; cursor: default; }
+  .btn.ghost:hover { background: #111; border-color: #555; color: #d1d5db; filter: none; }
+  .hero p.req { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 22px; }
+
+  /* section scaffolding */
+  section.block { margin: 68px 0; }
+  .section-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 12px; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  .section-label .accent { color: var(--amber); }
+  .section-sub { text-align: center; color: #8a9096; font-size: 15px; max-width: 560px; margin: 0 auto 34px; }
+
+  /* ---------- playable demo ---------- */
+  .demo-wrap { display: flex; flex-direction: column; align-items: center; }
+  .phone {
+    position: relative; width: 100%; max-width: 400px; aspect-ratio: 40 / 71;
+    border-radius: 34px; padding: 10px; background: linear-gradient(160deg, #1c1c1f, #0c0c0e);
+    box-shadow: 0 40px 90px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  .phone canvas { width: 100%; height: 100%; display: block; border-radius: 26px; background: #120608; touch-action: none; cursor: pointer; }
+  .demo-hint { margin-top: 18px; max-width: 440px; text-align: center; font-size: 13.5px; color: #8a9096; }
+  .demo-hint b { color: #cbd0d5; font-weight: 600; }
+  .demo-note { margin-top: 8px; font-size: 12px; color: #6a7076; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+
+  /* ---------- counter cycle ---------- */
+  .cycle-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 32px; align-items: center; }
+  .cycle-rules { display: flex; flex-direction: column; gap: 10px; }
+  .rule { display: flex; align-items: center; gap: 12px; font-size: 15px; background: #101012; border: 1px solid #1e1e22; border-radius: 10px; padding: 12px 16px; }
+  .swatch { width: 15px; height: 15px; border-radius: 50%; flex: 0 0 auto; box-shadow: 0 0 0 1px rgba(255,255,255,0.12); }
+  .rule .arw { color: #555; font-family: 'JetBrains Mono', monospace; }
+  .rule .nm { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: #cfd3d8; }
+  .cyclecanvas-wrap { display: flex; justify-content: center; }
+  #cycle-canvas { width: 100%; max-width: 320px; height: auto; }
+  .cycle-foot { grid-column: 1 / -1; text-align: center; color: #8a9096; font-size: 14px; margin-top: 6px; }
+  .cycle-foot b { color: var(--amber); font-weight: 600; }
+
+  /* ---------- cases ---------- */
+  .cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .case { position: relative; background: #101012; border: 1px solid #1f1f23; border-radius: 12px; padding: 22px; border-top: 3px solid var(--cc, #333); transition: border-color 0.2s, transform 0.2s; }
+  .case:hover { transform: translateY(-3px); border-color: #3a3a40; border-top-color: var(--cc); }
+  .case-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .case h3 { font-size: 17px; font-weight: 800; color: #fff; }
+  .case .mech { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #7d838a; border: 1px solid #2a2a30; border-radius: 5px; padding: 3px 7px; white-space: nowrap; }
+  .case p { font-size: 13.5px; color: #8a9096; line-height: 1.6; }
+  .case .tag { position: absolute; top: 16px; right: 16px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
+  .tag.free { color: var(--enzyme); border: 1px solid rgba(117,219,92,0.4); }
+  .tag.unlock { color: var(--amber); border: 1px solid var(--amber-dim); }
+  /* keep the mech badge from colliding with the tag row */
+  .case.has-tag .case-top { padding-right: 46px; }
+
+  /* ---------- features ---------- */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+  .feature { background: #101012; border: 1px solid #1f1f23; border-radius: 12px; padding: 22px; transition: border-color 0.2s; }
+  .feature:hover { border-color: #3a3a40; }
+  .feature h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 7px; display: flex; align-items: center; gap: 9px; }
+  .feature h3 .dot { color: var(--amber); font-size: 10px; }
+  .feature p { font-size: 13.5px; color: #8a9096; }
+
+  /* ---------- callout ---------- */
+  .callout { background: #0e0e10; border: 1px solid #1f1f23; border-radius: 12px; padding: 30px; }
+  .callout.amber { border-left: 3px solid var(--amber); }
+  .callout h2 { font-size: 21px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+  .callout p { font-size: 15px; color: #9aa0a6; margin-bottom: 12px; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout a { color: var(--amber); text-decoration: none; border-bottom: 1px solid var(--amber-dim); transition: border-color 0.2s; }
+  .callout a:hover { border-color: var(--amber); }
+
+  footer { position: relative; z-index: 1; padding: 60px 0; text-align: center; border-top: 1px solid #1a1a1a; margin-top: 64px; }
+  .footer-label { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 10px; }
+  .footer-text { font-size: 14px; color: #777; }
+  .footer-links { margin-top: 18px; display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+  .footer-links a { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.15em; text-decoration: none; border-bottom: 1px solid #333; transition: border-color 0.2s, color 0.2s; }
+  .footer-links a:hover { border-color: #d1d5db; color: #aaa; }
+
+  @media (max-width: 720px) {
+    .cycle-grid { grid-template-columns: 1fr; gap: 24px; }
+    .hero h1 { font-size: 34px; }
+    .loop-chip { font-size: 11px; letter-spacing: 0.1em; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="top-nav-row">
+    <a href="../index.html" class="nav-link">&larr; halfmarble.com</a>
+    <a href="../index.html" class="nav-logo">
+      <img src="../assets/logo.png" alt="halfmarble">
+      <span>halfmarble</span>
+    </a>
+  </div>
+</div>
+
+<div class="container">
+
+  <header class="hero">
+    <img class="app-icon" src="app-icon.png" alt="ViroFlick app icon — a swarm flicked from a vial into a pathogen">
+    <div class="label"><span class="accent">VIROFLICK</span> &middot; iPhone &amp; iPad game</div>
+    <h1>Diagnose the invader.<br><span class="flick">Deploy the counter.</span></h1>
+    <p class="sub">A biology-themed tower-defense game. Read the pathogen swarming your patient, arm the one cell type that counters it, and flick a homing swarm to hold the line.</p>
+    <div class="loop-chip mono"><b>DIAGNOSE</b> &rarr; <b>COUNTER</b> &#8635;</div>
+    <div class="cta-row">
+      <a class="btn" href="#play">Play the demo</a>
+      <span class="btn ghost">Coming to the App Store</span>
+    </div>
+    <p class="req">Free to play &middot; two free cases, one unlock for all six &middot; iPhone &amp; iPad, iOS 17+</p>
+  </header>
+
+  <!-- ============ PLAYABLE DEMO ============ -->
+  <section class="block" id="play">
+    <div class="section-label">Play a case <span class="accent">//</span> right here</div>
+    <p class="section-sub">A one-minute taste of the core loop. No download, nothing to install — the real game adds charging, boss strains, cases, and leaderboards.</p>
+    <div class="demo-wrap">
+      <div class="phone">
+        <canvas id="game" width="400" height="710" role="img" aria-label="ViroFlick playable demo"></canvas>
+      </div>
+      <p class="demo-hint">Tap a <b>vial</b> to arm it, then <b>flick</b> toward a pathogen — or just tap the invader. Fire the counter; hitting a pathogen with its <b>own</b> type heals it.</p>
+      <p class="demo-note">Keys 1&ndash;4 arm the vials &middot; a full run lives in the app</p>
+    </div>
+  </section>
+
+  <!-- ============ COUNTER CYCLE ============ -->
+  <section class="block">
+    <div class="section-label">The <span class="accent">//</span> counter cycle</div>
+    <p class="section-sub">Each cell destroys exactly one pathogen type. Fire the counter for a clean kill — a wrong type only chips, and a pathogen's own type heals it.</p>
+    <div class="cycle-grid">
+      <div class="cycle-rules">
+        <div class="rule"><span class="swatch" style="background:var(--antibody)"></span><span class="nm">ANTIBODY</span><span class="arw">neutralizes</span><span class="swatch" style="background:var(--toxin)"></span><span class="nm">TOXIN</span></div>
+        <div class="rule"><span class="swatch" style="background:var(--toxin)"></span><span class="nm">TOXIN</span><span class="arw">denatures</span><span class="swatch" style="background:var(--enzyme)"></span><span class="nm">ENZYME</span></div>
+        <div class="rule"><span class="swatch" style="background:var(--enzyme)"></span><span class="nm">ENZYME</span><span class="arw">consumes</span><span class="swatch" style="background:var(--oxygen)"></span><span class="nm">OXYGEN</span></div>
+        <div class="rule"><span class="swatch" style="background:var(--oxygen)"></span><span class="nm">OXYGEN</span><span class="arw">degrades</span><span class="swatch" style="background:var(--antibody)"></span><span class="nm">ANTIBODY</span></div>
+      </div>
+      <div class="cyclecanvas-wrap">
+        <canvas id="cycle-canvas" width="320" height="320" aria-label="The counter cycle: antibody beats toxin beats enzyme beats oxygen beats antibody"></canvas>
+      </div>
+      <p class="cycle-foot">Shape marks the strain, colour names the type. <b>Match the counter, never the mirror.</b></p>
+    </div>
+  </section>
+
+  <!-- ============ CASES ============ -->
+  <section class="block">
+    <div class="section-label">Six <span class="accent">//</span> cases</div>
+    <p class="section-sub">Each case is its own kind of invasion, with its own firing mechanic. Start with two free; one unlock opens them all.</p>
+    <div class="cases">
+      <div class="case has-tag" style="--cc:var(--antibody)">
+        <span class="tag free">Free</span>
+        <div class="case-top"><h3>Triage</h3><span class="mech">Hold &amp; fire</span></div>
+        <p>A relentless single-file flood in lanes. Hold a pool to auto-fire straight up its lane — but only two lanes at once, so triage which to cover and swap fingers as threats shift.</p>
+      </div>
+      <div class="case has-tag" style="--cc:var(--oxygen)">
+        <span class="tag free">Free</span>
+        <div class="case-top"><h3>Sepsis</h3><span class="mech">Flick to fire</span></div>
+        <p>The bloodstream overwhelmed — a mixed drip of viruses, dividing cells and shielded pathogens. Prioritize the fast ones and pre-empt the splits.</p>
+      </div>
+      <div class="case has-tag" style="--cc:var(--enzyme)">
+        <span class="tag unlock">Unlock</span>
+        <div class="case-top"><h3>Tapeworm</h3><span class="mech">Flick to fire</span></div>
+        <p>A segmented parasite that slithers edge to edge, dropping a row at each turn. Flick homing volleys; a clean counter-kill chains down a run of same-type segments.</p>
+      </div>
+      <div class="case has-tag" style="--cc:var(--toxin)">
+        <span class="tag unlock">Unlock</span>
+        <div class="case-top"><h3>Outbreak</h3><span class="mech">Flick to fire</span></div>
+        <p>A rigid grid descends as a wall. Only the exact counter kills — no chip, no chains. Clear it before it reaches the base.</p>
+      </div>
+      <div class="case has-tag" style="--cc:var(--amber)">
+        <span class="tag unlock">Unlock</span>
+        <div class="case-top"><h3>Mutation</h3><span class="mech">Flick to fire</span></div>
+        <p>The boss fight. Clear a satellite to open a window, strike the boss, then re-aim when it morphs element and demands a new counter.</p>
+      </div>
+      <div class="case has-tag" style="--cc:var(--blood)">
+        <span class="tag unlock">Unlock</span>
+        <div class="case-top"><h3>Full Spectrum</h3><span class="mech">Every case</span></div>
+        <p>Every case in rotation — the full examination. Mix any cases you like on the start screen; scores are kept per combination.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="block">
+    <div class="section-label">What's <span class="accent">//</span> inside</div>
+    <div class="features">
+      <div class="feature">
+        <h3><span class="dot">●</span>Charge &amp; overcharge</h3>
+        <p>Hold an orb to charge a cell — it hits harder and pierces, carrying leftover punch to the next pathogen. Hold too long and it overcharges and locks. Release in the window.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Nine pathogen kinds</h3>
+        <p>Rushers, dividing cells that split on death, shielded shells, worm segments, and a satellite-ringed strain that morphs element every time you hurt it.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Medical Textbook</h3>
+        <p>A built-in reference for every cell, pathogen, case, and tactic — with live mechanism loops, so you can study the counter cycle before you're under fire.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>Game Center leaderboards</h3>
+        <p>Optional ranked scores, kept per case combination. Leave Game Center off in Settings and your scores stay entirely private.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>No accounts, no ads, no tracking</h3>
+        <p>ViroFlick collects no data about you — no sign-in, no analytics, no advertising, no third-party SDKs. Settings and scores live on your device.</p>
+      </div>
+      <div class="feature">
+        <h3><span class="dot">●</span>One honest unlock</h3>
+        <p>Free to download with two full cases. A single one-time purchase opens all six — tied to your Apple Account, no subscriptions, no consumables.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRIVACY / SUPPORT ============ -->
+  <section class="block">
+    <div class="callout amber">
+      <h2>Private by design</h2>
+      <p>There are no accounts and no cloud sync. Your settings, evolutions, and best scores are stored on your device only — the same local-first stance behind everything halfmarble builds.</p>
+      <p>Read the full <a href="privacy/">privacy policy</a>, get <a href="support/">support</a>, or see halfmarble's <a href="../glass-box/data.html">Glass Box</a> data philosophy.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="footer-label">Halfmarble LLC</div>
+  <p class="footer-text">Engineering for the unbridgeable difference.</p>
+  <div class="footer-links">
+    <a href="../index.html">halfmarble.com</a>
+    <a href="privacy/">Privacy</a>
+    <a href="support/">Support</a>
+    <a href="mailto:support@halfmarble.com">support@halfmarble.com</a>
+  </div>
+</footer>
+
+<script>
+/* ============================================================================
+   ViroFlick browser demo — a faithful mini of the FLICK-TO-FIRE core loop.
+   Self-contained, no dependencies. Counter cycle + colors mirror the app:
+     ANTIBODY(white) → TOXIN(yellow) → ENZYME(green) → OXYGEN(blue) → ANTIBODY
+   Fire the cell whose target matches the pathogen; the mirror type HEALS it.
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  // ---- element model (order defines the ring; each .kills the next) ----------
+  var ORDER = ["antibody", "toxin", "enzyme", "oxygen"];
+  var EL = {
+    antibody: { name: "ANTIBODY", col: "#f2f7ff", kills: "toxin",    shape: "spiky"   },
+    toxin:    { name: "TOXIN",    col: "#ffeb1a", kills: "enzyme",   shape: "round"   },
+    enzyme:   { name: "ENZYME",   col: "#75db5c", kills: "oxygen",   shape: "bristle" },
+    oxygen:   { name: "OXYGEN",   col: "#338cfa", kills: "antibody", shape: "cluster" }
+  };
+  var AMBER = "#ffa126";
+
+  // =========================================================================
+  //  Small shared drawing helpers (pathogen silhouettes, used here + cycle)
+  // =========================================================================
+  function drawPathogenShape(ctx, x, y, r, key) {
+    var col = EL[key].col, shape = EL[key].shape;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2, r * 0.16);
+    ctx.strokeStyle = "rgba(4,4,6,0.85)";
+    ctx.fillStyle = col;
+    if (shape === "round") {
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    } else if (shape === "spiky") {
+      var pts = 11;
+      ctx.beginPath();
+      for (var i = 0; i < pts * 2; i++) {
+        var ang = (Math.PI * i) / pts;
+        var rad = (i % 2 === 0) ? r * 1.28 : r * 0.66;
+        ctx[i === 0 ? "moveTo" : "lineTo"](Math.cos(ang) * rad, Math.sin(ang) * rad);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (shape === "bristle") {
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.72, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      var n = 10;
+      for (var b = 0; b < n; b++) {
+        var a = (Math.PI * 2 * b) / n;
+        var bx = Math.cos(a), by = Math.sin(a);
+        ctx.beginPath();
+        ctx.moveTo(bx * r * 0.6, by * r * 0.6);
+        ctx.lineTo(bx * r * 1.02, by * r * 1.02);
+        ctx.lineWidth = Math.max(2, r * 0.14); ctx.strokeStyle = "rgba(4,4,6,0.7)"; ctx.stroke();
+        ctx.beginPath(); ctx.arc(bx * r * 1.1, by * r * 1.1, r * 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = col; ctx.fill();
+        ctx.lineWidth = Math.max(1.5, r * 0.1); ctx.strokeStyle = "rgba(4,4,6,0.85)"; ctx.stroke();
+      }
+    } else if (shape === "cluster") {
+      var lobes = [[0, -0.4], [-0.42, 0.28], [0.42, 0.28], [0, 0.12]];
+      for (var l = 0; l < lobes.length; l++) {
+        ctx.beginPath();
+        ctx.arc(lobes[l][0] * r, lobes[l][1] * r, r * 0.55, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  // =========================================================================
+  //  THE GAME
+  // =========================================================================
+  function Game(canvas) {
+    var ctx = canvas.getContext("2d");
+    var CW = canvas.width, CH = canvas.height;     // internal resolution (constant)
+    var self = this;
+
+    // world constants (in internal px)
+    var BASE_Y = CH - 120;                         // vitals line
+    var VIAL_Y = CH - 62;
+    var vials = ORDER.map(function (k, i) {
+      return { key: k, x: CW * (i + 0.5) / 4, y: VIAL_Y, r: 30 };
+    });
+
+    var state, aim, pointerId = null;
+
+    function reset() {
+      state = {
+        running: false, over: false, started: false,
+        score: 0, vitals: 100, combo: 0,
+        selected: 1,                               // start armed with TOXIN vial (counters green? no) — arms antibody? pick 0
+        pathogens: [], boids: [], sparks: [], cells: [], floats: [],
+        spawnT: 0, spawnGap: 95, t: 0, flash: 0, shake: 0
+      };
+      state.selected = 0;                          // ANTIBODY armed by default
+      seedBloodCells();
+    }
+
+    // decorative red blood cells drifting in the plasma (non-interactive)
+    function seedBloodCells() {
+      state.cells = [];
+      for (var i = 0; i < 9; i++) {
+        state.cells.push({
+          x: Math.random() * CW, y: Math.random() * CH,
+          r: 14 + Math.random() * 12, vy: 6 + Math.random() * 10,
+          rot: Math.random() * Math.PI, tilt: 0.5 + Math.random() * 0.4
+        });
+      }
+    }
+
+    // ---- spawning ----------------------------------------------------------
+    function spawn() {
+      var key = ORDER[(Math.random() * 4) | 0];
+      var r = 20;
+      state.pathogens.push({
+        key: key, x: 40 + Math.random() * (CW - 80), y: -30,
+        r: r, hp: 1, maxhp: 1, vy: 0.9 + Math.min(0.8, state.t / 4200),
+        wob: Math.random() * Math.PI * 2, heal: 0, hurt: 0
+      });
+    }
+
+    // ---- firing ------------------------------------------------------------
+    function fireFrom(vial, dirx, diry) {
+      var el = vials[vial].key;
+      var base = Math.atan2(diry, dirx);
+      var n = 9;
+      for (var i = 0; i < n; i++) {
+        var spread = (i / (n - 1) - 0.5) * 0.5;
+        var a = base + spread;
+        var sp = 7.0 + Math.random() * 1.6;
+        state.boids.push({
+          x: vials[vial].x + (Math.random() - 0.5) * 20,
+          y: vials[vial].y - 12,
+          vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+          el: el, life: 90, r: 5.5
+        });
+      }
+    }
+
+    // aim the armed vial at a world point (used for taps and auto-aim)
+    function fireAt(px, py) {
+      var v = vials[state.selected];
+      var dx = px - v.x, dy = py - v.y;
+      var len = Math.hypot(dx, dy) || 1;
+      fireFrom(state.selected, dx / len, dy / len);
+    }
+
+    function nearestPathogenTo(px, py, maxd) {
+      var best = null, bd = maxd || 1e9;
+      for (var i = 0; i < state.pathogens.length; i++) {
+        var p = state.pathogens[i];
+        var d = Math.hypot(p.x - px, p.y - py);
+        if (d < bd) { bd = d; best = p; }
+      }
+      return best;
+    }
+
+    // ---- collision / damage rules -----------------------------------------
+    function resolveHit(boid, p) {
+      if (EL[boid.el].kills === p.key) {
+        // counter — clean kill
+        p.hp -= 1;
+        if (p.hp <= 0) killPathogen(p, boid.el);
+      } else if (boid.el === p.key) {
+        // mirror — HEALS the pathogen (grow + green pop = bad)
+        p.heal = 1; p.maxhp += 0.15; p.hp = Math.min(p.maxhp, p.hp + 0.34);
+        p.r = Math.min(30, p.r + 1.4);
+        state.combo = 0;
+        floatText(p.x, p.y - p.r - 8, "HEALED", "#75db5c");
+        burst(boid.x, boid.y, EL[boid.el].col, 4);
+      } else {
+        // neutral — chip
+        p.hp -= 0.34; p.hurt = 1;
+        burst(boid.x, boid.y, "#8a8f96", 3);
+        if (p.hp <= 0) killPathogen(p, boid.el);
+      }
+    }
+
+    function killPathogen(p, byEl) {
+      var idx = state.pathogens.indexOf(p);
+      if (idx >= 0) state.pathogens.splice(idx, 1);
+      state.combo += 1;
+      var gain = 10 + (state.combo > 1 ? (state.combo - 1) * 2 : 0);
+      state.score += gain;
+      burst(p.x, p.y, EL[p.key].col, 16);
+      floatText(p.x, p.y - p.r, "+" + gain, "#ffa126");
+      state.flash = Math.min(0.5, state.flash + 0.18);
+    }
+
+    // ---- particles ---------------------------------------------------------
+    function burst(x, y, col, n) {
+      for (var i = 0; i < n; i++) {
+        var a = Math.random() * Math.PI * 2, s = 1 + Math.random() * 3.4;
+        state.sparks.push({ x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 26, col: col, r: 1.5 + Math.random() * 2.2 });
+      }
+    }
+    function floatText(x, y, txt, col) {
+      state.floats.push({ x: x, y: y, txt: txt, col: col, life: 42 });
+    }
+
+    // ---- vitals / breach ---------------------------------------------------
+    function breach(p) {
+      var idx = state.pathogens.indexOf(p);
+      if (idx >= 0) state.pathogens.splice(idx, 1);
+      var frac = Math.max(0, Math.min(1, p.hp / p.maxhp));
+      state.vitals -= 10 * frac + 4;
+      state.combo = 0;
+      state.shake = 10; state.flash = 0;
+      if (state.vitals <= 0) { state.vitals = 0; gameOver(); }
+    }
+
+    function gameOver() { state.over = true; state.running = false; }
+
+    // =======================================================================
+    //  UPDATE
+    // =======================================================================
+    function update() {
+      state.t++;
+      // bg blood cells always drift (even on menus) for life
+      for (var c = 0; c < state.cells.length; c++) {
+        var bc = state.cells[c];
+        bc.y += bc.vy * 0.16; bc.x += Math.sin((state.t + c * 30) * 0.01) * 0.2;
+        if (bc.y - bc.r > CH) { bc.y = -bc.r; bc.x = Math.random() * CW; }
+      }
+      if (!state.running) return;
+
+      // spawn
+      state.spawnT++;
+      if (state.spawnT >= state.spawnGap) {
+        state.spawnT = 0;
+        state.spawnGap = Math.max(46, state.spawnGap - 1.1);
+        spawn();
+      }
+
+      // pathogens fall
+      for (var i = state.pathogens.length - 1; i >= 0; i--) {
+        var p = state.pathogens[i];
+        p.wob += 0.05;
+        p.y += p.vy;
+        p.x += Math.sin(p.wob) * 0.35;
+        if (p.heal > 0) p.heal -= 0.05;
+        if (p.hurt > 0) p.hurt -= 0.08;
+        if (p.y + p.r >= BASE_Y) breach(p);
+      }
+
+      // boids: home toward nearest counter-able pathogen, else nearest
+      for (var b = state.boids.length - 1; b >= 0; b--) {
+        var bo = state.boids[b];
+        bo.life--;
+        var tgt = pickTarget(bo);
+        if (tgt) {
+          var dx = tgt.x - bo.x, dy = tgt.y - bo.y, d = Math.hypot(dx, dy) || 1;
+          bo.vx += (dx / d) * 0.55; bo.vy += (dy / d) * 0.55;
+        }
+        // clamp speed
+        var sp = Math.hypot(bo.vx, bo.vy);
+        var max = 9.5;
+        if (sp > max) { bo.vx = bo.vx / sp * max; bo.vy = bo.vy / sp * max; }
+        bo.x += bo.vx; bo.y += bo.vy;
+
+        // trail spark
+        if (state.t % 2 === 0) state.sparks.push({ x: bo.x, y: bo.y, vx: 0, vy: 0, life: 10, col: EL[bo.el].col, r: 1.6 });
+
+        // collision
+        var hit = false;
+        for (var j = 0; j < state.pathogens.length; j++) {
+          var pj = state.pathogens[j];
+          if (Math.hypot(pj.x - bo.x, pj.y - bo.y) < pj.r + bo.r) {
+            resolveHit(bo, pj); hit = true; break;
+          }
+        }
+        if (hit || bo.life <= 0 || bo.x < -30 || bo.x > CW + 30 || bo.y < -40) {
+          state.boids.splice(b, 1);
+        }
+      }
+
+      // sparks + floats
+      for (var s = state.sparks.length - 1; s >= 0; s--) {
+        var sk = state.sparks[s];
+        sk.x += sk.vx; sk.y += sk.vy; sk.vy += 0.04; sk.life--;
+        if (sk.life <= 0) state.sparks.splice(s, 1);
+      }
+      for (var f = state.floats.length - 1; f >= 0; f--) {
+        var fl = state.floats[f]; fl.y -= 0.7; fl.life--;
+        if (fl.life <= 0) state.floats.splice(f, 1);
+      }
+
+      if (state.flash > 0) state.flash -= 0.03;
+      if (state.shake > 0) state.shake -= 0.6;
+    }
+
+    // prefer a pathogen this boid actually counters; fall back to nearest
+    function pickTarget(bo) {
+      var best = null, bd = 1e9, bestC = null, bdc = 1e9;
+      for (var i = 0; i < state.pathogens.length; i++) {
+        var p = state.pathogens[i];
+        var d = Math.hypot(p.x - bo.x, p.y - bo.y);
+        if (d < bd) { bd = d; best = p; }
+        if (EL[bo.el].kills === p.key && d < bdc) { bdc = d; bestC = p; }
+      }
+      return bestC || best;
+    }
+
+    // =======================================================================
+    //  RENDER
+    // =======================================================================
+    function render() {
+      ctx.save();
+      // shake
+      if (state.shake > 0) ctx.translate((Math.random() - 0.5) * state.shake, (Math.random() - 0.5) * state.shake);
+
+      // bloodstream backdrop
+      var g = ctx.createLinearGradient(0, 0, 0, CH);
+      g.addColorStop(0, "#2a0910"); g.addColorStop(0.5, "#1a0509"); g.addColorStop(1, "#100306");
+      ctx.fillStyle = g; ctx.fillRect(-20, -20, CW + 40, CH + 40);
+      var rg = ctx.createRadialGradient(CW * 0.5, CH * 0.32, 30, CW * 0.5, CH * 0.32, CH * 0.7);
+      rg.addColorStop(0, "rgba(143,29,39,0.42)"); rg.addColorStop(1, "rgba(143,29,39,0)");
+      ctx.fillStyle = rg; ctx.fillRect(-20, -20, CW + 40, CH + 40);
+
+      // drifting red blood cells
+      for (var c = 0; c < state.cells.length; c++) {
+        var bc = state.cells[c];
+        ctx.save(); ctx.translate(bc.x, bc.y); ctx.rotate(bc.rot); ctx.scale(1, bc.tilt);
+        ctx.beginPath(); ctx.arc(0, 0, bc.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(150,32,42,0.5)"; ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, bc.r * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(90,16,24,0.55)"; ctx.fill();
+        ctx.restore();
+      }
+
+      // kill flash
+      if (state.flash > 0) { ctx.fillStyle = "rgba(255,161,38," + (state.flash * 0.25) + ")"; ctx.fillRect(0, 0, CW, CH); }
+
+      // base / vitals line
+      ctx.strokeStyle = "rgba(255,255,255,0.10)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, BASE_Y); ctx.lineTo(CW, BASE_Y); ctx.stroke();
+
+      // pathogens
+      for (var i = 0; i < state.pathogens.length; i++) {
+        var p = state.pathogens[i];
+        if (p.heal > 0) { ctx.save(); ctx.shadowColor = "#75db5c"; ctx.shadowBlur = 22 * p.heal; }
+        var jitter = p.hurt > 0 ? (Math.random() - 0.5) * 3 : 0;
+        drawPathogenShape(ctx, p.x + jitter, p.y, p.r, p.key);
+        if (p.heal > 0) ctx.restore();
+      }
+
+      // boids (homing cells)
+      for (var b = 0; b < state.boids.length; b++) {
+        var bo = state.boids[b];
+        ctx.beginPath(); ctx.arc(bo.x, bo.y, bo.r, 0, Math.PI * 2);
+        ctx.fillStyle = EL[bo.el].col; ctx.fill();
+        ctx.lineWidth = 1.4; ctx.strokeStyle = "rgba(4,4,6,0.6)"; ctx.stroke();
+      }
+
+      // sparks
+      for (var s = 0; s < state.sparks.length; s++) {
+        var sk = state.sparks[s];
+        ctx.globalAlpha = Math.max(0, sk.life / 26);
+        ctx.beginPath(); ctx.arc(sk.x, sk.y, sk.r, 0, Math.PI * 2);
+        ctx.fillStyle = sk.col; ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // aim line while flicking
+      if (aim && aim.active) {
+        var v = vials[state.selected];
+        ctx.setLineDash([6, 7]); ctx.lineWidth = 2;
+        ctx.strokeStyle = "rgba(255,161,38,0.75)";
+        ctx.beginPath(); ctx.moveTo(v.x, v.y - 12); ctx.lineTo(aim.x, aim.y); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // vials
+      for (var vi = 0; vi < vials.length; vi++) drawVial(vials[vi], vi === state.selected);
+
+      // floats
+      for (var f = 0; f < state.floats.length; f++) {
+        var fl = state.floats[f];
+        ctx.globalAlpha = Math.max(0, fl.life / 42);
+        ctx.font = "800 15px 'JetBrains Mono', monospace";
+        ctx.textAlign = "center"; ctx.fillStyle = fl.col;
+        ctx.fillText(fl.txt, fl.x, fl.y);
+      }
+      ctx.globalAlpha = 1;
+
+      // HUD
+      drawHUD();
+
+      ctx.restore();
+
+      // overlays
+      if (!state.started) drawOverlay("VIROFLICK", "Tap to begin", "Arm a vial · flick the counter");
+      else if (state.over) drawOverlay("VITALS LOST", "Score  " + state.score, "Tap to try again");
+    }
+
+    function drawVial(v, sel) {
+      ctx.save();
+      // glow ring when armed
+      if (sel) {
+        ctx.beginPath(); ctx.arc(v.x, v.y, v.r + 8, 0, Math.PI * 2);
+        ctx.strokeStyle = AMBER; ctx.lineWidth = 3; ctx.shadowColor = AMBER; ctx.shadowBlur = 16; ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+      // orb
+      ctx.beginPath(); ctx.arc(v.x, v.y, v.r, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(10,10,14,0.85)"; ctx.fill();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = EL[v.key].col; ctx.stroke();
+      // cluster of cells inside, in the vial's colour
+      var lobes = [[0, -0.32], [-0.32, 0.2], [0.32, 0.2]];
+      for (var l = 0; l < lobes.length; l++) {
+        ctx.beginPath();
+        ctx.arc(v.x + lobes[l][0] * v.r, v.y + lobes[l][1] * v.r, v.r * 0.28, 0, Math.PI * 2);
+        ctx.fillStyle = EL[v.key].col; ctx.fill();
+      }
+      // label + target
+      ctx.font = "700 8.5px 'JetBrains Mono', monospace"; ctx.textAlign = "center";
+      ctx.fillStyle = sel ? AMBER : "rgba(255,255,255,0.5)";
+      ctx.fillText(EL[v.key].name, v.x, v.y + v.r + 13);
+      ctx.restore();
+    }
+
+    function drawHUD() {
+      // score
+      ctx.textAlign = "left"; ctx.fillStyle = "#fff";
+      ctx.font = "800 22px 'JetBrains Mono', monospace";
+      ctx.fillText(String(state.score), 16, 34);
+      ctx.font = "600 9px 'JetBrains Mono', monospace"; ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.fillText("SCORE", 17, 46);
+      if (state.combo > 1) {
+        ctx.textAlign = "right"; ctx.fillStyle = AMBER;
+        ctx.font = "800 15px 'JetBrains Mono', monospace";
+        ctx.fillText("×" + state.combo, CW - 16, 30);
+      }
+      // vitals bar
+      ctx.textAlign = "right"; ctx.font = "600 9px 'JetBrains Mono', monospace";
+      ctx.fillStyle = "rgba(255,255,255,0.4)"; ctx.fillText("VITALS", CW - 16, 44);
+      var bw = 120, bx = CW - 16 - bw, by = 50;
+      ctx.fillStyle = "rgba(255,255,255,0.10)"; roundRect(bx, by, bw, 7, 3.5); ctx.fill();
+      var vc = state.vitals > 55 ? "#75db5c" : state.vitals > 25 ? "#ffeb1a" : "#e0424f";
+      ctx.fillStyle = vc; roundRect(bx, by, bw * state.vitals / 100, 7, 3.5); ctx.fill();
+    }
+
+    function roundRect(x, y, w, h, r) {
+      w = Math.max(0, w);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawOverlay(title, line1, line2) {
+      ctx.fillStyle = "rgba(6,3,5,0.72)"; ctx.fillRect(0, 0, CW, CH);
+      ctx.textAlign = "center";
+      ctx.fillStyle = AMBER; ctx.font = "900 34px 'Inter', sans-serif";
+      ctx.fillText(title, CW / 2, CH / 2 - 24);
+      ctx.fillStyle = "#fff"; ctx.font = "700 20px 'JetBrains Mono', monospace";
+      ctx.fillText(line1, CW / 2, CH / 2 + 12);
+      ctx.fillStyle = "rgba(255,255,255,0.6)"; ctx.font = "500 13px 'JetBrains Mono', monospace";
+      ctx.fillText(line2, CW / 2, CH / 2 + 44);
+    }
+
+    // =======================================================================
+    //  INPUT  (pointer events: mouse + touch)
+    // =======================================================================
+    function toWorld(e) {
+      var rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) / rect.width * CW,
+        y: (e.clientY - rect.top) / rect.height * CH
+      };
+    }
+    function vialAt(pt) {
+      for (var i = 0; i < vials.length; i++) {
+        if (Math.hypot(vials[i].x - pt.x, vials[i].y - pt.y) < vials[i].r + 12) return i;
+      }
+      return -1;
+    }
+
+    function onDown(e) {
+      e.preventDefault();
+      if (pointerId !== null) return;
+      pointerId = e.pointerId;
+      var pt = toWorld(e);
+
+      if (!state.started) { state.started = true; state.running = true; return; }
+      if (state.over) { reset(); state.started = true; state.running = true; return; }
+
+      var vi = vialAt(pt);
+      if (vi >= 0) state.selected = vi;             // arm this vial
+      aim = { active: true, x: pt.x, y: pt.y, sx: pt.x, sy: pt.y, onVial: vi >= 0 };
+    }
+    function onMove(e) {
+      if (pointerId !== e.pointerId || !aim) return;
+      var pt = toWorld(e); aim.x = pt.x; aim.y = pt.y;
+    }
+    function onUp(e) {
+      if (pointerId !== e.pointerId) return;
+      pointerId = null;
+      if (!aim) return;
+      var a = aim; aim = null;
+      if (!state.running) return;
+      var dx = a.x - a.sx, dy = a.y - a.sy;
+      var drag = Math.hypot(dx, dy);
+      if (drag > 26) {
+        // a real flick — fire in the drag direction
+        fireFrom(state.selected, dx / drag, dy / drag);
+      } else {
+        // a tap — auto-aim at the nearest pathogen to the tap (or straight up)
+        var tgt = nearestPathogenTo(a.x, a.y, 1e9);
+        if (tgt && !a.onVial) fireAt(tgt.x, tgt.y);
+        else if (!a.onVial) fireFrom(state.selected, 0, -1);
+        // (a tap that only armed a vial fires nothing — just arms it)
+      }
+    }
+    function onKey(e) {
+      var n = parseInt(e.key, 10);
+      if (n >= 1 && n <= 4) state.selected = n - 1;
+    }
+
+    canvas.addEventListener("pointerdown", onDown);
+    canvas.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("keydown", onKey);
+
+    // =======================================================================
+    //  LOOP  (runs only while the canvas is on-screen)
+    // =======================================================================
+    var visible = false, raf = null;
+    function frame() { update(); render(); raf = visible ? requestAnimationFrame(frame) : null; }
+    this.setVisible = function (v) {
+      if (v && !visible) { visible = true; if (!raf) frame(); }
+      else if (!v && visible) { visible = false; if (raf) cancelAnimationFrame(raf), raf = null; }
+    };
+
+    reset(); render();
+  }
+
+  // =========================================================================
+  //  STATIC COUNTER-CYCLE DIAGRAM
+  // =========================================================================
+  function drawCycle(canvas) {
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width, H = canvas.height, cx = W / 2, cy = H / 2, R = W * 0.33;
+    var pos = ORDER.map(function (k, i) {
+      var a = -Math.PI / 2 + i * Math.PI / 2;
+      return { key: k, x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R };
+    });
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      // arrows along the ring (i → i+1 = i kills next)
+      for (var i = 0; i < 4; i++) {
+        var a = pos[i], b = pos[(i + 1) % 4];
+        var mx = cx, my = cy;
+        // curved arrow: quadratic bulging outward
+        var midx = (a.x + b.x) / 2, midy = (a.y + b.y) / 2;
+        var ox = midx + (midx - mx) * 0.34, oy = midy + (midy - my) * 0.34;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(ox, oy, b.x, b.y);
+        ctx.strokeStyle = "rgba(255,161,38,0.5)"; ctx.lineWidth = 2; ctx.stroke();
+        // arrowhead near b
+        var ang = Math.atan2(b.y - oy, b.x - ox);
+        var hx = b.x - Math.cos(ang) * 26, hy = b.y - Math.sin(ang) * 26;
+        ctx.beginPath();
+        ctx.moveTo(hx, hy);
+        ctx.lineTo(hx - Math.cos(ang - 0.5) * 9, hy - Math.sin(ang - 0.5) * 9);
+        ctx.lineTo(hx - Math.cos(ang + 0.5) * 9, hy - Math.sin(ang + 0.5) * 9);
+        ctx.closePath(); ctx.fillStyle = AMBER; ctx.fill();
+      }
+      // nodes
+      var pulse = (Math.sin(t / 500) + 1) / 2;
+      for (var n = 0; n < 4; n++) {
+        var p = pos[n];
+        var r = 26 + (n === (Math.floor(t / 700) % 4) ? 3 * pulse : 0);
+        drawPathogenShape(ctx, p.x, p.y, r, p.key);
+        ctx.font = "700 9px 'JetBrains Mono', monospace"; ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(255,255,255,0.72)";
+        ctx.fillText(EL[p.key].name, p.x, p.y + r + 15);
+      }
+    }
+    // animate only while visible
+    var vis = false, raf = null, start = 0;
+    function loop(ts) { if (!start) start = ts; draw(ts - start); raf = vis ? requestAnimationFrame(loop) : null; }
+    return {
+      setVisible: function (v) {
+        if (v && !vis) { vis = true; if (!raf) raf = requestAnimationFrame(loop); }
+        else if (!v && vis) { vis = false; if (raf) cancelAnimationFrame(raf), raf = null; }
+      },
+      once: function () { draw(0); }
+    };
+  }
+
+  // =========================================================================
+  //  BOOTSTRAP + visibility wiring (pause when scrolled off-screen)
+  // =========================================================================
+  function ready(fn) {
+    if (document.readyState !== "loading") fn();
+    else document.addEventListener("DOMContentLoaded", fn);
+  }
+  ready(function () {
+    var gcv = document.getElementById("game");
+    var game = new Game(gcv);
+    var cyc = drawCycle(document.getElementById("cycle-canvas"));
+    cyc.once();
+
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.target === gcv) game.setVisible(en.isIntersecting);
+          else cyc.setVisible(en.isIntersecting);
+        });
+      }, { threshold: 0.15 });
+      io.observe(gcv);
+      io.observe(document.getElementById("cycle-canvas"));
+    } else {
+      game.setVisible(true); cyc.setVisible(true);
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { game.setVisible(false); cyc.setVisible(false); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
