@@ -19,3 +19,9 @@ build/
 
 # Local-only Claude Code guidance (canonical copy lives in halfmarble.closed/)
 CLAUDE.md
+
+# ViroFlick media — the site ships the sized .jpg screenshots + poster. The heavy
+# source assets stay local: the .mp4 gameplay archive (served via YouTube instead)
+# and the full-res .png captures the .jpgs were encoded from.
+viroflick/media/videos/
+viroflick/media/originals/
