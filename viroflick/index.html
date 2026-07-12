@@ -104,14 +104,17 @@
   .yt-facade { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; padding: 0; cursor: pointer; display: block;
                background: radial-gradient(120% 90% at 50% 22%, rgba(143,29,39,0.4), transparent 62%), linear-gradient(180deg, #180509, #0b0305); }
   .yt-facade > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .yt-shade { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 42%, rgba(0,0,0,0.5)); transition: background 0.2s; }
-  .yt-facade:hover .yt-shade { background: linear-gradient(180deg, rgba(143,29,39,0.14), rgba(0,0,0,0.55)); }
+  /* the scrim goes near-opaque at the foot so the poster's own in-game HUD row
+     (55 x ANTIBODY ... VITALS 100%) doesn't read through the caption sitting on it */
+  .yt-shade { position: absolute; inset: 0; transition: background 0.2s;
+              background: linear-gradient(180deg, transparent 42%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.97) 88%, #000 94%); }
+  .yt-facade:hover .yt-shade { background: linear-gradient(180deg, rgba(143,29,39,0.14), rgba(0,0,0,0.6) 70%, rgba(0,0,0,0.97) 88%, #000 94%); }
   .yt-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 66px; height: 66px; border-radius: 50%;
              background: var(--amber); box-shadow: 0 8px 30px -6px rgba(255,161,38,0.7); transition: transform 0.15s, filter 0.15s; }
   .yt-play::before { content: ""; position: absolute; top: 50%; left: 54%; transform: translate(-50%,-50%);
                      border-style: solid; border-width: 12px 0 12px 20px; border-color: transparent transparent transparent #1a0f00; }
   .yt-facade:hover .yt-play { transform: translate(-50%,-50%) scale(1.08); filter: brightness(1.06); }
-  .yt-cap { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #cbd0d5; }
+  .yt-cap { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #e2e6ea; text-shadow: 0 1px 4px rgba(0,0,0,0.95); }
 
   /* screenshot strip */
   .shots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; }
