@@ -82,7 +82,8 @@
      below; until they exist the .ph placeholder shows through (screenshots hide
      their broken <img> via onerror, so a new capture saved to the right path
      appears with no code change). The gameplay video is a click-to-load YouTube
-     facade (poster = media/gameplay-hero.jpg); nothing loads from Google until Play. */
+     facade in a 16:9 frame (poster = media/gameplay-poster-16x9.jpg); nothing loads
+     from Google until Play. */
   .media-wrap { display: flex; flex-direction: column; align-items: center; gap: 34px; }
 
   /* shared portrait device frame (real iPhone screenshot aspect: 1320 x 2868) */
@@ -90,8 +91,12 @@
   .device .screen { position: relative; display: block; width: 100%; aspect-ratio: 1320 / 2868; border-radius: 26px; overflow: hidden; background: #120608; }
   .device .screen > img, .device .screen > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  /* hero video device */
-  .video-device { width: 100%; max-width: 300px; }
+  /* landscape (16:9) frame for the gameplay video. The YouTube upload is composed
+     16:9 — gameplay centered on a blurred fill — so it belongs in a wide frame, not
+     the portrait phone frame the screenshot strip uses. */
+  .video-frame { width: 100%; max-width: 560px; border-radius: 20px; }
+  .video-frame .screen { aspect-ratio: 16 / 9; border-radius: 12px; }
+  .video-frame .screen > iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
 
   /* placeholder shown until the real media lands */
   .ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 18px;
@@ -233,17 +238,15 @@
     <div class="media-wrap">
 
       <!-- gameplay video — click-to-load YouTube (no Google requests until Play).
-           data-yt is the video id; poster is a local frame (media/gameplay-hero.jpg)
-           so nothing loads from Google before Play. To pull the video again, swap this
-           block for a plain still device: <div class="device video-device"><div
-           class="screen"><div class="ph"><div class="cap">Screen</div></div><img
-           src="media/gameplay-hero.jpg" alt="..." loading="lazy"
-           onerror="this.style.display='none'"></div></div> -->
-      <div class="device video-device">
+           The upload is composed 16:9 (gameplay centered on a blurred fill), so it
+           lives in the wide .video-frame, not the portrait phone frame. data-yt is the
+           video id; poster is a local 16:9 frame (media/gameplay-poster-16x9.jpg) so
+           nothing loads from Google before Play. -->
+      <div class="device video-frame">
         <div class="screen">
           <button type="button" class="yt-facade" data-yt="paS7PRt8Scw"
                   aria-label="Play ViroFlick gameplay video on YouTube" onclick="vfPlayYT(this)">
-            <img src="media/gameplay-hero.jpg" alt="" loading="lazy" onerror="this.remove()">
+            <img src="media/gameplay-poster-16x9.jpg" alt="" loading="lazy" onerror="this.remove()">
             <span class="yt-shade"></span>
             <span class="yt-play"></span>
             <span class="yt-cap mono">Watch gameplay</span>
