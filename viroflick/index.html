@@ -77,11 +77,13 @@
   .section-label .accent { color: var(--amber); }
   .section-sub { text-align: center; color: #8a9096; font-size: 15px; max-width: 560px; margin: 0 auto 34px; }
 
-  /* ---------- media: gameplay video + screenshot strip ----------
+  /* ---------- media: gameplay hero still + screenshot strip ----------
      Assets are dropped in under viroflick/media/ with the exact names referenced
      below; until they exist the .ph placeholder shows through (screenshots hide
      their broken <img> via onerror, so a new capture saved to the right path
-     appears with no code change). */
+     appears with no code change). The gameplay video is temporarily out (no fresh
+     capture yet) — a hero still stands in; the yt-facade CSS + vfPlayYT() below are
+     kept so the video can be dropped back in. */
   .media-wrap { display: flex; flex-direction: column; align-items: center; gap: 34px; }
 
   /* shared portrait device frame (real iPhone screenshot aspect: 1320 x 2868) */
@@ -231,17 +233,24 @@
     <p class="section-sub">Real gameplay from the app — read the pathogen, arm its counter, flick the swarm. Now in open beta on TestFlight.</p>
     <div class="media-wrap">
 
-      <!-- gameplay video — click-to-load YouTube (no Google requests until Play).
-           data-yt is the video id; poster is media/gameplay-poster.jpg. -->
+      <!-- Hero gameplay still. The gameplay VIDEO is temporarily out (no fresh
+           capture). To restore it, replace this .device block with the click-to-load
+           YouTube facade below (nothing loads from Google until Play is pressed) and
+           set data-yt to the new video id; poster is media/gameplay-poster.jpg. The
+           yt-facade CSS and vfPlayYT() script are retained for that restore.
+             <div class="device video-device"><div class="screen">
+               <button type="button" class="yt-facade" data-yt="VIDEO_ID"
+                       aria-label="Play ViroFlick gameplay video on YouTube" onclick="vfPlayYT(this)">
+                 <img src="media/gameplay-poster.jpg" alt="" loading="lazy" onerror="this.remove()">
+                 <span class="yt-shade"></span><span class="yt-play"></span>
+                 <span class="yt-cap mono">Watch gameplay</span>
+               </button>
+             </div></div>
+      -->
       <div class="device video-device">
         <div class="screen">
-          <button type="button" class="yt-facade" data-yt="TtWOqj3rglE"
-                  aria-label="Play ViroFlick gameplay video on YouTube" onclick="vfPlayYT(this)">
-            <img src="media/gameplay-poster.jpg" alt="" loading="lazy" onerror="this.remove()">
-            <span class="yt-shade"></span>
-            <span class="yt-play"></span>
-            <span class="yt-cap mono">Watch gameplay</span>
-          </button>
+          <div class="ph"><div class="cap">Screen</div></div>
+          <img src="media/gameplay-hero.jpg" alt="ViroFlick gameplay — reading pathogens in the bloodstream and flicking the counter cell" loading="lazy" onerror="this.style.display='none'">
         </div>
       </div>
 
