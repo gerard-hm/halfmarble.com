@@ -237,11 +237,12 @@
     <p class="section-sub">Real gameplay from the app — read the pathogen, arm its counter, flick the swarm. Now in open beta on TestFlight.</p>
     <div class="media-wrap">
 
-      <!-- gameplay video — click-to-load YouTube (no Google requests until Play).
-           The upload is composed 16:9 (gameplay centered on a blurred fill), so it
-           lives in the wide .video-frame, not the portrait phone frame. data-yt is the
-           video id; poster is a local 16:9 frame (media/gameplay-poster-16x9.jpg) so
-           nothing loads from Google before Play. -->
+      <!-- gameplay video HIDDEN 2026-07-15 until the audio is fixed: the uploaded file
+           has 96 kHz audio that plays back garbled. Re-enable by uncommenting the block
+           below once a re-encoded (48 kHz) video is live on YouTube. It's a click-to-load
+           YouTube facade (no Google requests until Play); the upload is composed 16:9
+           (gameplay on a blurred fill) so it lives in the wide .video-frame; poster is a
+           local 16:9 frame (media/gameplay-poster-16x9.jpg).
       <div class="device video-frame">
         <div class="screen">
           <button type="button" class="yt-facade" data-yt="paS7PRt8Scw"
@@ -253,6 +254,7 @@
           </button>
         </div>
       </div>
+      -->
 
       <!-- screenshot strip. Drop the fresh captures in at these exact paths and they
            replace the placeholders automatically (a missing file hides its <img>). -->
