@@ -185,7 +185,9 @@
   .beta-note b { color: #fff; font-weight: 700; }
   .beta-note .who { display: block; margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #7d838a; }
   .btn.lg { font-size: 14px; padding: 16px 32px; }
-  .beta-hint { margin: 26px auto 0; font-size: 12px; letter-spacing: 0.05em; color: #7d838a; }
+  /* > p.beta-hint: must out-rank ".beta-card > p" above, which otherwise zeroes
+     the top margin and overrides the smaller size/colour */
+  .beta-card > p.beta-hint { margin: 26px auto 0; font-size: 12px; letter-spacing: 0.05em; color: #7d838a; }
   .beta-card > p b { color: #fff; font-weight: 700; }
   .pledge { max-width: 620px; margin: 0 auto; padding: 0 20px 4px; text-align: center; font-size: 12.5px; letter-spacing: 0.03em; line-height: 1.85; color: #7d838a; }
   .pledge b { color: #cbd0d5; font-weight: 600; }
