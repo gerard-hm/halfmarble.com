@@ -137,7 +137,7 @@
   .cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
   .case { position: relative; background: #101012; border: 1px solid #1f1f23; border-radius: 12px; padding: 22px; border-top: 3px solid var(--cc, #333); transition: border-color 0.2s, transform 0.2s; }
   .case:hover { transform: translateY(-3px); border-color: #3a3a40; border-top-color: var(--cc); }
-  .case-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .case-top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; margin-bottom: 8px; }
   .case h3 { font-size: 17px; font-weight: 800; color: #fff; }
   .case .mech { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #7d838a; border: 1px solid #2a2a30; border-radius: 5px; padding: 3px 7px; white-space: nowrap; }
   .case p { font-size: 13.5px; color: #8a9096; line-height: 1.6; }
@@ -146,6 +146,9 @@
   .tag.unlock { color: var(--amber); border: 1px solid var(--amber-dim); }
   /* keep the mech badge from colliding with the tag row */
   .case.has-tag .case-top { padding-right: 46px; }
+  /* the free tag carries the surge cap, so it runs wider — its cards need more
+     clearance before the mech chip wraps under the title */
+  .case.free-capped .case-top { padding-right: 134px; }
 
   /* ---------- features ---------- */
   .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
@@ -304,13 +307,13 @@
     <div class="section-label">Six <span class="accent">//</span> cases</div>
     <p class="section-sub">Each case is its own kind of invasion, with its own firing mechanic. Triage and Sepsis are free to play through surge 22; one unlock lifts the cap and opens all six.</p>
     <div class="cases">
-      <div class="case has-tag" style="--cc:var(--antibody)">
-        <span class="tag free">Free</span>
+      <div class="case has-tag free-capped" style="--cc:var(--antibody)">
+        <span class="tag free">Free &middot; surges 1&ndash;22</span>
         <div class="case-top"><h3>Triage</h3><span class="mech">Hold &amp; fire</span></div>
         <p>A relentless single-file flood in lanes. Hold a pool to auto-fire straight up its lane — but only two lanes at once, so triage which to cover and swap fingers as threats shift. Tuned to play easily with a tremor: hold, don't aim.</p>
       </div>
-      <div class="case has-tag" style="--cc:var(--oxygen)">
-        <span class="tag free">Free</span>
+      <div class="case has-tag free-capped" style="--cc:var(--oxygen)">
+        <span class="tag free">Free &middot; surges 1&ndash;22</span>
         <div class="case-top"><h3>Sepsis</h3><span class="mech">Flick to fire</span></div>
         <p>The bloodstream overwhelmed — a mixed drip of viruses, dividing cells and shielded pathogens. Prioritize the fast ones and pre-empt the splits.</p>
       </div>
