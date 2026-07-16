@@ -98,6 +98,15 @@
   .video-frame .screen { aspect-ratio: 16 / 9; border-radius: 12px; }
   .video-frame .screen > iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
 
+  /* portrait frame for the silent gameplay loop. The clip is a real 1320 x 2868
+     capture scaled to 540 wide, so it reuses the phone frame the screenshots use
+     (see .device .screen > video above) — just larger than a strip tile. */
+  /* the cap goes on the figure, not the frame: as a centred flex item the figure
+     shrink-wraps its caption (~195px), and the frame's own max-width never binds —
+     which sizes the hero to a strip tile instead of leading the section. */
+  .loop-fig { margin: 0; width: 100%; max-width: 300px; display: flex; flex-direction: column; align-items: center; }
+  .loop-frame { width: 100%; }
+
   /* placeholder shown until the real media lands */
   .ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 18px;
         background: radial-gradient(120% 90% at 50% 22%, rgba(143,29,39,0.35), transparent 62%), linear-gradient(180deg, #180509, #0b0305); }
@@ -265,6 +274,45 @@
         </div>
       </div>
       -->
+
+      <!-- CANDIDATE silent gameplay loop: the Triage case, surge 10, cut straight from
+           the 1320x2868 capture (source 205.0s-221.1s, 16.1s, 540x1174, 2.4 MB). It is
+           self-hosted beside the screenshots — no YouTube, no Google request, so the
+           page stays trackerless. Silent by design, which also sidesteps the audio
+           defect that shelved the narrated tour. Both surge boundaries sit in the
+           inter-surge lull with the board cleared, but the HUD score and the four ammo
+           wheels still reset visibly on the wrap: a wrap-blended variant that hides
+           that is in media/videos/ (gitignored) if the pop is not acceptable. -->
+      <figure class="loop-fig">
+        <div class="device loop-frame">
+          <div class="screen">
+            <video class="loop-vid" autoplay muted loop playsinline preload="metadata"
+                   poster="media/loop-triage-surge10-poster.jpg"
+                   src="media/loop-triage-surge10.mp4"
+                   aria-label="ViroFlick gameplay: the Triage case at surge 10, playing silently on a loop"></video>
+          </div>
+        </div>
+        <figcaption class="shot-cap">Triage <span class="accent">·</span> surge 10 <span class="accent">·</span> silent loop</figcaption>
+      </figure>
+      <script>
+        /* Motion is opt-out: this is a PD-facing page, so a reader who asks their OS
+           for reduced motion gets the still poster instead of the loop. Runs inline
+           (not on DOMContentLoaded) to stop autoplay before the first frame paints. */
+        (function () {
+          var v = document.querySelector('.loop-vid');
+          if (!v) return;
+          var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+          var hold = function () {
+            if (!mq.matches) return;
+            v.autoplay = false;
+            v.pause();
+            v.currentTime = 0;
+            v.load();            /* drops back to the poster frame */
+          };
+          hold();
+          mq.addEventListener ? mq.addEventListener('change', hold) : mq.addListener(hold);
+        })();
+      </script>
 
       <!-- screenshot strip. Drop the fresh captures in at these exact paths and they
            replace the placeholders automatically (a missing file hides its <img>). -->
