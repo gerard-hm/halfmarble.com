@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Initiated | halfmarble</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="/assets/fonts/fonts.css" rel="stylesheet">
     <style>
         body { background-color: #0a0a0a; color: #d1d5db; font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
         .quote-bg { background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%); }
     </style>
+    <!-- Tailwind, built from this page's own classes (not the CDN): see tailwind.config.js.
+         Keep this LAST in <head>. The old cdn.tailwindcss.com script injected its generated
+         <style> at the end of <head>, i.e. AFTER the inline <style> above, so Tailwind won
+         cascade ties. Moving this link up next to the font link silently flips that. -->
+    <link href="/assets/tailwind.css" rel="stylesheet">
 </head>
 <body class="antialiased">
 
