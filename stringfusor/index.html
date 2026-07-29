@@ -94,6 +94,9 @@
   .shots .device { padding: 5px; border-radius: 18px; }
   .shots .device .screen { border-radius: 13px; }
   .shot-cap { margin-top: 9px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #7d838a; }
+  .loop-fig { margin: 0; width: 100%; max-width: 300px; display: flex; flex-direction: column; align-items: center; }
+  .loop-frame { width: 100%; }
+  .device .screen > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   @media (max-width: 720px) {
     .shots { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 46%; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
     .shots figure { scroll-snap-align: center; }
@@ -188,6 +191,45 @@
     <div class="section-label">See it <span class="accent">//</span> straight from the app</div>
     <p class="section-sub">Real captures — the reactor floats over a slowly turning night Earth, and the patterns you build release their energy in place.</p>
     <div class="media-wrap">
+      <!-- Silent gameplay loop: one whole Progression run arc on the daily board —
+           empty reactor, THE RING built piece by piece, the fusion fires and the
+           entire board clears back to empty. Cut from the 1320x2868 capture
+           (source 1.5s-41.8s, 40.3s, 540x1174, 1.3 MB). Self-hosted beside the
+           screenshots — no YouTube, no Google request, so the page stays trackerless.
+           The clip fades in from black and out to black (0.5s each) — same recipe as
+           the ViroFlick loop, and load-bearing for the same reason: the wrap resets
+           the HUD energy tally, and the fades hide that under black. Don't trim
+           the fades off. -->
+      <figure class="loop-fig">
+        <div class="device loop-frame">
+          <div class="screen">
+            <video class="loop-vid" autoplay muted loop playsinline preload="metadata"
+                   poster="media/loop-progression-ring-poster.jpg"
+                   src="media/loop-progression-ring.mp4"
+                   aria-label="StringFusor gameplay: a full Progression run on the daily board — the ring pattern is built from an empty reactor, fuses, and the whole board clears — playing silently on a loop"></video>
+          </div>
+        </div>
+        <figcaption class="shot-cap">Progression <span class="accent">·</span> one full fusion <span class="accent">·</span> silent loop</figcaption>
+      </figure>
+      <script>
+        /* Motion is opt-out: this is a PD-facing page, so a reader who asks their OS
+           for reduced motion gets the still poster instead of the loop. Runs inline
+           (not on DOMContentLoaded) to stop autoplay before the first frame paints. */
+        (function () {
+          var v = document.querySelector('.loop-vid');
+          if (!v) return;
+          var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+          var hold = function () {
+            if (!mq.matches) return;
+            v.autoplay = false;
+            v.pause();
+            v.currentTime = 0;
+            v.load();            /* drops back to the poster frame */
+          };
+          hold();
+          mq.addEventListener ? mq.addEventListener('change', hold) : mq.addListener(hold);
+        })();
+      </script>
       <div class="shots">
         <figure>
           <div class="device"><div class="screen">
