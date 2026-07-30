@@ -4,14 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>halfmarble | SteadyHeartBeat — your heart rate, read aloud</title>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <meta name="description" content="SteadyHeartBeat is a free iOS app that speaks your live heart rate from AirPods Pro 3 — no watch, no chest strap, no screen. Everything runs on-device; halfmarble never receives your data.">
+<meta property="og:title" content="SteadyHeartBeat — your heart rate, read aloud">
+<meta property="og:description" content="A free iOS app that speaks your live heart rate from AirPods Pro 3 — no watch, no chest strap, no screen. On-device; your data never leaves your iPhone.">
+<meta property="og:image" content="https://halfmarble.com/steadyheartbeat/app-icon.png">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" type="image/png" href="app-icon.png">
+<link rel="apple-touch-icon" href="app-icon.png">
 <link href="/assets/fonts/fonts.css" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #d1d5db; line-height: 1.7; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
   .mono { font-family: 'JetBrains Mono', monospace; }
   img { display: block; max-width: 100%; }
+  a { color: inherit; }
 
   /* rose = SteadyHeartBeat product accent (#E84855). pure red stays company-level. */
   :root { --rose: #E84855; --rose-dim: rgba(232,72,85,0.4); --rose-faint: rgba(232,72,85,0.08); }
@@ -22,63 +29,82 @@
   .top-nav-row { display: flex; justify-content: space-between; align-items: center; position: relative; }
   .nav-link { font-size: 12px; color: #666; text-decoration: none; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
   .nav-link:hover { border-color: var(--rose); }
-  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+  .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; position: absolute; left: 50%; transform: translateX(-50%); }
   .nav-logo img { width: 22px; height: 22px; filter: brightness(0) invert(1); opacity: 0.7; }
   .nav-logo span { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; }
   .nav-logo:hover { border-color: var(--rose); }
 
   /* hero */
-  .hero { text-align: center; padding: 72px 0 48px; border-bottom: 1px solid #1a1a1a; }
-  .hero .label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 20px; font-family: 'JetBrains Mono', monospace; }
+  .hero { text-align: center; padding: 48px 0 48px; border-bottom: 1px solid #1a1a1a; }
+  .app-icon { width: 118px; height: 118px; margin: 0 auto 26px; border-radius: 26px; box-shadow: 0 22px 60px -22px rgba(232,72,85,0.6), 0 0 0 1px rgba(255,255,255,0.06); animation: floaticon 6s ease-in-out infinite; }
+  @keyframes floaticon { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  /* Motion is opt-out on a PD-facing page. */
+  @media (prefers-reduced-motion: reduce) { .app-icon { animation: none; } }
+  .hero .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.32em; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; }
   .hero .label .accent { color: var(--rose); font-weight: 700; }
-  .hero h1 { font-size: 44px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 20px; }
-  .hero p.sub { font-size: 17px; color: #999; max-width: 640px; margin: 0 auto 16px; }
+  .hero h1 { font-size: 46px; font-weight: 900; color: #fff; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 20px; }
+  .hero h1 .aloud { color: var(--rose); }
+  .hero p.sub { font-size: 17px; color: #9aa0a6; max-width: 640px; margin: 0 auto 14px; }
   .hero p.req { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 20px; }
 
   .cta-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 32px; }
-  .btn { display: inline-block; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 28px; border: 1px solid var(--rose); background: var(--rose); color: #fff; transition: background 0.2s, border-color 0.2s; }
-  .btn:hover { background: #d13d49; border-color: #d13d49; }
+  .btn { display: inline-block; text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 28px; border: 1px solid var(--rose); background: var(--rose); color: #fff; border-radius: 6px; transition: filter 0.2s, transform 0.06s; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: translateY(1px); }
   .btn.ghost { background: transparent; border-color: #333; color: #888; }
-  .btn.ghost:hover { background: #111; border-color: #555; color: #d1d5db; }
+  .btn.ghost:hover { background: #111; border-color: #555; color: #d1d5db; filter: none; }
 
   /* sections */
-  section.block { margin: 64px 0; }
-  .section-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 28px; font-family: 'JetBrains Mono', monospace; text-align: center; }
+  section.block { margin: 68px 0; }
+  .section-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 28px; font-family: 'JetBrains Mono', monospace; text-align: center; }
   .section-label .accent { color: var(--rose); }
 
   /* feature grid */
-  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-  .feature { background: #111; border: 1px solid #222; padding: 24px; transition: border-color 0.2s; }
-  .feature:hover { border-color: #444; }
-  .feature h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-  .feature h3 .dot { color: var(--rose); margin-right: 8px; }
-  .feature p { font-size: 14px; color: #888; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .feature { background: #101012; border: 1px solid #1f1f23; border-radius: 12px; padding: 22px; transition: border-color 0.2s; }
+  .feature:hover { border-color: #3a3a40; }
+  .feature h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 7px; }
+  .feature h3 .dot { color: var(--rose); margin-right: 8px; font-size: 10px; }
+  .feature p { font-size: 13.5px; color: #8a9096; }
 
-  /* screenshots */
-  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-  .shot { background: #0f0f0f; border: 1px solid #1a1a1a; padding: 14px; }
-  .shot.wide { grid-column: 1 / -1; }
-  .shot img { width: 100%; border: 1px solid #222; }
-  .shot .cap { font-size: 12px; color: #777; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 12px; text-align: center; }
+  /* screenshots: portrait shots in the shared device frame (real capture aspect 1320x2868),
+     landscape session charts in a wide frame below */
+  .media-wrap { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .shots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 860px; }
+  .shots figure { margin: 0; }
+  .device { position: relative; border-radius: 18px; padding: 5px; background: linear-gradient(160deg, #1c1c1f, #0c0c0e); box-shadow: 0 40px 90px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05); }
+  .device .screen { position: relative; display: block; width: 100%; aspect-ratio: 1320 / 2868; border-radius: 13px; overflow: hidden; background: #120608; }
+  .device .screen > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .shot-cap { margin-top: 9px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: #7d838a; }
+  .wideshot { margin: 0; width: 100%; max-width: 860px; }
+  .wideshot .frame { border-radius: 18px; padding: 5px; background: linear-gradient(160deg, #1c1c1f, #0c0c0e); box-shadow: 0 40px 90px -40px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.05); }
+  .wideshot img { width: 100%; border-radius: 13px; }
+  @media (max-width: 720px) {
+    .shots { grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 46%; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+    .shots figure { scroll-snap-align: center; }
+  }
 
   /* callout box */
-  .callout { background: #0f0f0f; border: 1px solid #222; padding: 28px; }
+  .callout { background: #0e0e10; border: 1px solid #1f1f23; border-radius: 12px; padding: 30px; }
   .callout.rose { border-left: 3px solid var(--rose); }
-  .callout h2 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 12px; }
-  .callout p { font-size: 15px; color: #999; margin-bottom: 12px; }
+  .callout h2 { font-size: 21px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+  .callout p { font-size: 15px; color: #9aa0a6; margin-bottom: 12px; }
   .callout p:last-child { margin-bottom: 0; }
   .callout a { color: var(--rose); text-decoration: none; border-bottom: 1px solid var(--rose-dim); transition: border-color 0.2s; }
   .callout a:hover { border-color: var(--rose); }
 
-  footer { padding: 64px 0; text-align: center; border-top: 1px solid #1a1a1a; margin-top: 64px; }
+  .pledge { max-width: 620px; margin: 0 auto; padding: 0 20px 4px; text-align: center; font-size: 12.5px; letter-spacing: 0.03em; line-height: 1.85; color: #7d838a; }
+  .pledge b { color: #cbd0d5; font-weight: 600; }
+
+  footer { padding: 60px 0; text-align: center; border-top: 1px solid #1a1a1a; margin-top: 64px; }
   .footer-label { font-size: 11px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.3em; margin-bottom: 10px; }
   .footer-text { font-size: 14px; color: #777; }
-  .footer-links { margin-top: 18px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
-  .footer-links a { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.15em; text-decoration: none; border-bottom: 1px solid #333; transition: border-color 0.2s; }
-  .footer-links a:hover { border-color: #d1d5db; }
+  .footer-links { margin-top: 18px; display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+  .footer-links a { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.15em; text-decoration: none; border-bottom: 1px solid #333; transition: border-color 0.2s, color 0.2s; }
+  .footer-links a:hover { border-color: #d1d5db; color: #aaa; }
 
-  @media (max-width: 600px) {
-    .hero h1 { font-size: 32px; }
+  @media (max-width: 720px) {
+    .hero h1 { font-size: 34px; }
   }
 </style>
 </head>
@@ -87,7 +113,7 @@
 <div class="top-nav">
   <div class="top-nav-row">
     <a href="../index.html" class="nav-link">&larr; halfmarble.com</a>
-    <a href="../index.html" class="nav-logo" style="position:absolute;left:50%;transform:translateX(-50%);">
+    <a href="../index.html" class="nav-logo">
       <img src="../assets/logo.png" alt="halfmarble">
       <span>halfmarble</span>
     </a>
@@ -97,8 +123,9 @@
 <div class="container">
 
   <header class="hero">
-    <div class="label"><span class="accent">STEADYHEARTBEAT</span> · iOS APP</div>
-    <h1>Your heart rate, read aloud.</h1>
+    <img class="app-icon" src="app-icon.png" alt="SteadyHeartBeat app icon — a heart carrying a spoken waveform">
+    <div class="label"><span class="accent">STEADYHEARTBEAT</span> &middot; iPhone + AirPods Pro 3</div>
+    <h1>Your heart rate,<br><span class="aloud">read aloud.</span></h1>
     <p class="sub">SteadyHeartBeat speaks your live heart rate from AirPods Pro 3 — no watch, no chest strap, no glancing at a screen. The earbuds are both the sensor and the feedback.</p>
     <p class="sub">Everything runs on your iPhone. Your heart-rate data never leaves the device, and halfmarble never receives it.</p>
     <div class="cta-row">
@@ -141,17 +168,49 @@
 
   <section class="block">
     <div class="section-label">A <span class="accent">//</span> look inside</div>
-    <div class="shots">
-      <div class="shot"><img src="screenshots/06-voices.png" alt="Voice picker"><div class="cap">Choose your voice</div></div>
-      <div class="shot"><img src="screenshots/01-home-connected.png" alt="SteadyHeartBeat home screen with readiness snapshot and workout selector"><div class="cap">Readiness &amp; workout select</div></div>
-      <div class="shot"><img src="screenshots/07-cycling-zones.png" alt="Cycling with a target heart-rate zone selected"><div class="cap">Cycling — set a target zone</div></div>
-      <div class="shot"><img src="screenshots/08-boxing-timer.png" alt="Boxing round timer with presets, rounds, rest, and ten-second warning"><div class="cap">Boxing round timer</div></div>
-      <div class="shot wide"><img src="screenshots/03-live-landscape.png" alt="Full-session heart-rate chart from a real hike, reaching Zone 5"><div class="cap">A real hike — every zone, green to red</div></div>
-      <div class="shot wide"><img src="screenshots/09-hike-landscape-aerobic.png" alt="Full-session heart-rate chart from the same hike, a long aerobic effort with two climbs"><div class="cap">Same hike, a second body — a long aerobic effort, bookended by two climbs</div></div>
-      <div class="shot"><img src="screenshots/04-workout-summary.png" alt="Post-workout summary"><div class="cap">Post-workout summary</div></div>
-      <div class="shot"><img src="screenshots/05-sessions.png" alt="Session history"><div class="cap">Session history</div></div>
-      <div class="shot"><img src="screenshots/02-live-heartrate.png" alt="Live heart rate over a real hike, zone-colored, with the live BPM centered"><div class="cap">Live BPM, zone-colored</div></div>
-      <div class="shot"><img src="screenshots/10-hike-summary-aerobic.png" alt="Post-workout summary with ascent, vertical work, climb, and a zone histogram"><div class="cap">Ascent, vert work &amp; time in zones</div></div>
+    <div class="media-wrap">
+      <div class="shots">
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/01-home-connected.png" alt="SteadyHeartBeat home screen with readiness snapshot and workout selector" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Readiness &amp; workout select</figcaption>
+        </figure>
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/02-live-heartrate.png" alt="Live heart rate over a real hike, zone-colored, with the live BPM centered" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Live BPM, zone-colored</figcaption>
+        </figure>
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/07-cycling-zones.png" alt="Cycling with a target heart-rate zone selected" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Cycling — set a target zone</figcaption>
+        </figure>
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/08-boxing-timer.png" alt="Boxing round timer with presets, rounds, rest, and ten-second warning" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Boxing round timer</figcaption>
+        </figure>
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/06-voices.png" alt="Voice picker" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Choose your voice</figcaption>
+        </figure>
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/04-workout-summary.png" alt="Post-workout summary" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Post-workout summary</figcaption>
+        </figure>
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/05-sessions.png" alt="Session history" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Session history</figcaption>
+        </figure>
+        <figure>
+          <div class="device"><div class="screen"><img src="screenshots/10-hike-summary-aerobic.png" alt="Post-workout summary with ascent, vertical work, climb, and a zone histogram" loading="lazy"></div></div>
+          <figcaption class="shot-cap">Ascent, vert work &amp; time in zones</figcaption>
+        </figure>
+      </div>
+      <figure class="wideshot">
+        <div class="frame"><img src="screenshots/03-live-landscape.png" alt="Full-session heart-rate chart from a real hike, reaching Zone 5" loading="lazy"></div>
+        <figcaption class="shot-cap">A real hike — every zone, green to red</figcaption>
+      </figure>
+      <figure class="wideshot">
+        <div class="frame"><img src="screenshots/09-hike-landscape-aerobic.png" alt="Full-session heart-rate chart from the same hike, a long aerobic effort with two climbs" loading="lazy"></div>
+        <figcaption class="shot-cap">Same hike, a second body — a long aerobic effort, bookended by two climbs</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -171,7 +230,7 @@
     </div>
   </section>
 
-  <p style="max-width:620px;margin:56px auto 0;padding:0 20px 4px;text-align:center;font-size:12.5px;letter-spacing:0.03em;line-height:1.85;color:#7d838a;">5% of software net profits pledged:<br>2.5% to the <b style="color:#cbd0d5;font-weight:600;">Michael J. Fox Foundation</b> (MJFF)<br>2.5% to <b style="color:#cbd0d5;font-weight:600;">Public Health Collaboration</b> (PHC UK)<br>halfmarble is an independent Team&nbsp;Fox third-party fundraiser.</p>
+  <p class="pledge">5% of software net profits pledged:<br>2.5% to the <b>Michael J. Fox Foundation</b> (MJFF)<br>2.5% to <b>Public Health Collaboration</b> (PHC UK)<br>halfmarble is an independent Team&nbsp;Fox third-party fundraiser.</p>
 
 </div>
 
