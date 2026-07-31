@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SteadyHeartBeat — Privacy Policy</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/legal.css">
+</head>
+<body>
+  <h1>SteadyHeartBeat — Privacy Policy</h1>
+  <p class="eff">Effective date: July 30, 2026</p>
+
+  <p>SteadyHeartBeat is an iOS app published by <strong>Halfmarble LLC</strong> (“halfmarble”, “we”, “us”). This
+  policy explains how SteadyHeartBeat handles your information.</p>
+
+  <p class="lede"><strong>The short version: your health data never leaves your iPhone.</strong>
+  There are no accounts, no sign-in, no analytics, no advertising, and no third-party tracking —
+  and halfmarble never receives your data.</p>
+
+  <h2>Data we collect</h2>
+  <p><strong>None.</strong> SteadyHeartBeat does not collect, transmit, or share any personal data, and it
+  does not track you across other apps or websites. There is no advertising identifier (IDFA) and no
+  attribution. All computation — zone calculation, heart-rate analysis, histogram generation — happens
+  on your device; halfmarble does not operate a server that receives personal health data.</p>
+
+  <h2>Health data the app reads — on your device only</h2>
+  <p>SteadyHeartBeat reads health data through Apple’s <strong>HealthKit</strong> framework, with your
+  permission. None of it ever leaves your iPhone through SteadyHeartBeat.</p>
+  <table>
+    <thead>
+      <tr><th>Data type</th><th>Source</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Heart rate (live)</td><td>AirPods with heart-rate monitoring</td><td>Real-time voice readout and chart display during a workout</td></tr>
+      <tr><td>Respiratory rate (live)</td><td>AirPods with heart-rate monitoring</td><td>Displayed during a workout as breaths/min</td></tr>
+      <tr><td>Active calories burned</td><td>HealthKit (calculated from HR)</td><td>Displayed during a workout; saved to your workout session</td></tr>
+      <tr><td>Date of birth</td><td>Your Health profile</td><td>Calculates your personal heart-rate zones (Tanaka formula: maxHR = 208 − 0.7 × age)</td></tr>
+      <tr><td>Resting heart rate</td><td>Apple Watch (background)</td><td>Pre-workout screen, cardiovascular baseline indicator</td></tr>
+      <tr><td>Heart rate variability (HRV)</td><td>Apple Watch (background)</td><td>Pre-workout screen, autonomic health indicator</td></tr>
+      <tr><td>Cardio fitness (VO₂ max)</td><td>Apple Watch (background)</td><td>Pre-workout screen, fitness context indicator</td></tr>
+      <tr><td>Biological sex</td><td>Your Health profile</td><td>Selects age- and sex-based reference ranges for cardio fitness</td></tr>
+      <tr><td>Body mass (weight)</td><td>Your Health profile</td><td>Estimates the energy cost of elevation gain during a workout</td></tr>
+      <tr><td>Step count</td><td>HealthKit (during workout)</td><td>Shown during and after the workout</td></tr>
+      <tr><td>Walking + running distance</td><td>HealthKit (during workout)</td><td>Shown during and after the workout</td></tr>
+      <tr><td>Flights climbed</td><td>HealthKit (during workout)</td><td>Shown during and after the workout</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Information stored on your device</h2>
+  <p>When you complete a monitoring session, SteadyHeartBeat saves a workout record to
+  <strong>Apple Health</strong> by default — duration, activity type (boxing, cycling, running, walking,
+  hiking, or other), heart rate, and active calories — so it counts toward your Apple Fitness rings.
+  That record is governed by Apple’s Health privacy settings and your own iCloud Health sync settings.
+  You can turn this off in the app under <strong>Preferences → Apple Health → Save workouts to Apple
+  Health</strong>; with it off, the workout is discarded and never written to Apple Health.</p>
+  <p>Completed session summaries — HR timeline, zone distribution, and histogram — and your on-device
+  profile (age, biological sex, any self-reported conditions, and manually entered metrics) are saved to
+  the app’s private storage on your iPhone. This storage is <strong>explicitly excluded from iCloud and
+  iTunes backups</strong>, so it stays on your device, and it is removed when you delete the app.</p>
+
+  <h2>What we will never do</h2>
+  <ul>
+    <li><strong>Sell your health data</strong> — to anyone, including data brokers, advertisers, or analytics firms.</li>
+    <li><strong>Use your health data for advertising</strong>, in this app or on any other platform.</li>
+    <li><strong>Share data with pharmaceutical or biotech companies without consent</strong> — only ever under
+    IRB-approved research agreements with published findings, and only with your explicit, informed,
+    separately granted consent. (This research opt-in does not yet exist; when it ships, it will be a
+    standalone screen, not buried in settings.)</li>
+    <li><strong>Transmit raw health data to our servers</strong> — halfmarble does not operate a server that
+    receives personal health data.</li>
+    <li><strong>Retain data after you delete the app.</strong> Deleting SteadyHeartBeat removes all locally
+    stored session data. Workout records already saved to Apple Health remain in Health, under your
+    control there.</li>
+  </ul>
+
+  <h2>Export and delete, on demand</h2>
+  <p>Keeping your data on-device must not lock <em>you</em> out of it. <strong>Preferences → Your
+  Data</strong> gives you two unconditional actions — no account, no request form, no waiting.</p>
+  <p><strong>Export My Data</strong> assembles everything the app stores — your workout sessions and
+  on-device profile — into a complete, readable copy and hands it to the iOS share sheet. Where it goes
+  is your choice; the app uploads nothing. The export sheet also offers <strong>Anonymize for
+  Research…</strong>, which produces a de-identified copy (random identifiers; identity and absolute
+  timestamps removed) for you to donate to a research effort of your own choosing. halfmarble receives
+  nothing in either case. (Where halfmarble itself runs opt-in research, it never takes individual
+  records — only differential-privacy-protected aggregates; see our
+  <a href="/glass-box/data.html">data policy</a>.)</p>
+  <p><strong>Delete All Data</strong> immediately erases every session and the on-device profile. Workout
+  records you already saved to Apple Health remain in Health, under your control there.</p>
+
+  <h2>Third parties</h2>
+  <p>SteadyHeartBeat contains <strong>no third-party SDKs</strong> — no analytics, advertising,
+  crash-reporting, or social frameworks. No third-party partners receive any data from the app. This
+  website (halfmarble.com) likewise uses no analytics or tracking of any kind and sets no cookies.</p>
+
+  <h2>Children</h2>
+  <p>SteadyHeartBeat is not directed at children under 13 years of age, and we do not knowingly collect
+  personal information from children under 13.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>We may update this policy from time to time. Any material change will be posted on this page with a
+  new effective date.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy? Email <strong>privacy@halfmarble.com</strong>.</p>
+  <p>For data deletion: use <strong>Delete All Data</strong> in the app (Preferences → Your Data), or
+  simply delete the app from your iPhone. For Apple Health data, use the Health app’s data-management
+  features.</p>
+
+  <p>SteadyHeartBeat is built under halfmarble’s <strong>Glass Box</strong> principle: all algorithmic
+  logic is deterministic, traceable to peer-reviewed science, and runs locally on your device. The full
+  data philosophy is at <a href="/glass-box/data.html">halfmarble.com/glass-box/data.html</a>.</p>
+
+  <hr>
+  <footer>© 2026 Halfmarble LLC</footer>
+</body>
+</html>

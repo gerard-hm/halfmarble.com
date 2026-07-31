@@ -1,0 +1,31 @@
+/* Shared stylesheet for the product legal pages (privacy policies):
+   viroflick/privacy/, stringfusor/privacy/, steadyheartbeat/privacy/.
+   Extracted 2026-07-30 from the identical inline <style> blocks of the two
+   game pages; table/list rules added for the SteadyHeartBeat policy.
+   Light/dark follows the system (color-scheme), no JS. Self-hosted —
+   keep every URL on halfmarble.com. */
+
+:root { color-scheme: light dark; }
+body {
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  max-width: 720px; margin: 0 auto; padding: 40px 20px; color: #1b1b1f; background: #fff;
+}
+h1 { font-size: 1.7rem; margin: 0 0 4px; }
+h2 { font-size: 1.15rem; margin: 1.8em 0 .4em; }
+.eff { color: #666; margin: 0 0 1.5em; }
+.lede { font-size: 1.05rem; }
+a { color: #0a67d3; }
+hr { border: 0; border-top: 1px solid #e3e3e6; margin: 2.5em 0 1.2em; }
+footer { color: #666; font-size: .9rem; }
+table { width: 100%; border-collapse: collapse; margin: 1em 0 1.5em; font-size: .88rem; }
+th { text-align: left; padding: 8px 10px; border-bottom: 2px solid #e3e3e6; }
+td { padding: 8px 10px; border-bottom: 1px solid #e3e3e6; vertical-align: top; }
+ul { margin: .8em 0 1.2em; padding-left: 1.3em; }
+li { margin: .45em 0; }
+@media (prefers-color-scheme: dark) {
+  body { color: #e6e6ea; background: #16161a; }
+  .eff, footer { color: #9a9aa2; }
+  a { color: #6cb0ff; }
+  hr { border-top-color: #2c2c31; }
+  th, td { border-color: #2c2c31; }
+}
