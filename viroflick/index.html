@@ -70,6 +70,8 @@
   .btn.ghost { background: transparent; border-color: #333; color: #888; }
   .btn.ghost:hover { background: #111; border-color: #555; color: #d1d5db; filter: none; }
   .hero p.req { font-size: 12px; color: #666; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 22px; }
+  .beta-cta { margin-top: 22px; }
+  .beta-cta .beta-hint { margin: 14px auto 0; font-size: 12px; letter-spacing: 0.05em; color: #7d838a; }
 
   /* section scaffolding */
   section.block { margin: 68px 0; }
@@ -189,14 +191,11 @@
   .beta-req { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8a9096; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 16px; }
   .beta-card h2 { font-size: 27px; font-weight: 900; color: #fff; letter-spacing: -0.02em; margin-bottom: 10px; }
   .beta-card > p { color: #9aa0a6; font-size: 15px; max-width: 560px; margin: 0 auto 24px; }
-  .beta-note { max-width: 640px; margin: 0 auto 26px; text-align: left; background: #0e0e10; border: 1px solid #1f1f23; border-left: 3px solid var(--amber); border-radius: 10px; padding: 20px 22px; }
+  .beta-note { max-width: 640px; margin: 0 auto; text-align: left; background: #0e0e10; border: 1px solid #1f1f23; border-left: 3px solid var(--amber); border-radius: 10px; padding: 20px 22px; }
   .beta-note p { color: #cdd2d8; font-size: 15px; line-height: 1.75; margin: 0; }
   .beta-note b { color: #fff; font-weight: 700; }
   .beta-note .who { display: block; margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #7d838a; }
   .btn.lg { font-size: 14px; padding: 16px 32px; }
-  /* > p.beta-hint: must out-rank ".beta-card > p" above, which otherwise zeroes
-     the top margin and overrides the smaller size/colour */
-  .beta-card > p.beta-hint { margin: 26px auto 0; font-size: 12px; letter-spacing: 0.05em; color: #7d838a; }
   .beta-card > p b { color: #fff; font-weight: 700; }
   .pledge { max-width: 620px; margin: 0 auto; padding: 0 20px 4px; text-align: center; font-size: 12.5px; letter-spacing: 0.03em; line-height: 1.85; color: #7d838a; }
   .pledge b { color: #cbd0d5; font-weight: 600; }
@@ -233,6 +232,10 @@
     <div class="label"><span class="accent">VIROFLICK</span> &middot; iPhone &amp; iPad game</div>
     <h1>Diagnose the invader.<br><span class="flick">Deploy the counter.</span></h1>
     <p class="sub">A casual flick-and-defend arcade type game. Read the pathogen swarming your patient, arm the one cell type that counters it, and flick a homing swarm to hold the line.</p>
+    <div class="beta-cta">
+      <a class="btn lg" href="https://testflight.apple.com/join/ZtHf2x8G" target="_blank" rel="noopener">Join the beta on TestFlight</a>
+      <p class="beta-hint mono">Tap this on your iPhone or iPad, not your Mac. TestFlight installs on iOS.</p>
+    </div>
   </header>
 
   <!-- ============ OPEN BETA ============ -->
@@ -245,8 +248,6 @@
         <p>ViroFlick was in large part designed to be easy to play for people living with Parkinson's — like me. Every button carries a <b>tremor-tolerant debounce</b>, so a shaky double-tap counts once. And I built the <b>Triage</b> case specifically for hands like mine: you <b>hold a finger on a lane to fire</b> instead of aiming precise flicks, and it forgives a shaky hand. If games have ever felt too fiddly, start there.</p>
         <span class="who">gerard ziemski, cofounder, halfmarble</span>
       </div>
-      <a class="btn lg" href="https://testflight.apple.com/join/ZtHf2x8G" target="_blank" rel="noopener">Join the beta on TestFlight</a>
-      <p class="beta-hint mono">Tap this on your iPhone or iPad, not your Mac. TestFlight installs on iOS.</p>
     </div>
   </section>
 
